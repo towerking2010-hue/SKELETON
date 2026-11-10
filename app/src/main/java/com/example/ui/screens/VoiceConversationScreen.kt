@@ -42,12 +42,13 @@ import androidx.compose.ui.unit.sp
 import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
+import com.example.data.model.LanguageSetting
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 @Composable
-fun VoiceConversationScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun VoiceConversationScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, modifier: Modifier = Modifier) {
   BackHandler { onBack() }
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
@@ -67,7 +68,7 @@ fun VoiceConversationScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     transcript = ""; reply = ""; listening = true; processing = false; status = "Listening…"
     val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
       putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-      putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
+      putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (currentLanguage == LanguageSetting.SINHALA) "si-LK" else "en-US")
       putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
       putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
     }
@@ -99,8 +100,11 @@ fun VoiceConversationScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
           if (words.isBlank()) { processing = false; status = "No words recognized."; return }
           processing = true; status = "CORE is thinking…"
           scope.launch {
+            val languageInstruction = if (currentLanguage == LanguageSetting.SINHALA) {
+              "Respond in natural Sinhala script, keeping technical terms in English where useful.\n"
+            } else ""
             val answer = GeminiCognitiveService.chatGenerate(
-              userPrompt = words,
+              userPrompt = languageInstruction + words,
               role = AiRole.SKELETON_CORE,
               tier = ModelTier.FAST
             )
@@ -120,7 +124,16 @@ fun VoiceConversationScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     val tts = TextToSpeech(context) { result ->
       ttsReady = result == TextToSpeech.SUCCESS
-      if (ttsReady) speech?.language = Locale.US
+      if (ttsReady) {
+        val locale = if (currentLanguage == LanguageSetting.SINHALA) Locale("si", "LK") else Locale.US
+        val available = speech?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+        if (available >= TextToSpeech.LANG_AVAILABLE) {
+          speech?.language = locale
+        } else {
+          ttsReady = false
+          status = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala TTS voice is not installed on this device." else "English TTS voice unavailable."
+        }
+      }
     }
     speech = tts
     onDispose {
