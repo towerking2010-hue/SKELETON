@@ -74,6 +74,9 @@ import com.example.ui.theme.SilverText
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Locale
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import java.util.zip.ZipInputStream
 
 private data class AudiobookDocument(
@@ -95,7 +98,10 @@ private fun readImportedBook(context: android.content.Context, uri: Uri): Audiob
     ?: "Imported book"
   val mime = context.contentResolver.getType(uri).orEmpty()
   val raw = context.contentResolver.openInputStream(uri)?.use { input ->
-    if (mime.contains("epub") || name.endsWith(".epub", true)) {
+    if (mime.contains("pdf") || name.endsWith(".pdf", true)) {
+      PDFBoxResourceLoader.init(context)
+      PDDocument.load(input).use { pdf -> PDFTextStripper().getText(pdf) }
+    } else if (mime.contains("epub") || name.endsWith(".epub", true)) {
       ZipInputStream(input).use { zip ->
         val chapters = StringBuilder()
         var entry = zip.nextEntry
@@ -120,7 +126,7 @@ private fun readImportedBook(context: android.content.Context, uri: Uri): Audiob
     }
   }.orEmpty().replace(Regex("[ \\t]+"), " ").trim()
 
-  require(raw.isNotBlank()) { "No readable text was found in this file." }
+  require(raw.isNotBlank()) { "No selectable text was found. Scanned PDFs need OCR before they can be read." }
   return AudiobookDocument(name.substringBeforeLast('.', name), "Imported from device", "Imported text", raw)
 }
 
@@ -283,10 +289,10 @@ fun AudiobookCaptionScreen(
         Box(
           Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(ObsidianSurface)
             .border(1.dp, ObsidianBorder, RoundedCornerShape(12.dp))
-            .clickable { importLauncher.launch(arrayOf("text/plain", "application/epub+zip", "application/epub")) }
+            .clickable { importLauncher.launch(arrayOf("text/plain", "application/epub+zip", "application/epub", "application/pdf")) }
             .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-          Text("＋ IMPORT TXT / EPUB", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          Text("＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
       }
       importError?.let {
