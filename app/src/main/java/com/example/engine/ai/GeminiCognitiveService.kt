@@ -12,9 +12,9 @@ import kotlinx.coroutines.withTimeout
 private const val TAG = "GeminiService"
 
 enum class ModelTier(val modelName: String, val displayName: String) {
-  FAST("gemini-3.1-flash-lite", "Flash-Lite (Ultra Fast)"),
+  FAST("gemini-3.5-flash-lite", "Flash-Lite (Free tier)"),
   GENERAL("gemini-3.8-flash", "Gemini 3.8 Flash (General)"),
-  REASONING("gemini-4-argon", "Gemini 4 Argon (Deep Reasoning)")
+  REASONING("gemini-3.8-flash", "Gemini 3.8 Flash (Reasoning prompt)")
 }
 
 enum class VideoAspectRatio(val ratioString: String, val label: String) {
