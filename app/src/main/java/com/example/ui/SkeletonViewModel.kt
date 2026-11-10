@@ -96,6 +96,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   val currentUser: StateFlow<FirebaseUser?> = AuthManager.currentUser
 
   val feedCards: StateFlow<List<FeedCard>>
+  val dueReviewCards: StateFlow<List<FeedCard>>
   val savedCards: StateFlow<List<FeedCard>>
   val coreMessages: StateFlow<List<CoreChatMessage>>
   val ghostChallenges: StateFlow<List<GhostChallenge>>
@@ -107,6 +108,12 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     val dao = SkeletonDatabase.getDatabase(application).skeletonDao()
     repository = SkeletonRepository(dao)
     firestoreRepo = FirestoreKnowledgeRepository.create(application)
+
+    dueReviewCards = repository.dueReviewCards(System.currentTimeMillis()).stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      emptyList()
+    )
 
     feedCards = repository.feedCards.stateIn(
       viewModelScope,
