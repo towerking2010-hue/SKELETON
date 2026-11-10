@@ -162,7 +162,7 @@ fun DreamStateEngineScreen(
 
   val activeCard = consolidationNodes.getOrNull(activeNodeIndex)
 
-  LaunchedEffect(isPlaying, activeCard?.id) {
+  LaunchedEffect(isPlaying, activeCard?.id, ttsReady) {
     if (isPlaying && activeCard != null && ttsReady) {
       val narration = "${activeCard.title}. ${activeCard.itch}. ${activeCard.skeleton}. ${activeCard.intuition}"
       tts?.speak(narration, TextToSpeech.QUEUE_FLUSH, Bundle(), "dream_${activeCard.id}")
