@@ -285,7 +285,49 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   fun runConceptCollider(cardA: FeedCard, cardB: FeedCard) {
     viewModelScope.launch {
-      val collided = SkeletonCognitiveEngine.collideConcepts(cardA, cardB, _systemLanguage.value)
+      val lang = _systemLanguage.value
+      val languageRule = if (lang == LanguageSetting.SINHALA) {
+        "Write all learning content in natural Sinhala script, keeping technical terms in English."
+      } else "Write in clear English."
+      val prompt = """
+        $languageRule
+        Synthesize these two saved concepts into one accurate, memorable 30-second cross-domain insight.
+        Concept A: ${cardA.title}
+        Domain A: ${cardA.branchDomain}
+        Core A: ${cardA.skeleton}
+        Concept B: ${cardB.title}
+        Domain B: ${cardB.branchDomain}
+        Core B: ${cardB.skeleton}
+        Do not invent a mathematical equivalence. State where the analogy holds and where it breaks.
+        Return exactly three labeled sections:
+        INTUITION: one vivid analogy
+        MECHANISM: the actual shared mechanism and limits
+        NEW INSIGHT: one useful implication or testable question
+      """.trimIndent()
+      val generated = GeminiCognitiveService.chatGenerate(prompt, AiRole.SKELETON_CORE, ModelTier.FAST)
+      val collided = if (generated.startsWith("Inference error") || generated.startsWith("Synthesis complete without output")) {
+        SkeletonCognitiveEngine.collideConcepts(cardA, cardB, lang)
+      } else {
+        fun section(label: String): String = Regex(
+          """(?is)${label}:\s*(.*?)(?=\n(?:INTUITION|MECHANISM|NEW INSIGHT):|$)"""
+        ).find(generated)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val intuition = section("INTUITION").ifBlank { generated.take(500) }
+        val mechanism = section("MECHANISM").ifBlank { generated }
+        val insight = section("NEW INSIGHT").ifBlank { "Ask CORE to test this connection against a counterexample." }
+        FeedCard(
+          id = "collider_" + java.util.UUID.randomUUID().toString().take(8),
+          title = "${cardA.title} ⊗ ${cardB.title}",
+          itch = insight,
+          skeleton = mechanism,
+          intuition = intuition,
+          branchDomain = "Cross-Domain Synthesis",
+          crossLinkTarget = "${cardA.title} + ${cardB.title}",
+          isSaved = true,
+          challengeScenario = "Give one real example where this cross-domain connection is useful, and one where it breaks.",
+          challengeExpectedKey = "A correct explanation of the shared mechanism and its limits.",
+          language = if (lang == LanguageSetting.SINHALA) "si" else "en"
+        )
+      }
       repository.insertFeedCard(collided)
       if (currentUser.value != null) {
         try { firestoreRepo.saveCardToCloud(collided) } catch (_: Exception) {}
