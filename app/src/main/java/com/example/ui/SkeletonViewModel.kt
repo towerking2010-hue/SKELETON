@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -153,6 +154,13 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       currentUser.collectLatest { user ->
         if (user != null) {
+          val remoteAtSignIn = firestoreRepo.observeCloudCards().firstOrNull().orEmpty()
+          remoteAtSignIn.forEach { repository.insertFeedCard(it) }
+          val remoteIds = remoteAtSignIn.map { it.id }.toSet()
+          val localCards = repository.feedCards.firstOrNull().orEmpty()
+          localCards.filterNot { it.id in remoteIds }.forEach { card ->
+            try { firestoreRepo.saveCardToCloud(card) } catch (_: Exception) {}
+          }
           firestoreRepo.observeCloudCards().collectLatest { remoteCards ->
             remoteCards.forEach { repository.insertFeedCard(it) }
           }
