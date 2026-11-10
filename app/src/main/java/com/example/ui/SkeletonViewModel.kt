@@ -61,13 +61,17 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   private val repository: SkeletonRepository
   private val firestoreRepo: FirestoreKnowledgeRepository
 
-  private val _systemLanguage = MutableStateFlow(LanguageSetting.ENGLISH)
+  private val settings = application.getSharedPreferences("skeleton_settings", android.content.Context.MODE_PRIVATE)
+  private val _systemLanguage = MutableStateFlow(
+    runCatching { LanguageSetting.valueOf(settings.getString("language", "ENGLISH") ?: "ENGLISH") }
+      .getOrDefault(LanguageSetting.ENGLISH)
+  )
   val systemLanguage: StateFlow<LanguageSetting> = _systemLanguage.asStateFlow()
 
-  private val _cringeFilterEnabled = MutableStateFlow(true)
+  private val _cringeFilterEnabled = MutableStateFlow(settings.getBoolean("cringe_filter", true))
   val cringeFilterEnabled: StateFlow<Boolean> = _cringeFilterEnabled.asStateFlow()
 
-  private val _adrenalMode = MutableStateFlow(false)
+  private val _adrenalMode = MutableStateFlow(settings.getBoolean("adrenal_mode", false))
   val adrenalMode: StateFlow<Boolean> = _adrenalMode.asStateFlow()
 
   private val _currentTab = MutableStateFlow(MainTab.FEED)
@@ -185,6 +189,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   fun setSystemLanguage(lang: LanguageSetting) {
     _systemLanguage.value = lang
+    settings.edit().putString("language", lang.name).apply()
     viewModelScope.launch {
       repository.switchCurriculumLanguage(lang)
     }
@@ -193,17 +198,22 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   fun toggleSystemLanguage() {
     val next = _systemLanguage.value.toggle()
     _systemLanguage.value = next
+    settings.edit().putString("language", next.name).apply()
     viewModelScope.launch {
       repository.switchCurriculumLanguage(next)
     }
   }
 
   fun toggleCringeFilter() {
-    _cringeFilterEnabled.value = !_cringeFilterEnabled.value
+    val next = !_cringeFilterEnabled.value
+    _cringeFilterEnabled.value = next
+    settings.edit().putBoolean("cringe_filter", next).apply()
   }
 
   fun toggleAdrenalMode() {
-    _adrenalMode.value = !_adrenalMode.value
+    val next = !_adrenalMode.value
+    _adrenalMode.value = next
+    settings.edit().putBoolean("adrenal_mode", next).apply()
   }
 
   fun selectTab(tab: MainTab) {
