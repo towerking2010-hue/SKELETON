@@ -104,32 +104,6 @@ fun LanguageTeacherScreen(
   val context = LocalContext.current
   var pronunciationTts by remember { mutableStateOf<TextToSpeech?>(null) }
   var pronunciationReady by remember { mutableStateOf(false) }
-  DisposableEffect(selectedLanguage.id) {
-    val locale = when (selectedLanguage.id) {
-      "lang_sinhala" -> Locale("si", "LK")
-      "lang_japanese" -> Locale.JAPAN
-      "lang_greek" -> Locale("el", "GR")
-      "lang_latin" -> Locale("la", "VA")
-      else -> Locale.US
-    }
-    val engine = TextToSpeech(context) { result ->
-      if (result == TextToSpeech.SUCCESS) {
-        val available = pronunciationTts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
-        if (available >= TextToSpeech.LANG_AVAILABLE) {
-          pronunciationTts?.language = locale
-          pronunciationReady = true
-        } else pronunciationReady = false
-      } else pronunciationReady = false
-    }
-    pronunciationTts = engine
-    onDispose {
-      engine.stop()
-      engine.shutdown()
-      pronunciationTts = null
-      pronunciationReady = false
-    }
-  }
-
   val languages = remember {
     listOf(
       LanguageMasteryProfile(
@@ -206,6 +180,32 @@ fun LanguageTeacherScreen(
   }
 
   var selectedLanguage by remember { mutableStateOf(languages.first()) }
+
+  DisposableEffect(selectedLanguage.id) {
+    val locale = when (selectedLanguage.id) {
+      "lang_sinhala" -> Locale("si", "LK")
+      "lang_japanese" -> Locale.JAPAN
+      "lang_greek" -> Locale("el", "GR")
+      "lang_latin" -> Locale("la", "VA")
+      else -> Locale.US
+    }
+    val engine = TextToSpeech(context) { result ->
+      if (result == TextToSpeech.SUCCESS) {
+        val available = pronunciationTts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+        if (available >= TextToSpeech.LANG_AVAILABLE) {
+          pronunciationTts?.language = locale
+          pronunciationReady = true
+        } else pronunciationReady = false
+      } else pronunciationReady = false
+    }
+    pronunciationTts = engine
+    onDispose {
+      engine.stop()
+      engine.shutdown()
+      pronunciationTts = null
+      pronunciationReady = false
+    }
+  }
   var currentTab by remember { mutableStateOf(TeacherTab.BLUEPRINT) }
   var selectedQuizOption by remember { mutableStateOf<Int?>(null) }
   var userDrillInput by remember { mutableStateOf("") }
