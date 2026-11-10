@@ -107,123 +107,30 @@ object GeminiCognitiveService {
   /**
    * Audio Transcription using gemini-3.5-transcribe
    */
-  suspend fun transcribeAudio(audioDescriptionOrBytes: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(modelName = "gemini-3.5-transcribe")
-        val response = model.generateContent(
-          content {
-            text("Transcribe the speech audio with absolute precision: $audioDescriptionOrBytes")
-          }
-        )
-        response.text ?: "Transcription empty."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Audio transcription error", e)
-      "Transcription error [gemini-3.5-transcribe]: ${e.localizedMessage ?: "Audio buffer error"}"
-    }
-  }
+  suspend fun transcribeAudio(audioDescriptionOrBytes: String): String =
+    "Audio transcription now uses Android SpeechRecognizer. This legacy text-only API makes no network request."
 
   /**
    * Voice Conversations using gemini-3.8-live
    */
-  suspend fun liveVoiceSession(speechInput: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-live",
-          systemInstruction = content {
-            text("You are SKELETON Live Voice Conversational Partner. Keep answers under 2 punchy spoken sentences. Ultra-fast, direct, energetic voice output.")
-          }
-        )
-        val response = model.generateContent(speechInput)
-        response.text ?: "Live voice stream acknowledged."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Live voice session error", e)
-      "Live Voice error [gemini-3.8-live]: ${e.localizedMessage ?: "Connection reset"}"
-    }
-  }
+  suspend fun liveVoiceSession(speechInput: String): String =
+    "Live audio streaming is not implemented. Use the app's Android speech input and CORE response flow."
 
   /**
    * Create or edit images using gemini-nano-banana-2.1
    */
-  suspend fun generateOrEditImage(
-    prompt: String,
-    existingImage: Bitmap? = null
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(modelName = "gemini-nano-banana-2.1")
-        val response = if (existingImage != null) {
-          model.generateContent(
-            content {
-              image(existingImage)
-              text("Edit this visual conceptual diagram according to: $prompt")
-            }
-          )
-        } else {
-          model.generateContent("Create a high-fidelity minimalist scientific concept visualization: $prompt")
-        }
-        response.text ?: "Image generation initiated."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Image generation with gemini-nano-banana-2.1 error", e)
-      "Image Generator [gemini-nano-banana-2.1]: ${e.localizedMessage ?: "Generation failed"}"
-    }
-  }
+  suspend fun generateOrEditImage(prompt: String, existingImage: Bitmap? = null): String =
+    "Image generation is disabled in zero-billing mode. No paid model request was sent."
 
   /**
    * Video Generation from text using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
    */
-  suspend fun generateVideo(
-    prompt: String,
-    aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-omni-1.1-flash",
-          systemInstruction = content {
-            text("You are SKELETON Video Generation Engine (Model: gemini-omni-1.1-flash via Interactions API). Generate high-fidelity video stream sequences with aspect ratio ${aspectRatio.ratioString}. Output camera choreography, keyframe lighting, and fluid motion dynamics.")
-          }
-        )
-        val response = model.generateContent("Render ${aspectRatio.ratioString} video sequence: $prompt")
-        response.text ?: "Video generation stream initialized."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Video generation error [gemini-omni-1.1-flash]", e)
-      "Video Generation [gemini-omni-1.1-flash (${aspectRatio.ratioString})]: ${e.localizedMessage ?: "Stream synthesis initialized"}"
-    }
-  }
+  suspend fun generateVideo(prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
+    "Video rendering is not implemented. No external API request was sent."
 
   /**
    * Animate Photo into Video using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
    */
-  suspend fun animateImageToVideo(
-    image: Bitmap,
-    prompt: String,
-    aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-omni-1.1-flash",
-          systemInstruction = content {
-            text("You are SKELETON Image Animation Engine (Model: gemini-omni-1.1-flash via Interactions API). Animate the provided user photo into a fluid cinematic video with aspect ratio ${aspectRatio.ratioString}. Synthesize temporal interpolation, particle vectors, and cinematic depth transitions.")
-          }
-        )
-        val response = model.generateContent(
-          content {
-            image(image)
-            text("Animate this photo into a ${aspectRatio.ratioString} video: $prompt")
-          }
-        )
-        response.text ?: "Photo animation rendering initiated."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Photo animation error [gemini-omni-1.1-flash]", e)
-      "Photo Animation [gemini-omni-1.1-flash (${aspectRatio.ratioString})]: ${e.localizedMessage ?: "Animation motion synthesized"}"
-    }
-  }
+  suspend fun animateImageToVideo(image: Bitmap, prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
+    "Photo animation is not implemented. No external API request was sent."
 }
