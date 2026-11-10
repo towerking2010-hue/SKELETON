@@ -75,8 +75,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Locale
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.text.PDFTextStripper
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.util.zip.ZipInputStream
 
 private data class AudiobookDocument(
