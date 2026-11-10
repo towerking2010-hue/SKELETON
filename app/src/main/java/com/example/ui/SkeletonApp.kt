@@ -214,7 +214,7 @@ fun SkeletonApp(
       VaultMailerScreen(
         vaultCards = savedCards.ifEmpty { feedCards },
         currentLanguage = systemLanguage,
-        userEmail = currentUser?.email ?: "towerking2010@gmail.com",
+        userEmail = currentUser?.email.orEmpty(),
         userName = currentUser?.displayName ?: "Dasun",
         onBack = { viewModel.closeDrawerMode() }
       )
