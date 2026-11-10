@@ -121,12 +121,17 @@ class SkeletonRepository(private val dao: SkeletonDao) {
       generated
     }
 
+    val generatedTopic = if (offlineFallback) null else {
+      Regex("""\[FEED\s+SYNC:\s*(.+?)\]""", RegexOption.IGNORE_CASE)
+        .find(generated)?.groupValues?.getOrNull(1)?.trim()?.takeIf { it.isNotBlank() }
+    }
+    val syncTopic = generatedTopic ?: if (offlineFallback) novelTopic else null
     dao.insertCoreMessage(
       CoreChatMessage(
         id = UUID.randomUUID().toString(),
         isUser = false,
         text = aiReplyText,
-        feedSyncTopic = novelTopic,
+        feedSyncTopic = syncTopic,
         feedSyncAdded = false
       )
     )
