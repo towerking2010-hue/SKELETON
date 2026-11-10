@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
+import com.example.data.model.LearningSubject
 import com.example.ui.components.MinimalFeedCardView
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
@@ -73,6 +75,8 @@ fun FeedScreen(
 ) {
   val pendingChallenge = ghostChallenges.firstOrNull { it.status == "PENDING" }
   var challengeAnswerInput by remember { mutableStateOf("") }
+  var selectedSubject by remember { mutableStateOf(LearningSubject.ALL) }
+  val visibleCards = cards.filter { selectedSubject.matches(it) }
 
   LazyColumn(
     modifier = modifier
@@ -225,8 +229,42 @@ fun FeedScreen(
       }
     }
 
+    // Subject navigation: categories filter the same learning feed without duplicating cards.
+    item(key = "subject_filters") {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+          text = if (currentLanguage == LanguageSetting.SINHALA) "SUBJECTS" else "SUBJECTS",
+          color = SilverDim,
+          fontSize = 10.sp,
+          fontWeight = FontWeight.Bold,
+          fontFamily = FontFamily.Monospace,
+          letterSpacing = 1.2.sp
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          items(LearningSubject.values().toList(), key = { it.name }) { subject ->
+            val selected = subject == selectedSubject
+            Box(
+              modifier = Modifier
+                .clip(RoundedCornerShape(18.dp))
+                .background(if (selected) CyanNeon.copy(alpha = 0.16f) else ObsidianSurface)
+                .border(1.dp, if (selected) CyanNeon.copy(alpha = 0.8f) else ObsidianBorder, RoundedCornerShape(18.dp))
+                .clickable { selectedSubject = subject }
+                .padding(horizontal = 13.dp, vertical = 8.dp)
+            ) {
+              Text(
+                text = subject.label,
+                color = if (selected) CyanNeon else SilverMuted,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+              )
+            }
+          }
+        }
+      }
+    }
+
     // Feed Cards List
-    if (cards.isEmpty()) {
+    if (visibleCards.isEmpty()) {
       item {
         Box(
           modifier = Modifier
@@ -235,7 +273,7 @@ fun FeedScreen(
           contentAlignment = Alignment.Center
         ) {
           Text(
-            text = "No cognitive nodes in feed. Sync from CORE.",
+            text = if (cards.isEmpty()) "No lessons in feed yet. Ask CORE to create one." else "No lessons in this subject yet.",
             color = SilverDim,
             fontSize = 13.sp,
             fontFamily = FontFamily.Monospace
@@ -243,7 +281,7 @@ fun FeedScreen(
         }
       }
     } else {
-      items(cards, key = { it.id }) { card ->
+      items(visibleCards, key = { it.id }) { card ->
         MinimalFeedCardView(
           card = card,
           cringeFilterEnabled = cringeFilterEnabled,
