@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.os.Bundle
+import android.speech.tts.TextToSpeech
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,12 +51,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LanguageSetting
+import java.util.Locale
 import com.example.ui.components.SkeletonBracketLogo
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
@@ -95,6 +101,35 @@ fun LanguageTeacherScreen(
   onBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val context = LocalContext.current
+  var pronunciationTts by remember { mutableStateOf<TextToSpeech?>(null) }
+  var pronunciationReady by remember { mutableStateOf(false) }
+  DisposableEffect(selectedLanguage.id) {
+    val locale = when (selectedLanguage.id) {
+      "lang_sinhala" -> Locale("si", "LK")
+      "lang_japanese" -> Locale.JAPAN
+      "lang_greek" -> Locale("el", "GR")
+      "lang_latin" -> Locale("la", "VA")
+      else -> Locale.US
+    }
+    val engine = TextToSpeech(context) { result ->
+      if (result == TextToSpeech.SUCCESS) {
+        val available = pronunciationTts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+        if (available >= TextToSpeech.LANG_AVAILABLE) {
+          pronunciationTts?.language = locale
+          pronunciationReady = true
+        } else pronunciationReady = false
+      } else pronunciationReady = false
+    }
+    pronunciationTts = engine
+    onDispose {
+      engine.stop()
+      engine.shutdown()
+      pronunciationTts = null
+      pronunciationReady = false
+    }
+  }
+
   val languages = remember {
     listOf(
       LanguageMasteryProfile(
@@ -442,7 +477,11 @@ fun LanguageTeacherScreen(
                     imageVector = Icons.Filled.VolumeUp,
                     contentDescription = "Pronunciation",
                     tint = CyanNeon,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp).clickable {
+                      if (pronunciationReady) {
+                        pronunciationTts?.speak(selectedLanguage.sampleDrill, TextToSpeech.QUEUE_FLUSH, Bundle(), "language_phrase")
+                      }
+                    }
                   )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
