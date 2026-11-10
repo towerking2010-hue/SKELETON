@@ -97,7 +97,7 @@ fun AudioTranscribeScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
       Spacer(Modifier.width(8.dp))
       Column {
         Text("AUDIO TRANSCRIBE", color = EmeraldMastery, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text("Android device speech recognition · selected app language", color = SilverMuted, fontSize = 10.sp)
+        Text("Android device speech recognition · " + if (currentLanguage == LanguageSetting.SINHALA) "Sinhala" else "English", color = SilverMuted, fontSize = 10.sp)
       }
     }
     Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
