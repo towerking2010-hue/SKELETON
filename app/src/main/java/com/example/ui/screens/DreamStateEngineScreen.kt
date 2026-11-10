@@ -98,7 +98,8 @@ fun DreamStateEngineScreen(
     val engine = TextToSpeech(context) { result ->
       if (result == TextToSpeech.SUCCESS) {
         val locale = if (currentLanguage == LanguageSetting.SINHALA) Locale("si", "LK") else Locale.US
-        if (engine.isLanguageAvailable(locale) >= TextToSpeech.LANG_AVAILABLE) {
+        val availability = tts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+        if (availability >= TextToSpeech.LANG_AVAILABLE) {
           tts?.language = locale
           ttsReady = true
           voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala narration ready" else "English narration ready"
