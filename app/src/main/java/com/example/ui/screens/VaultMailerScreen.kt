@@ -81,8 +81,8 @@ data class MailTransmissionLog(
 )
 
 enum class ReportType(val title: String, val desc: String) {
-  DAILY_SYNTHESIS("Daily Pinnacle Synthesis", "Full summary of the 16 Master Curriculum keys and active feed nodes"),
-  SPACED_RECALL("Spaced-Repetition Deck", "Active recall cards due for 3-day, 7-day, and 14-day memory consolidation"),
+  DAILY_SYNTHESIS("Daily Pinnacle Synthesis", "Full summary of the 19 Master Domains and active feed nodes"),
+  SPACED_RECALL("Spaced-Repetition Deck", "Active recall cards due for 3, 7, 14, and 30-day reviews"),
   CONCEPT_COLLIDER("Cross-Domain Collider Report", "High-impact synthesis between 2 disparate knowledge vault nodes")
 }
 
@@ -90,7 +90,7 @@ enum class ReportType(val title: String, val desc: String) {
 fun VaultMailerScreen(
   vaultCards: List<FeedCard>,
   currentLanguage: LanguageSetting,
-  userEmail: String = "towerking2010@gmail.com",
+  userEmail: String = "",
   userName: String = "Dasun",
   onBack: () -> Unit,
   modifier: Modifier = Modifier
