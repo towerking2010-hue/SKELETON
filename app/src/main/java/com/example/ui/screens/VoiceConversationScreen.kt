@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.engine.SkeletonCognitiveEngine
 import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
@@ -103,14 +104,19 @@ fun VoiceConversationScreen(currentLanguage: LanguageSetting, onBack: () -> Unit
             val languageInstruction = if (currentLanguage == LanguageSetting.SINHALA) {
               "Respond in natural Sinhala script, keeping technical terms in English where useful.\n"
             } else ""
-            val answer = GeminiCognitiveService.chatGenerate(
+            val cloudAnswer = GeminiCognitiveService.chatGenerate(
               userPrompt = languageInstruction + words,
               role = AiRole.SKELETON_CORE,
               tier = ModelTier.FAST
             )
+            val usedOfflineFallback = cloudAnswer.startsWith("Inference error") ||
+              cloudAnswer.startsWith("Synthesis complete without output")
+            val answer = if (usedOfflineFallback) {
+              SkeletonCognitiveEngine.generateCoreResponse(words, currentLanguage, emptyList()).first
+            } else cloudAnswer
             reply = answer
             processing = false
-            status = if (answer.startsWith("Inference error")) "CORE unavailable · check connection and Firebase setup." else "CORE replied · device voice playback"
+            status = if (usedOfflineFallback) "Offline CORE fallback · no cloud response" else "CORE replied · device voice playback"
             if (ttsReady) speech?.speak(answer, TextToSpeech.QUEUE_FLUSH, Bundle(), "skeleton_voice_reply")
           }
         }
