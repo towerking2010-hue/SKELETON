@@ -20,6 +20,7 @@ import com.example.engine.ai.ModelTier
 import com.example.engine.bio.BioscienceModule
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -148,6 +149,16 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     activeDeepDiveMessages = _activeDeepDiveCardId.flatMapLatest { id ->
       if (id == null) flowOf(emptyList()) else repository.getDeepDiveMessages(id)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    viewModelScope.launch {
+      currentUser.collectLatest { user ->
+        if (user != null) {
+          firestoreRepo.observeCloudCards().collectLatest { remoteCards ->
+            remoteCards.forEach { repository.insertFeedCard(it) }
+          }
+        }
+      }
+    }
 
     viewModelScope.launch {
       repository.initializeStarterCardsIfEmpty()
