@@ -293,6 +293,16 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     }
   }
 
+  fun saveCapturedCard(card: FeedCard) {
+    viewModelScope.launch {
+      val saved = card.copy(isSaved = true)
+      repository.insertFeedCard(saved)
+      if (currentUser.value != null) {
+        try { firestoreRepo.saveCardToCloud(saved) } catch (_: Exception) {}
+      }
+    }
+  }
+
   fun runSniperOcr(scannedText: String) {
     if (scannedText.isBlank()) return
     viewModelScope.launch {
