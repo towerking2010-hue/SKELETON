@@ -62,45 +62,31 @@ object GeminiCognitiveService {
     }
   }
 
-  /**
-   * Search Grounding using gemini-3.8-flash
-   */
+  /** External Search grounding is intentionally disabled in zero-billing mode. */
   suspend fun searchGroundedQuery(query: String): String =
     "Google Search grounding is disabled in zero-billing mode. No search request was sent."
 
-  /**
-   * Maps Grounding using gemini-3.8-flash
-   */
+  /** External Maps grounding is intentionally disabled in zero-billing mode. */
   suspend fun mapsGroundedQuery(query: String): String =
     "Google Maps grounding is disabled in zero-billing mode. No Maps request was sent."
 
-  /**
-   * Audio Transcription using gemini-3.5-transcribe
-   */
+  /** Legacy text-only transcription entry point; real microphone capture uses Android SpeechRecognizer. */
   suspend fun transcribeAudio(audioDescriptionOrBytes: String): String =
     "Audio transcription now uses Android SpeechRecognizer. This legacy text-only API makes no network request."
 
-  /**
-   * Voice Conversations using gemini-3.8-live
-   */
+  /** Legacy live-audio entry point; the current voice screen uses device speech services. */
   suspend fun liveVoiceSession(speechInput: String): String =
     "Live audio streaming is not implemented. Use the app's Android speech input and CORE response flow."
 
-  /**
-   * Create or edit images using gemini-nano-banana-2.1
-   */
+  /** Image generation is disabled so the app cannot make a paid media request. */
   suspend fun generateOrEditImage(prompt: String, existingImage: Bitmap? = null): String =
     "Image generation is disabled in zero-billing mode. No paid model request was sent."
 
-  /**
-   * Video Generation from text using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
-   */
+  /** Video rendering is not available in the current zero-billing build. */
   suspend fun generateVideo(prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
     "Video rendering is not implemented. No external API request was sent."
 
-  /**
-   * Animate Photo into Video using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
-   */
+  /** Photo animation is not available in the current zero-billing build. */
   suspend fun animateImageToVideo(image: Bitmap, prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
     "Photo animation is not implemented. No external API request was sent."
 }
