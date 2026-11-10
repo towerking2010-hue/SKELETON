@@ -45,6 +45,12 @@ class FirestoreKnowledgeRepository(private val db: FirebaseFirestore) {
       "crossLinkTarget" to (card.crossLinkTarget ?: ""),
       "isSaved" to card.isSaved,
       "recallStage" to card.recallStage,
+      "lastReviewedTimestamp" to card.lastReviewedTimestamp,
+      "weakRecallCount" to card.weakRecallCount,
+      "challengeScenario" to card.challengeScenario,
+      "challengeExpectedKey" to card.challengeExpectedKey,
+      "language" to card.language,
+      "timestamp" to card.timestamp,
       "createdAt" to FieldValue.serverTimestamp()
     )
     docRef.set(data).await()
@@ -75,7 +81,13 @@ class FirestoreKnowledgeRepository(private val db: FirebaseFirestore) {
             branchDomain = domain,
             crossLinkTarget = if (crossLink.isNullOrBlank()) null else crossLink,
             isSaved = isSaved,
-            recallStage = recallStage
+            recallStage = recallStage,
+            lastReviewedTimestamp = doc.getLong("lastReviewedTimestamp") ?: 0L,
+            weakRecallCount = doc.getLong("weakRecallCount")?.toInt() ?: 0,
+            challengeScenario = doc.getString("challengeScenario") ?: "",
+            challengeExpectedKey = doc.getString("challengeExpectedKey") ?: "",
+            language = doc.getString("language") ?: "en",
+            timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
           )
         }
       }
