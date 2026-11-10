@@ -52,6 +52,7 @@ fun SkeletonApp(
   val isProcessingAi by viewModel.isProcessingAi.collectAsState()
 
   val feedCards by viewModel.feedCards.collectAsState()
+  val dueReviewCards by viewModel.dueReviewCards.collectAsState()
   val savedCards by viewModel.savedCards.collectAsState()
   val coreMessages by viewModel.coreMessages.collectAsState()
   val ghostChallenges by viewModel.ghostChallenges.collectAsState()
@@ -159,7 +160,7 @@ fun SkeletonApp(
     }
     DrawerMode.SPACED_REPETITION -> {
       SpacedRepetitionScreen(
-        cards = feedCards,
+        cards = dueReviewCards,
         currentLanguage = systemLanguage,
         onRecordRecall = { cardId, success ->
           viewModel.recordSpacedRepetition(cardId, success)
