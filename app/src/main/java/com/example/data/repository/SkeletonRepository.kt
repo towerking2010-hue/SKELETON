@@ -15,6 +15,7 @@ import java.util.UUID
 class SkeletonRepository(private val dao: SkeletonDao) {
 
   val feedCards: Flow<List<FeedCard>> = dao.getAllFeedCards()
+  fun dueReviewCards(now: Long): Flow<List<FeedCard>> = dao.getDueReviewCards(now)
   val savedCards: Flow<List<FeedCard>> = dao.getSavedCards()
   val coreMessages: Flow<List<CoreChatMessage>> = dao.getAllCoreMessages()
   val ghostChallenges: Flow<List<GhostChallenge>> = dao.getAllGhostChallenges()
