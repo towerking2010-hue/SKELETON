@@ -180,7 +180,7 @@ fun SkeletonApp(
     DrawerMode.AR_LENS -> {
       ArLensScreen(
         currentLanguage = systemLanguage,
-        onSaveToVault = { card -> viewModel.toggleSaveCard(card) },
+        onSaveToVault = { card -> viewModel.saveCapturedCard(card) },
         onBack = { viewModel.closeDrawerMode() }
       )
       return
