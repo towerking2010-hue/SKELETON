@@ -258,7 +258,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       _isProcessingAi.value = true
       try {
-        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value, _selectedModelTier.value)
+        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value, _selectedModelTier.value, _selectedAiRole.value)
       } finally {
         _isProcessingAi.value = false
       }
