@@ -116,7 +116,8 @@ fun SkeletonApp(
     }
     DrawerMode.AUDIO_TRANSCRIBE -> {
       AudioTranscribeScreen(
-        onBack = { viewModel.closeDrawerMode() }
+        onBack = { viewModel.closeDrawerMode() },
+        onAddToFeed = { transcript -> viewModel.runSniperOcr(transcript) }
       )
       return
     }
