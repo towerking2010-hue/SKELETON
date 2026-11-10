@@ -348,7 +348,50 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   fun runSniperOcr(scannedText: String) {
     if (scannedText.isBlank()) return
     viewModelScope.launch {
-      val extracted = SkeletonCognitiveEngine.sniperOcrExtraction(scannedText, _systemLanguage.value)
+      val lang = _systemLanguage.value
+      val languageRule = if (lang == LanguageSetting.SINHALA) {
+        "Write all educational fields in natural Sinhala script. Keep established technical terms and equations in English."
+      } else "Write in clear English."
+      val prompt = """
+        $languageRule
+        Turn the following OCR text into one accurate micro-learning card.
+        Extract the central question, actual mechanism, an intuitive analogy, the best-fit subject/domain,
+        and one active-recall challenge. Do not add facts that are not supported by the source.
+        If the source is ambiguous or incomplete, say so instead of inventing details.
+        Return exactly these labeled fields:
+        TITLE: short title
+        ITCH: the central question or tension
+        SKELETON: the actual mechanism, rules, or equations
+        INTUITION: a helpful analogy
+        DOMAIN: one of the 19 SKELETON master domains or the closest accurate subject
+        CHALLENGE: one recall question
+        ANSWER KEY: essential points a correct answer must contain
+        OCR SOURCE:
+        ${scannedText.take(12000)}
+      """.trimIndent()
+      val generated = GeminiCognitiveService.chatGenerate(prompt, AiRole.SKELETON_CORE, ModelTier.FAST)
+      val extracted = if (generated.startsWith("Inference error") || generated.startsWith("Synthesis complete without output")) {
+        SkeletonCognitiveEngine.sniperOcrExtraction(scannedText, lang)
+      } else {
+        fun field(label: String): String = Regex(
+          """(?is)^\\s*${label}:\\s*(.*?)(?=^\\s*(?:TITLE|ITCH|SKELETON|INTUITION|DOMAIN|CHALLENGE|ANSWER KEY):|$)""",
+          setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
+        ).find(generated)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val title = field("TITLE").ifBlank { scannedText.lineSequence().firstOrNull { it.isNotBlank() }?.take(70) ?: "OCR Learning Card" }
+        FeedCard(
+          id = "ocr_" + java.util.UUID.randomUUID().toString().take(8),
+          title = title,
+          itch = field("ITCH").ifBlank { "Question extracted from source text." },
+          skeleton = field("SKELETON").ifBlank { generated },
+          intuition = field("INTUITION").ifBlank { "Ask CORE to explain this concept with an analogy." },
+          branchDomain = field("DOMAIN").ifBlank { "OCR Extraction" },
+          crossLinkTarget = "Ghost Sniper OCR",
+          isSaved = true,
+          challengeScenario = field("CHALLENGE"),
+          challengeExpectedKey = field("ANSWER KEY"),
+          language = if (lang == LanguageSetting.SINHALA) "si" else "en"
+        )
+      }
       repository.insertFeedCard(extracted)
       if (currentUser.value != null) {
         try { firestoreRepo.saveCardToCloud(extracted) } catch (_: Exception) {}
