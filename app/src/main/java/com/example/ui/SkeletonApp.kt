@@ -117,6 +117,7 @@ fun SkeletonApp(
     }
     DrawerMode.AUDIO_TRANSCRIBE -> {
       AudioTranscribeScreen(
+        currentLanguage = systemLanguage,
         onBack = { viewModel.closeDrawerMode() },
         onAddToFeed = { transcript -> viewModel.runSniperOcr(transcript) }
       )
