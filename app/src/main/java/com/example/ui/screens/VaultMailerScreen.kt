@@ -329,22 +329,26 @@ fun VaultMailerScreen(
       // Open a user-reviewed email draft; the app does not claim to send it.
       ElevatedButton(
         onClick = {
-          dispatchEmailDigest(
+          val opened = dispatchEmailDigest(
             context = context,
             userEmail = userEmail,
             userName = userName,
             reportType = selectedReport,
             cards = vaultCards
           )
-          val newLog = MailTransmissionLog(
-            id = "log_${System.currentTimeMillis()}",
-            timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date()),
-            subject = "[SKELETON VAULT]: ${selectedReport.title}",
-            recipient = userEmail,
-            status = "COMPOSER OPENED"
-          )
-          transmissionLogs.add(0, newLog)
-          lastSentMessage = "Opened an email draft addressed to $userEmail. Review and send it in your email app."
+          if (opened) {
+            val newLog = MailTransmissionLog(
+              id = "log_${System.currentTimeMillis()}",
+              timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date()),
+              subject = "[SKELETON VAULT]: ${selectedReport.title}",
+              recipient = userEmail,
+              status = "COMPOSER OPENED"
+            )
+            transmissionLogs.add(0, newLog)
+            lastSentMessage = "Opened an email draft addressed to $userEmail. Review and send it in your email app."
+          } else {
+            lastSentMessage = "No email app could open the draft. Nothing was sent."
+          }
         },
         enabled = userEmail.isNotBlank(),
         modifier = Modifier
@@ -445,7 +449,7 @@ private fun dispatchEmailDigest(
   userName: String,
   reportType: ReportType,
   cards: List<FeedCard>
-) {
+): Boolean {
   val subject = "[SKELETON VAULT]: ${reportType.title} for $userName"
   val bodyBuilder = StringBuilder()
   bodyBuilder.append("SKELETON // OMNISCIENT COGNITIVE VAULT REPORT\n")
@@ -475,8 +479,10 @@ private fun dispatchEmailDigest(
   }
 
   try {
-    context.startActivity(Intent.createChooser(intent, "Dispatch via Gmail"))
+    context.startActivity(Intent.createChooser(intent, "Review email draft"))
+    return true
   } catch (e: Exception) {
-    Toast.makeText(context, "Email client not found. Digest copied.", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Email client not found. Nothing was sent.", Toast.LENGTH_SHORT).show()
+    return false
   }
 }
