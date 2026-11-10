@@ -8,7 +8,6 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
-import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -27,6 +26,12 @@ import kotlinx.coroutines.tasks.await
 
 object AuthManager {
   private const val TAG = "AuthManager"
+
+  private fun getGoogleWebClientId(context: Context): String {
+    val resourceId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+    require(resourceId != 0) { "Google Sign-In configuration missing: default_web_client_id" }
+    return context.getString(resourceId)
+  }
 
   private val _currentUser = MutableStateFlow<FirebaseUser?>(Firebase.auth.currentUser)
   val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
@@ -51,7 +56,7 @@ object AuthManager {
     }
 
     val clientId = try {
-      context.getString(R.string.default_web_client_id)
+      getGoogleWebClientId(context)
     } catch (e: Exception) {
       Log.w(TAG, "default_web_client_id not found")
       onUnauthenticated()
@@ -98,7 +103,7 @@ object AuthManager {
     onCancelled: () -> Unit = {}
   ) {
     val clientId = try {
-      activity.getString(R.string.default_web_client_id)
+      getGoogleWebClientId(activity)
     } catch (e: Exception) {
       onError("Google Sign-In configuration missing: default_web_client_id")
       return
