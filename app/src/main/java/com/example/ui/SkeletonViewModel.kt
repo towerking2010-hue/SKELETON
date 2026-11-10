@@ -43,7 +43,7 @@ enum class DrawerMode(val title: String, val subtitle: String) {
   AUDIOBOOK_CAPTION("AUDIOBOOK CAPTION ENGINE", "E-Book Player & Word-by-Word Highlighting"),
   DREAM_STATE("DREAM STATE ENGINE", "10-minute spoken recall briefing · device TTS"),
   LANGUAGE_TEACHER("LANGUAGE TEACHER", "Dedicated Immersive Language Mastery"),
-  VAULT_MAILER("GMAIL VAULT MAILER", "Dispatch Digests & Flashcards to Dasun"),
+  VAULT_MAILER("VAULT MAILER", "Manual email drafts · automatic sending disabled"),
   BIOSCIENCE("BIOSCIENCE LAB", "Molecular & Cognitive Neuroscience"),
   LIVE_VOICE("VOICE CONVERSATION", "Android speech input + CORE + device TTS"),
   IMAGE_STUDIO("IMAGE STUDIO", "Local prompt lab · paid rendering disabled"),
