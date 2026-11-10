@@ -258,7 +258,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       _isProcessingAi.value = true
       try {
-        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value)
+        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value, _selectedModelTier.value)
       } finally {
         _isProcessingAi.value = false
       }
@@ -276,7 +276,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       _isProcessingAi.value = true
       try {
-        repository.sendDeepDiveMessage(cardId, query.trim(), _systemLanguage.value)
+        repository.sendDeepDiveMessage(cardId, query.trim(), _systemLanguage.value, _selectedModelTier.value)
       } finally {
         _isProcessingAi.value = false
       }
