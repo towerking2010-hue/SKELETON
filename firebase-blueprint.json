@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "User": {
+      "path": "users/{userId}",
+      "fields": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      }
+    },
+    "UserCard": {
+      "path": "users/{userId}/cards/{cardId}",
+      "fields": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "itch": { "type": "string" },
+        "skeleton": { "type": "string" },
+        "intuition": { "type": "string" },
+        "branchDomain": { "type": "string" },
+        "crossLinkTarget": { "type": "string", "optional": true },
+        "isSaved": { "type": "boolean" },
+        "recallStage": { "type": "number" },
+        "createdAt": { "type": "timestamp" }
+      }
+    },
+    "DeepDiveThread": {
+      "path": "users/{userId}/threads/{threadId}",
+      "fields": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "cardId": { "type": "string" },
+        "cardTitle": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "updatedAt": { "type": "timestamp" }
+      }
+    }
+  }
+}

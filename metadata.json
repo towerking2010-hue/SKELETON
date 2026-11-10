@@ -1,0 +1,6 @@
+{
+  "name": "SKELETON",
+  "description": "Minimalist, hyper-efficient cognitive engine with CORE and DEEPDIVE intelligence modes, multi-language support (English/Sinhala), and mastery subsystems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
