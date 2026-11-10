@@ -98,6 +98,7 @@ fun SkeletonApp(
     }
     DrawerMode.LIVE_VOICE -> {
       VoiceConversationScreen(
+        currentLanguage = systemLanguage,
         onBack = { viewModel.closeDrawerMode() }
       )
       return
