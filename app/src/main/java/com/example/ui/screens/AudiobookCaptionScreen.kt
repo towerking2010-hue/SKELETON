@@ -85,7 +85,7 @@ private data class AudiobookDocument(
 
 private fun splitIntoSentences(text: String): List<String> =
   Regex("(?<=[.!?।])\\s+|\\n+")
-    .split(text.replace("\\r", " "))
+    .split(text.replace("\r", " "))
     .map { it.trim() }
     .filter { it.isNotBlank() }
 
@@ -104,11 +104,11 @@ private fun readImportedBook(context: android.content.Context, uri: Uri): Audiob
                 entry.name.endsWith(".html", true) || entry.name.endsWith(".htm", true))) {
             val html = BufferedReader(InputStreamReader(zip, Charsets.UTF_8)).readText()
             val visible = html.replace(Regex("(?is)<(script|style)[^>]*>.*?</\\1>"), " ")
-              .replace(Regex("(?i)<br\\s*/?>|</p>|</div>|</h[1-6]>"), "\\n")
+              .replace(Regex("(?i)<br\\s*/?>|</p>|</div>|</h[1-6]>"), "\n")
               .replace(Regex("<[^>]+>"), " ")
               .replace("&nbsp;", " ").replace("&amp;", "&")
-              .replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\\"")
-            chapters.append(visible).append("\\n\\n")
+              .replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
+            chapters.append(visible).append("\n\n")
           }
           zip.closeEntry()
           entry = zip.nextEntry
