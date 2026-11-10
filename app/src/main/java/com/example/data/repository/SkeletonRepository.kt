@@ -7,6 +7,7 @@ import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
 import com.example.engine.SkeletonCognitiveEngine
+import com.example.engine.learning.SpacedRepetitionScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.UUID
@@ -128,13 +129,18 @@ class SkeletonRepository(private val dao: SkeletonDao) {
 
   suspend fun evaluateSpacedRepetition(cardId: String, wasSuccessful: Boolean) {
     val card = dao.getFeedCardByIdDirect(cardId) ?: return
-    val nextStage = if (wasSuccessful) {
-      (card.recallStage + 1).coerceAtMost(4)
-    } else {
-      1.coerceAtMost(card.recallStage)
-    }
-    val weakCount = if (wasSuccessful) card.weakRecallCount else card.weakRecallCount + 1
-    dao.updateSpacedRepetition(cardId, nextStage, weakCount, System.currentTimeMillis())
+    val review = SpacedRepetitionScheduler.review(
+      stage = card.recallStage,
+      weakCount = card.weakRecallCount,
+      successful = wasSuccessful,
+      now = System.currentTimeMillis()
+    )
+    dao.updateSpacedRepetition(
+      cardId,
+      review.stage,
+      review.weakRecallCount,
+      review.lastReviewedTimestamp
+    )
   }
 
   suspend fun createGhostChallenge(card: FeedCard, lang: LanguageSetting) {
