@@ -29,10 +29,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.LanguageSetting
 import com.example.ui.theme.*
 
 @Composable
-fun AudioTranscribeScreen(onBack: () -> Unit, onAddToFeed: (String) -> Unit = {}, modifier: Modifier = Modifier) {
+fun AudioTranscribeScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, onAddToFeed: (String) -> Unit = {}, modifier: Modifier = Modifier) {
   BackHandler { onBack() }
   val context = LocalContext.current
   var listening by remember { mutableStateOf(false) }
@@ -48,7 +49,7 @@ fun AudioTranscribeScreen(onBack: () -> Unit, onAddToFeed: (String) -> Unit = {}
     output = ""; listening = true; busy = true; status = "Listening…"
     val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
       putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-      putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
+      putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (currentLanguage == LanguageSetting.SINHALA) "si-LK" else "en-US")
       putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
       putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
     }
@@ -96,7 +97,7 @@ fun AudioTranscribeScreen(onBack: () -> Unit, onAddToFeed: (String) -> Unit = {}
       Spacer(Modifier.width(8.dp))
       Column {
         Text("AUDIO TRANSCRIBE", color = EmeraldMastery, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text("Android device speech recognition · English", color = SilverMuted, fontSize = 10.sp)
+        Text("Android device speech recognition · selected app language", color = SilverMuted, fontSize = 10.sp)
       }
     }
     Column(Modifier.weight(1f).fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
