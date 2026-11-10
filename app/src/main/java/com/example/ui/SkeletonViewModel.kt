@@ -374,7 +374,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
         SkeletonCognitiveEngine.sniperOcrExtraction(scannedText, lang)
       } else {
         fun field(label: String): String = Regex(
-          """(?is)^\\s*${label}:\\s*(.*?)(?=^\\s*(?:TITLE|ITCH|SKELETON|INTUITION|DOMAIN|CHALLENGE|ANSWER KEY):|$)""",
+          """(?is)^\s*${label}:\s*(.*?)(?=^\s*(?:TITLE|ITCH|SKELETON|INTUITION|DOMAIN|CHALLENGE|ANSWER KEY):|$)""",
           setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         ).find(generated)?.groupValues?.getOrNull(1)?.trim().orEmpty()
         val title = field("TITLE").ifBlank { scannedText.lineSequence().firstOrNull { it.isNotBlank() }?.take(70) ?: "OCR Learning Card" }
