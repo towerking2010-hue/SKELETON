@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Psychology
@@ -37,7 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -156,44 +159,45 @@ fun FeedScreen(
 
           Spacer(modifier = Modifier.height(12.dp))
 
-          // Answer actions
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            ElevatedButton(
-              onClick = {
-                onAnswerGhostChallenge(pendingChallenge, "Quorum consensus boundary / Invariant verified")
-              },
-              colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = AmberAccent,
-                contentColor = ObsidianBg
-              ),
-              shape = RoundedCornerShape(12.dp),
-              modifier = Modifier.weight(1f)
-            ) {
-              Text(
-                text = "Submit Recall Proof",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-              )
+          // Real learner recall input — no prefilled answer is submitted for the user.
+          BasicTextField(
+            value = challengeAnswerInput,
+            onValueChange = { challengeAnswerInput = it },
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(ObsidianSurfaceElevated)
+              .border(1.dp, ObsidianBorder, RoundedCornerShape(12.dp))
+              .padding(12.dp)
+              .testTag("ghost_answer_input"),
+            textStyle = TextStyle(color = SilverText, fontSize = 12.sp, lineHeight = 18.sp),
+            cursorBrush = SolidColor(AmberAccent),
+            decorationBox = { inner ->
+              Box {
+                if (challengeAnswerInput.isBlank()) {
+                  Text("Explain the mechanism in your own words…", color = SilverDim, fontSize = 12.sp)
+                }
+                inner()
+              }
             }
+          )
 
-            ElevatedButton(
-              onClick = {
-                onAnswerGhostChallenge(pendingChallenge, "Need review")
-              },
-              colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = ObsidianSurfaceElevated,
-                contentColor = SilverMuted
-              ),
-              shape = RoundedCornerShape(12.dp)
-            ) {
-              Text(
-                text = "Decay",
-                fontSize = 11.sp
-              )
-            }
+          Spacer(modifier = Modifier.height(10.dp))
+          ElevatedButton(
+            onClick = {
+              onAnswerGhostChallenge(pendingChallenge, challengeAnswerInput.trim())
+              challengeAnswerInput = ""
+            },
+            enabled = challengeAnswerInput.isNotBlank(),
+            colors = ButtonDefaults.elevatedButtonColors(
+              containerColor = AmberAccent,
+              contentColor = ObsidianBg,
+              disabledContainerColor = ObsidianBorder
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text("SUBMIT RECALL PROOF", fontSize = 11.sp, fontWeight = FontWeight.Bold)
           }
         }
       }
