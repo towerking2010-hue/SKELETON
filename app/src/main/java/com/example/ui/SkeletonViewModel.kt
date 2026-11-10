@@ -93,10 +93,16 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   val isProcessingAi: StateFlow<Boolean> = _isProcessingAi.asStateFlow()
 
   // Gemini Role and Model Tier State
-  private val _selectedModelTier = MutableStateFlow(ModelTier.GENERAL)
+  private val _selectedModelTier = MutableStateFlow(
+    runCatching { ModelTier.valueOf(settings.getString("model_tier", "GENERAL") ?: "GENERAL") }
+      .getOrDefault(ModelTier.GENERAL)
+  )
   val selectedModelTier: StateFlow<ModelTier> = _selectedModelTier.asStateFlow()
 
-  private val _selectedAiRole = MutableStateFlow(AiRole.SKELETON_CORE)
+  private val _selectedAiRole = MutableStateFlow(
+    runCatching { AiRole.valueOf(settings.getString("ai_role", "SKELETON_CORE") ?: "SKELETON_CORE") }
+      .getOrDefault(AiRole.SKELETON_CORE)
+  )
   val selectedAiRole: StateFlow<AiRole> = _selectedAiRole.asStateFlow()
 
   val currentUser: StateFlow<FirebaseUser?> = AuthManager.currentUser
@@ -181,10 +187,12 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   fun setModelTier(tier: ModelTier) {
     _selectedModelTier.value = tier
+    settings.edit().putString("model_tier", tier.name).apply()
   }
 
   fun setAiRole(role: AiRole) {
     _selectedAiRole.value = role
+    settings.edit().putString("ai_role", role.name).apply()
   }
 
   fun setSystemLanguage(lang: LanguageSetting) {
