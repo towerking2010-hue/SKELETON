@@ -48,7 +48,7 @@ enum class DrawerMode(val title: String, val subtitle: String) {
   IMAGE_STUDIO("IMAGE STUDIO", "Local prompt lab · paid rendering disabled"),
   VIDEO_STUDIO("VIDEO STUDIO", "Preview only · video rendering disabled"),
   AUDIO_TRANSCRIBE("AUDIO TRANSCRIBE", "Android device speech recognition"),
-  GROUNDING("SEARCH & MAPS GROUNDING", "Model: gemini-3.8-flash"),
+  GROUNDING("SEARCH & MAPS", "External grounding disabled · zero-billing mode"),
   GHOST_SNIPER_OCR("GHOST SNIPER OCR", "Extract Itch + Skeleton from Text"),
   SPACED_REPETITION("SPACED REPETITION", "3d / 7d / 14d Decay Tracker"),
   BOSS_BATTLE("BOSS BATTLE", "Multi-Variable Stress Test"),
