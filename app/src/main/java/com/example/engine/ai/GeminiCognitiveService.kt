@@ -65,44 +65,14 @@ object GeminiCognitiveService {
   /**
    * Search Grounding using gemini-3.8-flash
    */
-  suspend fun searchGroundedQuery(query: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-flash",
-          systemInstruction = content {
-            text("You are SKELETON Search Grounding agent. Use real-time Google Search data to find verifiable scientific citations, papers, and current empirical findings. Format concisely.")
-          }
-        )
-        val response = model.generateContent("[SEARCH GROUNDING]: $query")
-        response.text ?: "No search telemetry returned."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Search grounding error", e)
-      "Search Grounding error: ${e.localizedMessage ?: "Failed to retrieve search data"}"
-    }
-  }
+  suspend fun searchGroundedQuery(query: String): String =
+    "Google Search grounding is disabled in zero-billing mode. No search request was sent."
 
   /**
    * Maps Grounding using gemini-3.8-flash
    */
-  suspend fun mapsGroundedQuery(query: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-flash",
-          systemInstruction = content {
-            text("You are SKELETON Maps Grounding agent. Locate real-world laboratories, bioscience facilities, universities, and tech research centers. Return precise geographic details.")
-          }
-        )
-        val response = model.generateContent("[MAPS GROUNDING]: $query")
-        response.text ?: "No maps telemetry returned."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Maps grounding error", e)
-      "Maps Grounding error: ${e.localizedMessage ?: "Failed to retrieve location data"}"
-    }
-  }
+  suspend fun mapsGroundedQuery(query: String): String =
+    "Google Maps grounding is disabled in zero-billing mode. No Maps request was sent."
 
   /**
    * Audio Transcription using gemini-3.5-transcribe
