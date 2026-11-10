@@ -1,8 +1,6 @@
 name: Android build and unit tests
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main, feature/microlearning-foundation]
   workflow_dispatch:
