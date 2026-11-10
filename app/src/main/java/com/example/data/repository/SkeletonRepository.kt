@@ -63,7 +63,8 @@ class SkeletonRepository(private val dao: SkeletonDao) {
   suspend fun sendCoreUserMessage(
     text: String,
     systemLanguage: LanguageSetting,
-    tier: ModelTier = ModelTier.GENERAL
+    tier: ModelTier = ModelTier.GENERAL,
+    role: AiRole = AiRole.SKELETON_CORE
   ) {
     dao.insertCoreMessage(
       CoreChatMessage(id = UUID.randomUUID().toString(), isUser = true, text = text)
@@ -105,7 +106,7 @@ class SkeletonRepository(private val dao: SkeletonDao) {
 
     val generated = GeminiCognitiveService.chatGenerate(
       userPrompt = prompt,
-      role = AiRole.SKELETON_CORE,
+      role = role,
       tier = tier
     )
     val offlineFallback = generated.startsWith("Inference error") ||
