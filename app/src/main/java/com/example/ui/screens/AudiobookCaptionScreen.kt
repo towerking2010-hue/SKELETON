@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -152,6 +153,8 @@ fun AudiobookCaptionScreen(
   var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
   var isPlaying by remember { mutableStateOf(false) }
   var ttsReady by remember { mutableStateOf(false) }
+  var selectedVoiceAvailable by remember { mutableStateOf(false) }
+  val latestSentences by rememberUpdatedState(sentences)
   var voiceStatus by remember { mutableStateOf("Initializing device speech engine…") }
   var tts by remember { mutableStateOf<TextToSpeech?>(null) }
   var importError by remember { mutableStateOf<String?>(null) }
@@ -185,9 +188,10 @@ fun AudiobookCaptionScreen(
           val availability = instance.isLanguageAvailable(locale)
           if (availability >= TextToSpeech.LANG_AVAILABLE) {
             instance.language = locale
+            selectedVoiceAvailable = true
             voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala voice available on this device" else "English voice ready"
           } else {
-            instance.language = Locale.US
+            selectedVoiceAvailable = false
             voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) {
               "Sinhala voice unavailable. Install a Sinhala voice in Android Text-to-Speech settings."
             } else "English voice unavailable on this device"
@@ -208,7 +212,7 @@ fun AudiobookCaptionScreen(
       }
       override fun onDone(utteranceId: String?) {
         val index = utteranceId?.removePrefix("skeleton_sentence_")?.toIntOrNull() ?: return
-        if (index == sentences.lastIndex) {
+        if (index == latestSentences.lastIndex) {
           android.os.Handler(android.os.Looper.getMainLooper()).post { isPlaying = false }
         }
       }
@@ -233,6 +237,10 @@ fun AudiobookCaptionScreen(
     val engine = tts
     if (!ttsReady || engine == null || sentences.isEmpty()) {
       voiceStatus = "Speech engine is not ready yet."
+      return
+    }
+    if (!selectedVoiceAvailable) {
+      voiceStatus = "No installed voice supports the selected language."
       return
     }
     engine.stop()
