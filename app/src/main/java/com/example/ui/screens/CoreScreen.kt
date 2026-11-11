@@ -146,9 +146,9 @@ fun CoreScreen(
         ) {
           Text(
             text = when (tier) {
-              com.example.engine.ai.ModelTier.FAST -> "3.5 Flash-Lite"
-              com.example.engine.ai.ModelTier.GENERAL -> "3.8 Flash"
-              com.example.engine.ai.ModelTier.REASONING -> "4 Argon"
+              com.example.engine.ai.ModelTier.FAST -> "FAST"
+              com.example.engine.ai.ModelTier.GENERAL -> "STANDARD"
+              com.example.engine.ai.ModelTier.REASONING -> "DEEP REASONING"
             },
             color = if (isSelected) CyanNeon else SilverMuted,
             fontSize = 10.sp,
