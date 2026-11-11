@@ -69,6 +69,23 @@ fun YggdrasilGraphScreen(
 
   var selectedNodeId by remember { mutableStateOf<String?>(cards.firstOrNull()?.id) }
   val selectedCard = cards.find { it.id == selectedNodeId }
+  val semanticEdges = remember(cards) {
+    buildList {
+      for (i in cards.indices) {
+        for (j in i + 1 until cards.size) {
+          val a = cards[i]
+          val b = cards[j]
+          val aLink = a.crossLinkTarget.orEmpty()
+          val bLink = b.crossLinkTarget.orEmpty()
+          val explicitLink =
+            (aLink.isNotBlank() && (b.title.contains(aLink, ignoreCase = true) || b.branchDomain.contains(aLink, ignoreCase = true))) ||
+            (bLink.isNotBlank() && (a.title.contains(bLink, ignoreCase = true) || a.branchDomain.contains(bLink, ignoreCase = true)))
+          val sharedDomain = a.branchDomain.equals(b.branchDomain, ignoreCase = true)
+          if (explicitLink || sharedDomain) add(i to j)
+        }
+      }
+    }
+  }
 
   Column(
     modifier = modifier
@@ -168,28 +185,14 @@ fun YggdrasilGraphScreen(
           )
         }
 
-        // Draw inter-connecting attractor lines
-        for (i in nodePositions.indices) {
-          val next = (i + 1) % nodePositions.size
-          val skip = (i + 2) % nodePositions.size
+        // Connections reflect explicit cross-links or shared learning domains.
+        semanticEdges.forEach { (from, to) ->
+          val selectedConnection = cards[from].id == selectedNodeId || cards[to].id == selectedNodeId
           drawLine(
-            color = ObsidianBorder,
-            start = nodePositions[i],
-            end = nodePositions[next],
-            strokeWidth = 1.2f
-          )
-          drawLine(
-            color = CyanNeon.copy(alpha = 0.15f),
-            start = nodePositions[i],
-            end = nodePositions[skip],
-            strokeWidth = 0.8f
-          )
-          // Line to core
-          drawLine(
-            color = AmberAccent.copy(alpha = 0.2f),
-            start = nodePositions[i],
-            end = Offset(centerX, centerY),
-            strokeWidth = 0.8f
+            color = if (selectedConnection) CyanNeon.copy(alpha = 0.72f) else EmeraldMastery.copy(alpha = 0.22f),
+            start = nodePositions[from],
+            end = nodePositions[to],
+            strokeWidth = if (selectedConnection) 2.2f else 1.0f
           )
         }
 
@@ -219,7 +222,7 @@ fun YggdrasilGraphScreen(
           .align(Alignment.TopStart)
       ) {
         Text(
-          text = "Tap node to inspect placement",
+          text = "Concept links · shared domains · cross-references",
           color = SilverDim,
           fontSize = 11.sp,
           fontFamily = FontFamily.Monospace
