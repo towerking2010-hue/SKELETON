@@ -169,7 +169,7 @@ fun YggdrasilGraphScreen(
           .fillMaxSize()
           .pointerInput(cards) {
             detectTapGestures { tapOffset ->
-              val positions = graphNodePositions(size.width, size.height)
+              val positions = graphNodePositions(size.width.toFloat(), size.height.toFloat())
               positions.forEachIndexed { index, position ->
                 val dx = tapOffset.x - position.x
                 val dy = tapOffset.y - position.y
