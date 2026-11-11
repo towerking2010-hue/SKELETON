@@ -27,7 +27,25 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
+      # AI Studio's debug signing config expects this file at the repository root.
+      # This CI-only key is for test builds, not a production/release signing key.
+      - name: Create CI debug keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
       - name: Run unit tests
         run: gradle testDebugUnitTest
       - name: Assemble debug APK
         run: gradle assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: skeleton-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
