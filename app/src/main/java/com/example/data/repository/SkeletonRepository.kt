@@ -32,7 +32,7 @@ class SkeletonRepository(private val dao: SkeletonDao) {
         CoreChatMessage(
           id = UUID.randomUUID().toString(),
           isUser = false,
-          text = "SKELETON is ready. CORE and DEEPDIVE are available. Connect Firebase AI to enable cloud intelligence; offline lessons remain available."
+          text = "Hey! I’m here. What’s something you’ve been curious about lately? We can figure it out together, one small piece at a time."
         )
       )
     }
