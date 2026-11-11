@@ -114,7 +114,7 @@ fun TopHeaderBar(
           )
         }
         Text(
-          text = if (adrenalMode) "MODE: ADRENALINE [MAX]" else "PINNACLE COGNITIVE VAULT",
+          text = if (adrenalMode) "MODE: ADRENALINE [MAX]" else "PERSONAL KNOWLEDGE SYSTEM",
           color = if (adrenalMode) CrimsonAdrenal else SilverMuted,
           fontSize = 9.sp,
           fontFamily = FontFamily.Monospace,
