@@ -126,14 +126,6 @@ fun TopHeaderBar(
     // Right Controls: Intelligence Mode Switch + Language Pill + Adrenal toggle + Drawer (≡)
     Row(verticalAlignment = Alignment.CenterVertically) {
 
-      // Compact Intelligence Mode Switch
-      CompactIntelligenceModeSwitch(
-        selectedMode = selectedIntelligenceMode,
-        onToggle = onToggleIntelligenceMode
-      )
-
-      Spacer(modifier = Modifier.width(8.dp))
-
       // Language Switcher Pill
       Box(
         modifier = Modifier
@@ -167,21 +159,6 @@ fun TopHeaderBar(
       }
 
       Spacer(modifier = Modifier.width(8.dp))
-
-      // Adrenal Mode Quick Toggle
-      IconButton(
-        onClick = onToggleAdrenalMode,
-        modifier = Modifier
-          .size(40.dp)
-          .testTag("adrenal_mode_toggle")
-      ) {
-        Icon(
-          imageVector = Icons.Filled.FlashOn,
-          contentDescription = "Adrenal Mode",
-          tint = if (adrenalMode) CrimsonAdrenal else SilverMuted,
-          modifier = Modifier.size(20.dp)
-        )
-      }
 
       // Slide-Up Subsystem Drawer Button (≡)
       IconButton(
