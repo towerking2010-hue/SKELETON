@@ -37,10 +37,10 @@ enum class MainTab {
 }
 
 enum class DrawerMode(val title: String, val subtitle: String) {
-  YGGDRASIL("YGGDRASIL", "3D Dynamic Attractor Graph"),
+  YGGDRASIL("YGGDRASIL", "Multiversal knowledge tree & concept links"),
   CONCEPT_COLLIDER("CONCEPT COLLIDER", "Synthesize 2 Vault Nodes"),
   AR_LENS("AR LENS", "Real-World Camera & Vault Cross-Reference"),
-  AUDIOBOOK_CAPTION("AUDIOBOOK CAPTION ENGINE", "E-Book Player & Word-by-Word Highlighting"),
+  AUDIOBOOK_CAPTION("AUDIOBOOK CAPTION ENGINE", "Read & listen with synchronized sentence highlighting"),
   DREAM_STATE("DREAM STATE ENGINE", "10-minute spoken recall briefing · device TTS"),
   LANGUAGE_TEACHER("LANGUAGE TEACHER", "Dedicated Immersive Language Mastery"),
   VAULT_MAILER("VAULT MAILER", "Manual email drafts · automatic sending disabled"),
@@ -51,7 +51,7 @@ enum class DrawerMode(val title: String, val subtitle: String) {
   AUDIO_TRANSCRIBE("AUDIO TRANSCRIBE", "Android device speech recognition"),
   GROUNDING("SEARCH & MAPS", "External grounding disabled · zero-billing mode"),
   GHOST_SNIPER_OCR("GHOST SNIPER OCR", "Extract Itch + Skeleton from Text"),
-  SPACED_REPETITION("SPACED REPETITION", "3d / 7d / 14d Decay Tracker"),
+  SPACED_REPETITION("SPACED REPETITION", "Recall progress · 3 / 7 / 14 / 30-day intervals"),
   BOSS_BATTLE("BOSS BATTLE", "Multi-Variable Stress Test"),
   SETTINGS("SETTINGS", "Language & Engine Controls")
 }
