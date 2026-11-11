@@ -148,7 +148,7 @@ fun SubsystemDrawer(
         // Tool: MODE [BIOSCIENCE LAB]
         SubsystemRowItem(
           title = "MODE [BIOSCIENCE LAB]",
-          description = "Molecular Genetics, Optogenetics & Synaptic LTP",
+          description = "Curated bioscience lessons and mechanism-focused study",
           icon = Icons.Filled.Science,
           accentColor = EmeraldMastery,
           testTag = "mode_bioscience",
@@ -160,7 +160,7 @@ fun SubsystemDrawer(
         // Tool: MODE [VOICE CONVERSATION]
         SubsystemRowItem(
           title = "MODE [VOICE CONVERSATION]",
-          description = "Real-Time Audio Session (Model: gemini-3.8-live)",
+          description = "On-device speech input, CORE replies and device text-to-speech",
           icon = Icons.Filled.RecordVoiceOver,
           accentColor = CyanNeon,
           testTag = "mode_live_voice",
@@ -172,7 +172,7 @@ fun SubsystemDrawer(
         // Tool: MODE [IMAGE STUDIO]
         SubsystemRowItem(
           title = "MODE [IMAGE STUDIO]",
-          description = "Create & Edit Visuals (Model: gemini-nano-banana-2.1)",
+          description = "Unavailable in the $0 build — no paid image service is called",
           icon = Icons.Filled.Image,
           accentColor = AmberAccent,
           testTag = "mode_image_studio",
@@ -184,7 +184,7 @@ fun SubsystemDrawer(
         // Tool: MODE [VIDEO STUDIO]
         SubsystemRowItem(
           title = "MODE [VIDEO STUDIO]",
-          description = "Text-to-Video & Animate Photo (Model: gemini-omni-1.1-flash)",
+          description = "Unavailable in the $0 build — no paid video service is called",
           icon = Icons.Filled.Videocam,
           accentColor = CyanNeon,
           testTag = "mode_video_studio",
@@ -196,7 +196,7 @@ fun SubsystemDrawer(
         // Tool: MODE [AUDIO TRANSCRIBE]
         SubsystemRowItem(
           title = "MODE [AUDIO TRANSCRIBE]",
-          description = "Speech Transcription (Model: gemini-3.5-transcribe)",
+          description = "Device speech recognition; supported languages vary by phone",
           icon = Icons.Filled.Mic,
           accentColor = EmeraldMastery,
           testTag = "mode_audio_transcribe",
@@ -208,7 +208,7 @@ fun SubsystemDrawer(
         // Tool: MODE [SEARCH & MAPS GROUNDING]
         SubsystemRowItem(
           title = "MODE [SEARCH & MAPS GROUNDING]",
-          description = "Real-time Verification (Model: gemini-3.8-flash)",
+          description = "Not active in the $0 offline-first build",
           icon = Icons.Filled.TravelExplore,
           accentColor = CyanNeon,
           testTag = "mode_grounding",
@@ -220,7 +220,7 @@ fun SubsystemDrawer(
         // Tool 1: MODE [YGGDRASIL / ATTRACTOR_GRAPH]
         SubsystemRowItem(
           title = "MODE [YGGDRASIL / GRAPH]",
-          description = "Dynamic 3D Attractor Placement & Node Map",
+          description = "Explore saved concepts and their cross-links",
           icon = Icons.Filled.AltRoute,
           accentColor = CyanNeon,
           testTag = "mode_yggdrasil",
@@ -232,7 +232,7 @@ fun SubsystemDrawer(
         // Tool 2: MODE [CONCEPT_COLLIDER]
         SubsystemRowItem(
           title = "MODE [CONCEPT_COLLIDER]",
-          description = "Synthesize 2 Vault Concepts into 30s Insight",
+          description = "Combine two saved concepts into one synthesis card",
           icon = Icons.Filled.AutoAwesome,
           accentColor = AmberAccent,
           testTag = "mode_concept_collider",
@@ -244,7 +244,7 @@ fun SubsystemDrawer(
         // Tool 3: MODE [GHOST_SNIPER_OCR]
         SubsystemRowItem(
           title = "MODE [GHOST_SNIPER_OCR]",
-          description = "Extract Itch + Skeleton from Textbook Captures",
+          description = "Camera or photo OCR; Latin-script recognition",
           icon = Icons.Filled.CameraAlt,
           accentColor = EmeraldMastery,
           testTag = "mode_ghost_sniper",
@@ -256,7 +256,7 @@ fun SubsystemDrawer(
         // Tool 4: MODE [SPACED_REPETITION_ENGINE]
         SubsystemRowItem(
           title = "MODE [SPACED_REPETITION]",
-          description = "Track 3d / 7d / 14d Decay & Silent Feed Re-injection",
+          description = "3 / 7 / 14 / 30-day review intervals with retry",
           icon = Icons.Filled.QueryBuilder,
           accentColor = Color(0xFFA78BFA),
           testTag = "mode_spaced_repetition",
@@ -268,7 +268,7 @@ fun SubsystemDrawer(
         // Tool 5: MODE [BOSS_BATTLE]
         SubsystemRowItem(
           title = "MODE [BOSS_BATTLE]",
-          description = "Multi-Variable Chained Stress Test (Timed)",
+          description = "Recall challenges generated from your learning vault",
           icon = Icons.Filled.Shield,
           accentColor = CrimsonAdrenal,
           testTag = "mode_boss_battle",
@@ -280,7 +280,7 @@ fun SubsystemDrawer(
         // Tool 6: MODE [AR_LENS]
         SubsystemRowItem(
           title = "MODE [AR_LENS]",
-          description = "Live Real-World Optical Scan & Vault Overlay",
+          description = "Live camera text recognition and Vault capture; no object recognition",
           icon = Icons.Filled.CenterFocusStrong,
           accentColor = CyanNeon,
           testTag = "mode_ar_lens",
@@ -292,7 +292,7 @@ fun SubsystemDrawer(
         // Tool 7: MODE [AUDIOBOOK_CAPTION_ENGINE]
         SubsystemRowItem(
           title = "MODE [AUDIOBOOK_CAPTION]",
-          description = "E-Book Player & High-Contrast Word Highlighting",
+          description = "Read TXT, EPUB and text-based PDF with sentence highlighting",
           icon = Icons.Filled.MenuBook,
           accentColor = AmberAccent,
           testTag = "mode_audiobook_caption",
@@ -304,7 +304,7 @@ fun SubsystemDrawer(
         // Tool 8: MODE [DREAM_STATE_ENGINE]
         SubsystemRowItem(
           title = "MODE [DREAM_STATE_ENGINE]",
-          description = "10-Min Briefing & Binaural Memory Consolidation",
+          description = "10-minute review briefing narrated with device text-to-speech",
           icon = Icons.Filled.Bedtime,
           accentColor = Color(0xFFA78BFA),
           testTag = "mode_dream_state",
@@ -316,7 +316,7 @@ fun SubsystemDrawer(
         // Tool 9: MODE [LANGUAGE_TEACHER]
         SubsystemRowItem(
           title = "MODE [LANGUAGE_TEACHER]",
-          description = "Immersive Mastery, Drills & Structural Syntax Diagrams",
+          description = "Language drills and device pronunciation where voices are installed",
           icon = Icons.Filled.School,
           accentColor = EmeraldMastery,
           testTag = "mode_language_teacher",
@@ -328,7 +328,7 @@ fun SubsystemDrawer(
         // Tool 10: MODE [GMAIL_VAULT_MAILER]
         SubsystemRowItem(
           title = "MODE [GMAIL_VAULT_MAILER]",
-          description = "Dispatch Digests & Flashcards to Dasun's Gmail",
+          description = "Prepare a digest email draft for you to review and send",
           icon = Icons.Filled.Email,
           accentColor = CyanNeon,
           testTag = "mode_vault_mailer",
