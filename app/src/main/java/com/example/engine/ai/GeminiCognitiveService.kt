@@ -49,9 +49,14 @@ object GeminiCognitiveService {
   ): String = withContext(Dispatchers.IO) {
     try {
       withTimeout(60_000L) {
+        val tierInstruction = if (tier == ModelTier.REASONING) {
+          role.systemInstruction + " For difficult questions, check assumptions, compare plausible explanations, verify the logic and calculations, and present a concise, well-structured answer. Do not reveal private chain-of-thought; provide the conclusion and useful verification."
+        } else {
+          role.systemInstruction
+        }
         val model = Firebase.ai.generativeModel(
           modelName = tier.modelName,
-          systemInstruction = content { text(role.systemInstruction) }
+          systemInstruction = content { text(tierInstruction) }
         )
         val response = model.generateContent(userPrompt)
         response.text ?: "Synthesis complete without output."
