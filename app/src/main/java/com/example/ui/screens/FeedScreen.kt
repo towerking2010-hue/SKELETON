@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.ButtonDefaults
@@ -245,7 +245,7 @@ private fun DoomscrollDiscoveryCard(
       }
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onSave, modifier = Modifier.size(46.dp).clip(CircleShape).background(ObsidianSurfaceElevated).testTag("save_card_button_${card.id}")) {
-          Icon(if (card.isSaved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder, contentDescription = if (card.isSaved) "Unsave discovery" else "Save discovery", tint = if (card.isSaved) AmberAccent else SilverMuted)
+          Icon(if (card.isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, contentDescription = if (card.isSaved) "Unsave discovery" else "Save discovery", tint = if (card.isSaved) AmberAccent else SilverMuted)
         }
         ElevatedButton(
           onClick = onAsk,
