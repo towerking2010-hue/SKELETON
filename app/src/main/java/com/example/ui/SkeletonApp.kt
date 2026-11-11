@@ -215,7 +215,7 @@ fun SkeletonApp(
         vaultCards = savedCards.ifEmpty { feedCards },
         currentLanguage = systemLanguage,
         userEmail = currentUser?.email.orEmpty(),
-        userName = currentUser?.displayName ?: "Dasun",
+        userName = currentUser?.displayName ?: currentUser?.email?.substringBefore("@").orEmpty(),
         onBack = { viewModel.closeDrawerMode() }
       )
       return
