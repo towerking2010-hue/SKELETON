@@ -97,6 +97,42 @@ fun FeedScreen(
         onSignOut = onSignOut
       )
     }
+    // Feed identity and live library count.
+    item(key = "feed_hero") {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(26.dp))
+          .background(ObsidianSurface)
+          .border(1.dp, ObsidianBorder, RoundedCornerShape(26.dp))
+          .padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Text("YOUR KNOWLEDGE STREAM", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp)
+          Text("${visibleCards.size} NODES", color = SilverDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+        }
+        Text(
+          text = if (currentLanguage == LanguageSetting.SINHALA) "අද ඉගෙන ගන්න." else "Learn something that stays.",
+          color = SilverText, fontSize = 23.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.6).sp
+        )
+        Text(
+          text = if (currentLanguage == LanguageSetting.SINHALA) "කුඩා අදහස්. පැහැදිලි අවබෝධය. දිගුකාලීන මතකය." else "Small ideas. First-principles understanding. Lasting recall.",
+          color = SilverMuted, fontSize = 12.sp, lineHeight = 17.sp
+        )
+        Row(
+          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(ObsidianSurfaceElevated).padding(horizontal = 12.dp, vertical = 10.dp),
+          horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+          Text("19 MASTER DOMAINS", color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+          Text("FEED → DEEPDIVE → RECALL", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+        }
+      }
+    }
     // Ghosts of Mastery Alert Card (if triggered)
     if (pendingChallenge != null) {
       item(key = "ghost_challenge_${pendingChallenge.id}") {
