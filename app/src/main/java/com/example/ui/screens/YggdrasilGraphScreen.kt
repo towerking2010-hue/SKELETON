@@ -103,11 +103,13 @@ fun YggdrasilGraphScreen(
           val explicitLink =
             (aLink.isNotBlank() && (b.title.contains(aLink, ignoreCase = true) || b.branchDomain.contains(aLink, ignoreCase = true))) ||
             (bLink.isNotBlank() && (a.title.contains(bLink, ignoreCase = true) || a.branchDomain.contains(bLink, ignoreCase = true)))
-          val sharedDomain = a.branchDomain.equals(b.branchDomain, ignoreCase = true)
-          if (explicitLink || sharedDomain) add(i to j)
+          if (explicitLink) add(i to j)
         }
       }
-    }
+      cards.indices.groupBy { cards[it].branchDomain }.values.forEach { domainIndices ->
+        domainIndices.zipWithNext().forEach { (from, to) -> add(from to to) }
+      }
+    }.distinct()
   }
 
   Column(
