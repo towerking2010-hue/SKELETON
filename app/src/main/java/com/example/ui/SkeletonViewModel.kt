@@ -179,7 +179,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     repository = SkeletonRepository(dao)
     firestoreRepo = FirestoreKnowledgeRepository.create(application)
 
-    dueReviewCards = repository.dueReviewCards(System.currentTimeMillis()).stateIn(
+    dueReviewCards = repository.dueReviewCards().stateIn(
       viewModelScope,
       SharingStarted.WhileSubscribed(5000),
       emptyList()
