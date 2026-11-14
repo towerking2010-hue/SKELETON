@@ -51,7 +51,9 @@ class ArenaEngineTest {
         "strategic_judgment" to ArenaSkillEvidence(attempts = 4, correct = 3),
         "scientific_reasoning" to ArenaSkillEvidence(attempts = 4, correct = 4),
         "memory_learning" to ArenaSkillEvidence(attempts = 4, correct = 4),
-        "probabilistic_thinking" to ArenaSkillEvidence(attempts = 4, correct = 4)
+        "probabilistic_thinking" to ArenaSkillEvidence(attempts = 4, correct = 4),
+        "attention_control" to ArenaSkillEvidence(attempts = 4, correct = 4),
+        "systems_thinking" to ArenaSkillEvidence(attempts = 4, correct = 4)
       )
     )
     assertEquals("bias_detection", ArenaEngine.challengesFor("ALL", profile).first().skillId)
