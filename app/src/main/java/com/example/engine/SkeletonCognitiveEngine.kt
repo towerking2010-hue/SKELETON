@@ -56,7 +56,8 @@ object SkeletonCognitiveEngine {
     // Determine candidate topic
     val extractedTopic = extractTopicCandidate(lower)
     val isKnown = existingTopics.any { it.contains(extractedTopic, ignoreCase = true) || extractedTopic.contains(it, ignoreCase = true) }
-    val suggestSync = extractedTopic.isNotBlank() && !isKnown
+    val supportedOfflineTopic = listOf("raft", "rust ownership", "ownership", "quantum computing", "vector database").any { lower.contains(it) }
+    val suggestSync = supportedOfflineTopic && extractedTopic.isNotBlank() && !isKnown
 
     val responseText = if (lang == LanguageSetting.SINHALA) {
       buildSinhalaCoreReply(userText, extractedTopic, suggestSync)
@@ -87,26 +88,27 @@ object SkeletonCognitiveEngine {
   private fun buildEnglishCoreReply(userText: String, topic: String, suggestSync: Boolean): String {
     val intuition = when {
       topic.contains("raft", ignoreCase = true) ->
-        "Dasun, think of Raft as a democratic parliament with a strict stopwatch. If the current leader stops heartbeating for 150ms, any node stands up, votes for itself, and rallies a quorum."
+        "Think of Raft as a small team that elects a coordinator. If the leader stops sending heartbeats long enough, a node can start an election; it needs votes from a majority before becoming leader."
       topic.contains("rust", ignoreCase = true) || topic.contains("ownership", ignoreCase = true) ->
-        "Dasun, Rust ownership is like passing a physical torch: only one runner holds it at a time. If you pass it, you lose write privileges; if you borrow it, you must return it before the owner can leave scope."
+        "Rust ownership is like having one clear owner for a resource. You can lend references under compiler-checked rules, but Rust prevents unsafe combinations of mutable and shared access."
       topic.contains("quantum", ignoreCase = true) ->
-        "Dasun, classic bits are a coin lying flat on a table (Heads or Tails). A qubit is that coin spinning in mid-air—superposition holds amplitudes for both until wave-function collapse."
+        "A classical bit is either 0 or 1. A qubit is described by probability amplitudes for measurement outcomes; superposition is not simply a tiny coin spinning, and measurement returns a definite result."
       topic.contains("vector", ignoreCase = true) ->
-        "Dasun, vector databases map semantic ideas into high-dimensional geometric space so related concepts cluster by cosine similarity rather than brittle string matching."
+        "A vector database stores numerical embeddings and retrieves nearby vectors using a chosen distance or similarity metric. It can find semantically related items even when their wording differs."
       else ->
-        "Dasun, here is the raw structural truth: $topic works by cutting away redundant state and enforcing invariant constraints. You strip the fluff and execute in constant space."
+        "I’m running in zero-cost offline mode, and I don’t have a reliable explanation for this topic stored locally. I won’t invent a mechanism or pretend I researched it. The Research Desk can help you find original scholarly records to inspect."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    body.append("\n\n")
-    body.append("Core Rule: Every complex domain has a 3-variable skeleton underneath. Master the boundary constraints, and the rest is trivial boilerplate.")
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\nThe important part is the actual mechanism—not just the analogy.")
+    }
 
     if (suggestSync) {
       body.append("\n\n[FEED SYNC]: Add this topic to your feed? (Yes/No)")
-    } else {
-      body.append("\n\n[ACTIVE RECALL]: Dasun, what is the single invariant failure condition that breaks this mechanism?")
+    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\n[ACTIVE RECALL]: What is the key rule that makes this mechanism work?")
     }
 
     return body.toString()
@@ -115,24 +117,25 @@ object SkeletonCognitiveEngine {
   private fun buildSinhalaCoreReply(userText: String, topic: String, suggestSync: Boolean): String {
     val intuition = when {
       topic.contains("raft", ignoreCase = true) ->
-        "Dasun, Raft Consensus එක හරියට strict stopwatch එකක් තියෙන පාර්ලිමේන්තුවක් වගේ. Leader node එක 150ms heartbeat එක නැවැත්තුව ගමන්, ඕනෑම node එකකට candidate කෙනෙක් විදියට vote එකක් start කරලා quorum එක ගන්න පුළුවන්."
+        "Raft Consensus එක team එකක් coordinator කෙනෙක් තෝරනවා වගේ. Leader එක heartbeats එවීම නතර කරලා election timeout එක ඉක්මවා ගියොත්, node එකක් election එකක් පටන් ගන්නවා. Leader වෙන්න majority votes අවශ්‍යයි."
       topic.contains("rust", ignoreCase = true) || topic.contains("ownership", ignoreCase = true) ->
-        "Dasun, Rust Ownership කියන්නේ physical පන්දමක් වගේ. එක වෙලාවක තියාගන්න පුළුවන් එක්කෙනෙක්ට විතරයි. තව කෙනෙක්ට pass කළාට පස්සේ original owner ට access නෑ. Memory leaks බිංදුවටම drop වෙන්නේ මේ constraint එකෙන්."
+        "Rust Ownership කියන්නේ resource එකකට පැහැදිලි owner කෙනෙක් ඉන්නවා වගේ. Borrowing rules compiler එකෙන් check කරන නිසා unsafe mutable/shared access combinations බොහොමයක් compile වෙන්න කලින්ම අල්ලගන්නවා."
       topic.contains("quantum", ignoreCase = true) ->
-        "Dasun, normal bits කියන්නේ බිම තියෙන coin එකක් (Heads or Tails). Qubit එකක් කියන්නේ කරකැවෙන coin එකක්—measure කරන මොහොත වෙනකම් states දෙකේම superposition එකක පවතිනවා."
+        "Classical bit එකක් 0 හෝ 1. Qubit එකක් measurement outcomes සඳහා probability amplitudes වලින් විස්තර කරනවා. Superposition කියන්නේ පොඩි coin එකක් කරකැවෙනවා කියන එකම නෙවෙයි."
       else ->
-        "Dasun, සරල intuition එක: $topic කියන්නේ redundant state ඉවත් කරලා direct constraints run කරන system එකක්. Rule එක simple: high-impact analogy එක අල්ලගත්තම theory එක direct grasp වෙනවා."
+        "මම දැන් zero-cost offline mode එකේ. මේ topic එක ගැන විශ්වාසදායක explanation එකක් local knowledge එකේ නැති නිසා හිතලා facts හදන්නේ නැහැ. Research Desk එකෙන් මුල් scholarly sources සොයාගෙන ඒවා පරීක්ෂා කරන්න පුළුවන්."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    body.append("\n\n")
-    body.append("ප්‍රධාන Technical Core එක: ඕනෑම complex system එකක ඇතුළත තියෙන්නේ variables 2-3ක structural skeleton එකක් විතරයි.")
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\nAnalogy එකට වඩා වැදගත් වෙන්නේ ඇත්ත mechanism එකයි.")
+    }
 
     if (suggestSync) {
       body.append("\n\n[FEED SYNC]: මේ topic එක feed එකට එකතු කරන්නද? (Yes/No)")
-    } else {
-      body.append("\n\n[ACTIVE RECALL]: Dasun, මෙම පද්ධතියේ ප්‍රධාන invariant එක බිඳවැටෙන නිශ්චිත කොන්දේසිය කුමක්ද?")
+    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\n[ACTIVE RECALL]: මේ mechanism එක ක්‍රියාකරන්නේ කුමන ප්‍රධාන rule එක නිසාද?")
     }
 
     return body.toString()
