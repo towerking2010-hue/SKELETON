@@ -40,6 +40,13 @@ enum class AiRole(val roleName: String, val systemInstruction: String) {
 object GeminiCognitiveService {
 
   /**
+   * Hard $0 safety gate. Firebase AI model pricing/free quotas depend on project,
+   * region and current provider policy, so the app must never assume a model is free.
+   * Keep disabled until a verified no-billing route is configured and tested.
+   */
+  private const val CLOUD_INFERENCE_ENABLED = false
+
+  /**
    * Multi-turn chat generation with system instruction role and selectable model tier
    */
   suspend fun chatGenerate(
@@ -47,6 +54,9 @@ object GeminiCognitiveService {
     role: AiRole,
     tier: ModelTier = ModelTier.GENERAL
   ): String = withContext(Dispatchers.IO) {
+    if (!CLOUD_INFERENCE_ENABLED) {
+      return@withContext "Inference error [zero-billing policy]: Cloud inference is disabled. No model request was sent."
+    }
     try {
       withTimeout(60_000L) {
         val tierInstruction = if (tier == ModelTier.REASONING) {
