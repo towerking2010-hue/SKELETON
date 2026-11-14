@@ -443,7 +443,7 @@ fun LanguageTeacherScreen(
           TeacherTab.DRILL -> {
             Column(modifier = Modifier.fillMaxWidth()) {
               Text(
-                text = "CONVERSATIONAL DRILL // DASUN",
+                text = "CONVERSATIONAL DRILL // YOUR TURN",
                 color = CyanNeon,
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
@@ -513,7 +513,7 @@ fun LanguageTeacherScreen(
               OutlinedTextField(
                 value = userDrillInput,
                 onValueChange = { userDrillInput = it },
-                placeholder = { Text("Enter response for Dasun...", color = SilverDim, fontSize = 12.sp) },
+                placeholder = { Text("Enter your response...", color = SilverDim, fontSize = 12.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                   focusedBorderColor = CyanNeon,
@@ -657,7 +657,7 @@ fun LanguageTeacherScreen(
           TeacherTab.QUIZ -> {
             Column(modifier = Modifier.fillMaxWidth()) {
               Text(
-                text = "ACTIVE RECALL QUIZ // DASUN",
+                text = "ACTIVE RECALL QUIZ // YOUR TURN",
                 color = EmeraldMastery,
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
