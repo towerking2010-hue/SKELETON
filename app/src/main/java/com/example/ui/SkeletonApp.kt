@@ -14,6 +14,7 @@ import com.example.data.model.IntelligenceMode
 import com.example.ui.components.BottomNavBar
 import com.example.ui.components.SubsystemDrawer
 import com.example.ui.components.TopHeaderBar
+import com.example.ui.screens.ArenaScreen
 import com.example.ui.screens.ArLensScreen
 import com.example.ui.screens.AudioTranscribeScreen
 import com.example.ui.screens.AudiobookCaptionScreen
@@ -44,6 +45,8 @@ fun SkeletonApp(
   val systemLanguage by viewModel.systemLanguage.collectAsState()
   val cringeFilterEnabled by viewModel.cringeFilterEnabled.collectAsState()
   val adrenalMode by viewModel.adrenalMode.collectAsState()
+  val arenaEnabled by viewModel.arenaEnabled.collectAsState()
+  val arenaProfile by viewModel.arenaProfile.collectAsState()
   val currentTab by viewModel.currentTab.collectAsState()
   val isDrawerOpen by viewModel.isDrawerOpen.collectAsState()
   val activeDrawerMode by viewModel.activeDrawerMode.collectAsState()
