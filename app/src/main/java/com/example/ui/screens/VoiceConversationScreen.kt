@@ -76,7 +76,7 @@ fun VoiceConversationScreen(currentLanguage: LanguageSetting, onBack: () -> Unit
     engine.startListening(intent)
   }
 
-  DisposableEffect(context) {
+  DisposableEffect(context, currentLanguage) {
     if (SpeechRecognizer.isRecognitionAvailable(context)) {
       val engine = SpeechRecognizer.createSpeechRecognizer(context)
       engine.setRecognitionListener(object : RecognitionListener {
