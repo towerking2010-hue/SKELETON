@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.IntelligenceMode
@@ -43,6 +44,7 @@ import com.example.ui.theme.ObsidianBg
 fun SkeletonApp(
   viewModel: SkeletonViewModel = viewModel()
 ) {
+  val context = LocalContext.current
   val systemLanguage by viewModel.systemLanguage.collectAsState()
   val cringeFilterEnabled by viewModel.cringeFilterEnabled.collectAsState()
   val adrenalMode by viewModel.adrenalMode.collectAsState()
@@ -306,8 +308,9 @@ fun SkeletonApp(
             currentLanguage = systemLanguage,
             cringeFilterEnabled = cringeFilterEnabled,
             currentUser = currentUser,
-            onSignInSuccess = {},
+            onSignInSuccess = { user -> user.displayName?.takeIf { it.isNotBlank() }?.let { viewModel.saveProfileName(it) } },
             onSignOut = {},
+            onOpenEmailSignIn = { viewModel.selectDrawerMode(DrawerMode.ACCOUNT) },
             onAskDeepDive = { cardId -> viewModel.openDeepDive(cardId) },
             onToggleSave = { card -> viewModel.toggleSaveCard(card) },
             onTriggerGhostChallenge = { viewModel.triggerMicroChallenge() },
