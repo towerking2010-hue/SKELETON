@@ -14,7 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -34,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
@@ -84,12 +87,14 @@ fun FeedScreen(
   var challengeAnswerInput by remember { mutableStateOf("") }
   var selectedSubject by remember { mutableStateOf(LearningSubject.ALL) }
   val visibleCards = cards.filter { selectedSubject.matches(it) }
+  val pagerState = rememberPagerState(pageCount = { visibleCards.size })
+  val pagerScope = rememberCoroutineScope()
   val masteredCount = cards.count { it.recallStage >= 4 }
   val mastery = if (cards.isEmpty()) 0f else masteredCount.toFloat() / cards.size.toFloat()
 
   Column(
-    modifier = modifier.fillMaxSize().background(ObsidianBg).padding(horizontal = 14.dp, vertical = 6.dp),
-    verticalArrangement = Arrangement.spacedBy(10.dp)
+    modifier = modifier.fillMaxSize().background(ObsidianBg).padding(horizontal = 10.dp, vertical = 4.dp),
+    verticalArrangement = Arrangement.spacedBy(5.dp)
   ) {
     Row(
       modifier = Modifier.fillMaxWidth(),
@@ -98,7 +103,7 @@ fun FeedScreen(
     ) {
       Column {
         Text("DISCOVER", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-        Text("Explore deeply. Learn at your own pace.", color = SilverMuted, fontSize = 11.sp)
+        Text("Full lessons. Your pace.", color = SilverMuted, fontSize = 10.sp)
       }
       Text("${visibleCards.size} lessons", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     }
@@ -113,7 +118,7 @@ fun FeedScreen(
             .background(if (selected) CyanNeon.copy(alpha = 0.15f) else ObsidianSurface)
             .border(1.dp, if (selected) CyanNeon else ObsidianBorder, RoundedCornerShape(18.dp))
             .clickable { selectedSubject = subject }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {
           Text(subject.label, color = if (selected) CyanNeon else SilverMuted, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
         }
@@ -124,15 +129,15 @@ fun FeedScreen(
     Column(
       modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
         .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp))
-        .padding(horizontal = 13.dp, vertical = 10.dp),
-      verticalArrangement = Arrangement.spacedBy(7.dp)
+        .padding(horizontal = 10.dp, vertical = 6.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text("MASTERY", color = EmeraldMastery, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
         Text("$masteredCount / ${cards.size} mastered  •  ${(mastery * 100).toInt()}%", color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
       }
-      Box(Modifier.fillMaxWidth().height(5.dp).clip(CircleShape).background(ObsidianBorder)) {
-        Box(Modifier.fillMaxWidth(mastery).height(5.dp).clip(CircleShape).background(EmeraldMastery))
+      Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(ObsidianBorder)) {
+        Box(Modifier.fillMaxWidth(mastery).height(3.dp).clip(CircleShape).background(EmeraldMastery))
       }
     }
 
@@ -165,7 +170,7 @@ fun FeedScreen(
     } else {
       Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(ObsidianSurface)
-          .clickable { onTriggerGhostChallenge() }.padding(horizontal = 12.dp, vertical = 8.dp),
+          .clickable { onTriggerGhostChallenge() }.padding(horizontal = 10.dp, vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
@@ -179,18 +184,20 @@ fun FeedScreen(
         Text(if (cards.isEmpty()) "Your learning library is waiting. Ask CORE to explore a topic." else "No lessons in this subject yet.", color = SilverDim, fontSize = 13.sp)
       }
     } else {
-      LazyColumn(
-        modifier = Modifier.weight(1f).fillMaxWidth().testTag("discovery_learning_list"),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 22.dp)
-      ) {
-        items(visibleCards, key = { it.id }) { card ->
-          DiscoveryLessonCard(
-            card = card,
-            onAsk = { onAskDeepDive(card.id) },
-            onSave = { onToggleSave(card) }
-          )
-        }
+      VerticalPager(
+        state = pagerState,
+        modifier = Modifier.weight(1f).fillMaxWidth().testTag("discovery_fullscreen_pager"),
+        pageSpacing = 8.dp
+      ) { page ->
+        val card = visibleCards[page]
+        DiscoveryLessonCard(
+          card = card,
+          page = page + 1,
+          total = visibleCards.size,
+          modifier = Modifier.fillMaxSize(),
+          onAsk = { onAskDeepDive(card.id) },
+          onSave = { onToggleSave(card) }
+        )
       }
     }
   }
@@ -199,18 +206,22 @@ fun FeedScreen(
 @Composable
 private fun DiscoveryLessonCard(
   card: FeedCard,
+  page: Int,
+  total: Int,
+  modifier: Modifier = Modifier,
   onAsk: () -> Unit,
   onSave: () -> Unit
 ) {
   Column(
-    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+    modifier = modifier.clip(RoundedCornerShape(24.dp))
       .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
-      .padding(18.dp),
-    verticalArrangement = Arrangement.spacedBy(16.dp)
+      .padding(15.dp),
+    verticalArrangement = Arrangement.SpaceBetween
   ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(card.branchDomain.uppercase(), color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text("$page / $total", color = SilverDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
       }
       Text(card.title, color = SilverText, fontSize = 27.sp, lineHeight = 33.sp, fontWeight = FontWeight.Bold)
       Column(
