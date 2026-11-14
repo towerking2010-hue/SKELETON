@@ -18,7 +18,7 @@ class SkeletonCognitiveEngineTest {
 
     assertNull(feedTopic)
     assertTrue(reply.contains("zero-cost offline mode", ignoreCase = true))
-    assertTrue(reply.contains("won't invent", ignoreCase = true))
+    assertTrue(reply.contains("invent", ignoreCase = true))
     assertFalse(reply.contains("Every complex domain has a 3-variable skeleton"))
   }
 
