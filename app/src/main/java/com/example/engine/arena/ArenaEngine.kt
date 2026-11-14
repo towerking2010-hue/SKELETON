@@ -129,7 +129,7 @@ object ArenaEngine {
   )
 
   fun challengesFor(mode: String, profile: ArenaProfile): List<ArenaChallenge> {
-    val remaining = challenges.filter { (mode == "ALL" || it.mode == mode) && it.id !in profile.completedChallengeIds }
+    val remaining = challenges.filter { mode == "ALL" || it.mode == mode }
     val unassessed = remaining.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
     if (unassessed.isNotEmpty()) return unassessed
     return remaining.sortedWith(compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }.thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 })
