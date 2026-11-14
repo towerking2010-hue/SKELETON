@@ -53,6 +53,7 @@ import com.example.ui.theme.SilverText
 @Composable
 fun ArenaScreen(
   profile: ArenaProfile,
+  displayName: String,
   onCompleteChallenge: (String, Int) -> Unit,
   onRecordAttempt: (String, Boolean) -> Unit,
   onBack: () -> Unit
@@ -80,7 +81,7 @@ fun ArenaScreen(
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text("THE ARENA", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp)
-        Text("Train your thinking. Earn your rank.", color = SilverMuted, fontSize = 12.sp)
+        Text(if (displayName.isBlank()) "Welcome to your Arena. Train your thinking." else "Welcome, $displayName. Your Arena is ready.", color = SilverMuted, fontSize = 12.sp)
       }
       Box(
         Modifier.clip(RoundedCornerShape(12.dp)).background(ObsidianSurfaceElevated)
