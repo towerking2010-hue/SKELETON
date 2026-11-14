@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.QueryBuilder
 import androidx.compose.material.icons.filled.RecordVoiceOver
@@ -146,6 +147,17 @@ fun SubsystemDrawer(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        SubsystemRowItem(
+          title = "SKELETON IDENTITY",
+          description = "Your name, email account and personal progress",
+          icon = Icons.Filled.Person,
+          accentColor = CyanNeon,
+          testTag = "mode_account",
+          onClick = { onSelectMode(DrawerMode.ACCOUNT) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Research Desk: free public bibliographic metadata, no model inference.
         SubsystemRowItem(
@@ -390,7 +402,7 @@ fun SubsystemDrawer(
         ) {
           Column(Modifier.weight(1f)) {
             Text("FEATURE [THE ARENA]", color = if (arenaEnabled) AmberAccent else SilverText, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-            Text("Optional game mode · local XP · no purchases", color = SilverDim, fontSize = 11.sp)
+            Text("Personal skill arena · private profile · offline", color = SilverDim, fontSize = 11.sp)
           }
           Switch(
             checked = arenaEnabled,
