@@ -16,10 +16,10 @@ class ArenaEngineTest {
   }
 
   @Test
-  fun completedChallengesAreNotOfferedAgain() {
+  fun completedChallengesRemainAvailableForPractice() {
     val first = ArenaEngine.challenges.first()
     val remaining = ArenaEngine.challengesFor("ALL", ArenaProfile(completedChallengeIds = setOf(first.id)))
-    assertFalse(remaining.any { it.id == first.id })
+    assertTrue(remaining.any { it.id == first.id })
     assertTrue(remaining.isNotEmpty())
   }
 
