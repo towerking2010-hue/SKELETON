@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,7 +62,6 @@ fun BioscienceScreen(
     modifier = modifier
       .fillMaxSize()
       .background(ObsidianBg)
-      .statusBarsPadding()
       .navigationBarsPadding()
   ) {
     // Header
