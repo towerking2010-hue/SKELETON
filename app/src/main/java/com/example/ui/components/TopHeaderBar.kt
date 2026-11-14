@@ -85,7 +85,7 @@ fun TopHeaderBar(
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
           Box(Modifier.size(5.dp).clip(CircleShape).background(CyanNeon))
-          Text("PERSONAL KNOWLEDGE SYSTEM", color = SilverMuted, fontSize = 8.sp, letterSpacing = 0.8.sp)
+          Text("LOCAL-FIRST  ·  ZERO-BILLING", color = SilverMuted, fontSize = 8.sp, letterSpacing = 0.8.sp)
         }
       }
     }
