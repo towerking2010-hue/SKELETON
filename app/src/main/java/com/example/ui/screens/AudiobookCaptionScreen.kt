@@ -47,6 +47,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +79,9 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.util.zip.ZipInputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private data class AudiobookDocument(
   val title: String,
@@ -137,6 +141,7 @@ fun AudiobookCaptionScreen(
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
+  val scope = rememberCoroutineScope()
   val samples = remember {
     listOf(
       AudiobookDocument(
@@ -167,19 +172,22 @@ fun AudiobookCaptionScreen(
 
   val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
     if (uri != null) {
-      try {
-        context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-      } catch (_: Exception) { }
-      try {
-        val imported = readImportedBook(context, uri)
-        document = imported
-        sentences = splitIntoSentences(imported.text)
-        currentSentence = 0
-        isPlaying = false
-        tts?.stop()
-        importError = null
-      } catch (error: Exception) {
-        importError = error.message ?: "Could not read this document."
+      scope.launch {
+        try {
+          try {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+          } catch (_: Exception) { }
+          // PDF/EPUB extraction can be expensive; keep file I/O and parsing off the UI thread.
+          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri) }
+          document = imported
+          sentences = splitIntoSentences(imported.text)
+          currentSentence = 0
+          isPlaying = false
+          tts?.stop()
+          importError = null
+        } catch (error: Exception) {
+          importError = error.message ?: "Could not read this document."
+        }
       }
     }
   }
