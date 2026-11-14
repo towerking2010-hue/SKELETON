@@ -74,6 +74,7 @@ fun FeedScreen(
   currentUser: com.google.firebase.auth.FirebaseUser? = null,
   onSignInSuccess: (com.google.firebase.auth.FirebaseUser) -> Unit = {},
   onSignOut: () -> Unit = {},
+  onOpenEmailSignIn: () -> Unit = {},
   onAskDeepDive: (String) -> Unit,
   onToggleSave: (FeedCard) -> Unit,
   onTriggerGhostChallenge: () -> Unit,
@@ -109,7 +110,7 @@ fun FeedScreen(
       Text(if (visibleCards.isEmpty()) "0 / 0" else "$currentPage / ${visibleCards.size}", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     }
 
-    AuthStatusBar(currentUser = currentUser, onSignInSuccess = onSignInSuccess, onSignOut = onSignOut)
+    AuthStatusBar(currentUser = currentUser, onSignInSuccess = onSignInSuccess, onSignOut = onSignOut, onOpenEmailSignIn = onOpenEmailSignIn)
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
       items(LearningSubject.values().toList(), key = { it.name }) { subject ->
