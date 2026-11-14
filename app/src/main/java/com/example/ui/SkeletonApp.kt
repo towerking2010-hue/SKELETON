@@ -91,6 +91,7 @@ fun SkeletonApp(
       ArenaScreen(
         profile = arenaProfile,
         onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
+        onRecordAttempt = { skillId, correct -> viewModel.recordArenaAttempt(skillId, correct) },
         onBack = { viewModel.closeDrawerMode() }
       )
       return
