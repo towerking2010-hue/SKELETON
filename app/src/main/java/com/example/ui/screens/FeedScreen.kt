@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,7 +49,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
@@ -88,7 +86,7 @@ fun FeedScreen(
   var selectedSubject by remember { mutableStateOf(LearningSubject.ALL) }
   val visibleCards = cards.filter { selectedSubject.matches(it) }
   val pagerState = rememberPagerState(pageCount = { visibleCards.size })
-  val pagerScope = rememberCoroutineScope()
+  LaunchedEffect(selectedSubject) { if (visibleCards.isNotEmpty()) pagerState.scrollToPage(0) }
   val masteredCount = cards.count { it.recallStage >= 4 }
   val mastery = if (cards.isEmpty()) 0f else masteredCount.toFloat() / cards.size.toFloat()
 
