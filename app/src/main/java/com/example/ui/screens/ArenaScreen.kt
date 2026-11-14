@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,7 +78,7 @@ fun ArenaScreen(
   }
 
   Column(
-    modifier = Modifier.fillMaxSize().background(ObsidianBg).statusBarsPadding().navigationBarsPadding().padding(horizontal = 18.dp, vertical = 10.dp),
+    modifier = Modifier.fillMaxSize().background(ObsidianBg).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 10.dp),
     verticalArrangement = Arrangement.spacedBy(14.dp)
   ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -143,7 +145,7 @@ fun ArenaScreen(
     }
 
     if (challenge == null) {
-      Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+      Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(9.dp)) {
           Text("TRIALS CLEARED", color = EmeraldMastery, fontSize = 17.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
           Text("You've completed every available challenge in this category.", color = SilverMuted, fontSize = 12.sp)
@@ -171,7 +173,7 @@ fun ArenaScreen(
           }
           submitted = true
         },
-        modifier = Modifier.weight(1f)
+        modifier = Modifier.fillMaxWidth()
       )
     }
     Text("OFFLINE • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp)
