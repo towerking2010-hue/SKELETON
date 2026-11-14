@@ -18,7 +18,7 @@ class ArenaEngineTest {
   @Test
   fun completedChallengesAreNotOfferedAgain() {
     val first = ArenaEngine.challenges.first()
-    val remaining = ArenaEngine.challengesFor("ALL", setOf(first.id))
+    val remaining = ArenaEngine.challengesFor("ALL", ArenaProfile(completedChallengeIds = setOf(first.id)))
     assertFalse(remaining.any { it.id == first.id })
     assertTrue(remaining.isNotEmpty())
   }
@@ -31,4 +31,30 @@ class ArenaEngineTest {
       assertTrue(challenge.explanation.isNotBlank())
     }
   }
+  @Test
+  fun skillAccuracyIsPersonalAndEvidenceBased() {
+    val evidence = ArenaSkillEvidence(attempts = 4, correct = 3)
+    assertEquals(75, evidence.accuracy)
+    assertTrue(evidence.isEstablished)
+    assertFalse(ArenaSkillEvidence(attempts = 2, correct = 2).isEstablished)
+  }
+
+  @Test
+  fun adaptiveQueuePrioritizesUnassessedSkillsThenWeakestEvidence() {
+    val first = ArenaEngine.challengesFor("ALL", ArenaProfile()).first()
+    assertEquals(0, ArenaProfile().skillEvidence[first.skillId]?.attempts ?: 0)
+
+    val profile = ArenaProfile(
+      skillEvidence = mapOf(
+        "critical_reasoning" to ArenaSkillEvidence(attempts = 4, correct = 4),
+        "bias_detection" to ArenaSkillEvidence(attempts = 4, correct = 1),
+        "strategic_judgment" to ArenaSkillEvidence(attempts = 4, correct = 3),
+        "scientific_reasoning" to ArenaSkillEvidence(attempts = 4, correct = 4),
+        "memory_learning" to ArenaSkillEvidence(attempts = 4, correct = 4),
+        "probabilistic_thinking" to ArenaSkillEvidence(attempts = 4, correct = 4)
+      )
+    )
+    assertEquals("bias_detection", ArenaEngine.challengesFor("ALL", profile).first().skillId)
+  }
+
 }
