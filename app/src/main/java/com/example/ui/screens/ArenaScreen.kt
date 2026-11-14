@@ -58,13 +58,15 @@ fun ArenaScreen(
   onBack: () -> Unit
 ) {
   var selectedMode by remember { mutableStateOf("ALL") }
+  var activeChallengeId by remember { mutableStateOf<String?>(null) }
   val available = ArenaEngine.challengesFor(selectedMode, profile)
-  val challenge = available.firstOrNull()
+  val challenge = available.firstOrNull { it.id == activeChallengeId } ?: available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
 
   LaunchedEffect(challenge?.id) {
+    activeChallengeId = challenge?.id
     selectedAnswer = -1
     submitted = false
     lastWasCorrect = false
@@ -111,18 +113,17 @@ fun ArenaScreen(
 
     Column(
       Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(ObsidianSurface)
-        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(12.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
+        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(11.dp),
+      verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
       Text("YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
-      Text("Built only from your Arena answers. Not an IQ test or clinical assessment.", color = SilverDim, fontSize = 9.sp, lineHeight = 13.sp)
-      ArenaEngine.skillsFor(profile).forEach { skill ->
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-          Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(skill.label, color = SilverText, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
-            Text(if (skill.evidence.attempts == 0) "NOT ASSESSED" else skill.evidence.attempts.toString() + " attempts · " + if (skill.evidence.isEstablished) "EARLY SIGNAL" else "BUILDING EVIDENCE", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+      Text("Private skill signals from your answers · not an IQ or clinical test", color = SilverDim, fontSize = 8.sp)
+      Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ArenaEngine.skillsFor(profile).forEach { skill ->
+          Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(skill.label, color = SilverText, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(if (skill.evidence.attempts == 0) "NOT TESTED" else skill.evidence.accuracy.toString() + "% · " + skill.evidence.attempts.toString() + " tries", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
           }
-          Text(if (skill.evidence.attempts == 0) "—" else skill.evidence.accuracy.toString() + "%", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
         }
       }
     }
@@ -158,6 +159,7 @@ fun ArenaScreen(
           val isCorrect = selectedAnswer == challenge.correctIndex
           onRecordAttempt(challenge.skillId, isCorrect)
           if (isCorrect) {
+            activeChallengeId = null
             lastWasCorrect = true
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
