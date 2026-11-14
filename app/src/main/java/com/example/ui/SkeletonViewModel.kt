@@ -127,6 +127,43 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   val currentUser: StateFlow<FirebaseUser?> = AuthManager.currentUser
 
+  private val _profileName = MutableStateFlow(settings.getString("profile_name", "")?.trim().orEmpty())
+  val profileName: StateFlow<String> = _profileName.asStateFlow()
+
+  fun saveProfileName(name: String) {
+    val cleanName = name.trim().take(40)
+    _profileName.value = cleanName
+    settings.edit().putString("profile_name", cleanName).apply()
+  }
+
+  fun authenticateEmail(
+    email: String,
+    password: String,
+    displayName: String,
+    createAccount: Boolean,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+  ) {
+    if (displayName.isNotBlank()) saveProfileName(displayName)
+    AuthManager.signInWithEmail(
+      email = email,
+      password = password,
+      displayName = displayName,
+      createAccount = createAccount,
+      scope = viewModelScope,
+      onSuccess = { user ->
+        user.displayName?.takeIf { it.isNotBlank() }?.let { saveProfileName(it) }
+        onSuccess()
+      },
+      onError = onError
+    )
+  }
+
+  fun signOut() {
+    AuthManager.signOut(getApplication(), viewModelScope)
+  }
+
+
   val feedCards: StateFlow<List<FeedCard>>
   val dueReviewCards: StateFlow<List<FeedCard>>
   val savedCards: StateFlow<List<FeedCard>>
