@@ -1,5 +1,12 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +31,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.VolumeUp
@@ -36,17 +40,20 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -65,384 +72,337 @@ import com.example.ui.theme.ObsidianSurfaceElevated
 import com.example.ui.theme.SilverDim
 import com.example.ui.theme.SilverMuted
 import com.example.ui.theme.SilverText
-import kotlinx.coroutines.delay
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.Locale
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
+import java.util.zip.ZipInputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-data class EbookTreatise(
-  val id: String,
+private data class AudiobookDocument(
   val title: String,
   val author: String,
   val chapter: String,
   val text: String
 )
 
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+private fun splitIntoSentences(text: String): List<String> =
+  Regex("(?<=[.!?।])\\s+|\\n+")
+    .split(text.replace("\r", " "))
+    .map { it.trim() }
+    .filter { it.isNotBlank() }
+
+private fun readImportedBook(context: android.content.Context, uri: Uri): AudiobookDocument {
+  val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+    ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+    ?: "Imported book"
+  val mime = context.contentResolver.getType(uri).orEmpty()
+  val raw = context.contentResolver.openInputStream(uri)?.use { input ->
+    if (mime.contains("pdf") || name.endsWith(".pdf", true)) {
+      PDFBoxResourceLoader.init(context)
+      PDDocument.load(input).use { pdf -> PDFTextStripper().getText(pdf) }
+    } else if (mime.contains("epub") || name.endsWith(".epub", true)) {
+      ZipInputStream(input).use { zip ->
+        val chapters = StringBuilder()
+        var entry = zip.nextEntry
+        while (entry != null) {
+          if (!entry.isDirectory && (entry.name.endsWith(".xhtml", true) ||
+                entry.name.endsWith(".html", true) || entry.name.endsWith(".htm", true))) {
+            val html = BufferedReader(InputStreamReader(zip, Charsets.UTF_8)).readText()
+            val visible = html.replace(Regex("(?is)<(script|style)[^>]*>.*?</\\1>"), " ")
+              .replace(Regex("(?i)<br\\s*/?>|</p>|</div>|</h[1-6]>"), "\n")
+              .replace(Regex("<[^>]+>"), " ")
+              .replace("&nbsp;", " ").replace("&amp;", "&")
+              .replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
+            chapters.append(visible).append("\n\n")
+          }
+          zip.closeEntry()
+          entry = zip.nextEntry
+        }
+        chapters.toString()
+      }
+    } else {
+      BufferedReader(InputStreamReader(input, Charsets.UTF_8)).readText()
+    }
+  }.orEmpty().replace(Regex("[ \\t]+"), " ").trim()
+
+  require(raw.isNotBlank()) { "No selectable text was found. Scanned PDFs need OCR before they can be read." }
+  return AudiobookDocument(name.substringBeforeLast('.', name), "Imported from device", "Imported text", raw)
+}
+
 @Composable
 fun AudiobookCaptionScreen(
   currentLanguage: LanguageSetting,
   onBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
-  val treatises = remember {
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+  val samples = remember {
     listOf(
-      EbookTreatise(
-        id = "treatise_kybalion",
-        title = "The Kybalion",
-        author = "Three Initiates",
-        chapter = "Chapter II: The Seven Hermetic Principles",
-        text = "The principles of truth are seven: he who knows these, understandingly, possesses the magic key before whose touch all the doors of the temple fly open. The first principle is Mentalism: The All is Mind; the Universe is Mental. The second is Correspondence: As above, so below; as below, so above. The third is Vibration: Nothing rests; everything moves; everything vibrates."
+      AudiobookDocument(
+        "The Kybalion", "Three Initiates", "Chapter II: The Seven Hermetic Principles",
+        "The principles of truth are seven. The first principle is Mentalism: The All is Mind; the Universe is Mental. The second is Correspondence: As above, so below; as below, so above. The third is Vibration: Nothing rests; everything moves; everything vibrates."
       ),
-      EbookTreatise(
-        id = "treatise_mahavamsa",
-        title = "මහාවංශය (Mahavamsa)",
-        author = "මහානාම හිමි",
-        chapter = "38 වන පරිච්ඡේදය: ධාතුසේන රජු සහ කලා වැව",
-        text = "ධාතුසේන රජතුමා මහා සයුරක් බඳු කලා වැව කරවා ජල කළමනාකරණ විස්මයක් ලොවට දායාද කළේය. කළාවැවේ ජලයම තමාගේ සදාකාලික ධන නිධානය බව එතුමා ප්‍රකාශ කළේය. මිනිස් ශ්‍රමය සහ ගුරුත්වාකර්ෂණ ජ්‍යාමිතිය එක්තැන් වූ මෙම වාරි ශිෂ්ටාචාරය සදා අමරණීය වේ."
+      AudiobookDocument(
+        "මහාවංශය", "මහානාම හිමි", "ධාතුසේන රජු සහ කලා වැව",
+        "ධාතුසේන රජතුමා මහා සයුරක් බඳු කලා වැව කරවා ජල කළමනාකරණ විස්මයක් ලොවට දායාද කළේය. කළාවැවේ ජලයම තමාගේ සදාකාලික ධන නිධානය බව එතුමා ප්‍රකාශ කළේය."
       ),
-      EbookTreatise(
-        id = "treatise_sidat_sangarawa",
-        title = "සිදත් සඟරාව (Sidat Sangarawa)",
-        author = "පතිරාජ දේව",
-        chapter = "පළමු පරිච්ඡේදය: අක්ෂර සහ ව්‍යාකරණ න්‍යාය",
-        text = "වදන් පෙරළි ව්‍යාකරණ නීති අනුව පද සන්ධි වන ආකාරය සහ නාම පද ආඛ්‍යාත පද සමඟ එක්වන ආකාරය මනාව විග්‍රහ කෙරේ. භාෂාවක අභ්‍යන්තර ආත්මය රඳා පවතින්නේ එහි ව්‍යාකරණමය නීති සහ ශබ්ද විද්‍යාත්මක ශක්තිය මතය."
-      ),
-      EbookTreatise(
-        id = "treatise_trivium",
-        title = "The Trivium: The Liberal Arts",
-        author = "Sister Miriam Joseph",
-        chapter = "Chapter I: Nature of the Liberal Arts",
-        text = "The liberal arts are the arts of the mind. By them man learns to think clearly, to formulate ideas, and to express them precisely. Grammar is the art of inventing and combining symbols. Logic is the art of thinking. Rhetoric is the art of communicating thought from one mind to another. These three form the foundational Trivium."
-      ),
-      EbookTreatise(
-        id = "treatise_amawatura",
-        title = "අමාවතුර (Amawatura)",
-        author = "ගුරුළුගෝමී",
-        chapter = "පුරිසදම්මසාරථී විග්‍රහය: විඥාන සංස්ලේෂණය",
-        text = "හික්මවිය නොහැකි දරුණු මනස ප්‍රඥාවේ සහ දයාවේ ආලෝකයෙන් ශාන්ත භාවයට පත් කිරීමේ අපූර්ව මනෝවිද්‍යාත්මක ක්‍රමවේදය මෙහි විවරණය වේ. ආවේග පාලනය කර සිත සමාහිත කිරීම ශ්‍රේෂ්ඨතම ජයග්‍රහණයයි."
-      ),
-      EbookTreatise(
-        id = "treatise_meditations",
-        title = "Meditations",
-        author = "Marcus Aurelius",
-        chapter = "Book IV: The Inner Citadel",
-        text = "Nowhere can man find a quieter or more untroubled retreat than in his own soul, especially he who has within himself such principles that on turning to look into them he is immediately in perfect tranquility. Keep this retreat always in mind, and refresh yourself continuously."
+      AudiobookDocument(
+        "The Trivium", "Sister Miriam Joseph", "Chapter I: Nature of the Liberal Arts",
+        "The liberal arts are the arts of the mind. Grammar is the art of inventing and combining symbols. Logic is the art of thinking. Rhetoric is the art of communicating thought from one mind to another."
       )
     )
   }
-
-  var selectedTreatise by remember { mutableStateOf(treatises.first()) }
-  var isPlaying by remember { mutableStateOf(false) }
-  var currentWordIndex by remember { mutableIntStateOf(0) }
+  var document by remember { mutableStateOf(samples.first()) }
+  var sentences by remember(document) { mutableStateOf(splitIntoSentences(document.text)) }
+  var currentSentence by remember { mutableIntStateOf(0) }
   var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
+  var isPlaying by remember { mutableStateOf(false) }
+  var ttsReady by remember { mutableStateOf(false) }
+  var selectedVoiceAvailable by remember { mutableStateOf(false) }
+  val latestSentences by rememberUpdatedState(sentences)
+  var voiceStatus by remember { mutableStateOf("Initializing device speech engine…") }
+  var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+  var importError by remember { mutableStateOf<String?>(null) }
 
-  val words = remember(selectedTreatise) {
-    selectedTreatise.text.split(Regex("\\s+")).filter { it.isNotBlank() }
+  val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    if (uri != null) {
+      scope.launch {
+        try {
+          try {
+            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+          } catch (_: Exception) { }
+          // PDF/EPUB extraction can be expensive; keep file I/O and parsing off the UI thread.
+          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri) }
+          document = imported
+          sentences = splitIntoSentences(imported.text)
+          currentSentence = 0
+          isPlaying = false
+          tts?.stop()
+          importError = null
+        } catch (error: Exception) {
+          importError = error.message ?: "Could not read this document."
+        }
+      }
+    }
   }
 
-  // Active word playback simulation
-  LaunchedEffect(isPlaying, words, playbackSpeed) {
-    if (isPlaying) {
-      while (currentWordIndex < words.size - 1) {
-        val delayMillis = (320L / playbackSpeed).toLong()
-        delay(delayMillis)
-        currentWordIndex++
+  DisposableEffect(currentLanguage) {
+    var engine: TextToSpeech? = null
+    val speech = TextToSpeech(context) { status ->
+      if (status == TextToSpeech.SUCCESS) {
+        val instance = engine
+        if (instance != null) {
+          val locale = if (currentLanguage == LanguageSetting.SINHALA) Locale("si", "LK") else Locale.US
+          val availability = instance.isLanguageAvailable(locale)
+          if (availability >= TextToSpeech.LANG_AVAILABLE) {
+            instance.language = locale
+            selectedVoiceAvailable = true
+            voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala voice available on this device" else "English voice ready"
+          } else {
+            selectedVoiceAvailable = false
+            voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) {
+              "Sinhala voice unavailable. Install a Sinhala voice in Android Text-to-Speech settings."
+            } else "English voice unavailable on this device"
+          }
+          ttsReady = true
+        }
+      } else {
+        voiceStatus = "Android Text-to-Speech initialization failed"
       }
+    }
+    engine = speech
+    tts = speech
+    speech.setSpeechRate(playbackSpeed)
+    speech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+      override fun onStart(utteranceId: String?) {
+        val index = utteranceId?.removePrefix("skeleton_sentence_")?.toIntOrNull() ?: return
+        android.os.Handler(android.os.Looper.getMainLooper()).post { currentSentence = index }
+      }
+      override fun onDone(utteranceId: String?) {
+        val index = utteranceId?.removePrefix("skeleton_sentence_")?.toIntOrNull() ?: return
+        if (index == latestSentences.lastIndex) {
+          android.os.Handler(android.os.Looper.getMainLooper()).post { isPlaying = false }
+        }
+      }
+      @Deprecated("Deprecated in Java")
+      override fun onError(utteranceId: String?) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+          isPlaying = false
+          voiceStatus = "Speech failed. Check the installed device voice."
+        }
+      }
+    })
+    onDispose {
+      speech.stop()
+      speech.shutdown()
+      if (tts === speech) tts = null
+      ttsReady = false
       isPlaying = false
     }
   }
 
+  fun playFrom(index: Int) {
+    val engine = tts
+    if (!ttsReady || engine == null || sentences.isEmpty()) {
+      voiceStatus = "Speech engine is not ready yet."
+      return
+    }
+    if (!selectedVoiceAvailable) {
+      voiceStatus = "No installed voice supports the selected language."
+      return
+    }
+    engine.stop()
+    engine.setSpeechRate(playbackSpeed)
+    isPlaying = true
+    val start = index.coerceIn(0, sentences.lastIndex)
+    for (i in start..sentences.lastIndex) {
+      engine.speak(sentences[i], if (i == start) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD,
+        Bundle(), "skeleton_sentence_$i")
+    }
+  }
+
+  val sentence = sentences.getOrNull(currentSentence).orEmpty()
+  val scrollState = rememberScrollState()
+
   Box(
-    modifier = modifier
-      .fillMaxSize()
-      .background(ObsidianBg)
-      .statusBarsPadding()
-      .navigationBarsPadding()
-      .testTag("audiobook_caption_screen")
+    modifier = modifier.fillMaxSize().background(ObsidianBg)
+      .statusBarsPadding().navigationBarsPadding().testTag("audiobook_caption_screen")
   ) {
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 16.dp)
-    ) {
-      // Top Navigation
+    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
       Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(top = 8.dp),
+        Modifier.fillMaxWidth().padding(top = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        IconButton(
-          onClick = onBack,
-          modifier = Modifier.size(42.dp)
-        ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Back",
-            tint = SilverText
-          )
+        IconButton(onClick = { tts?.stop(); isPlaying = false; onBack() }, modifier = Modifier.size(42.dp)) {
+          Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = SilverText)
         }
-
         Row(verticalAlignment = Alignment.CenterVertically) {
           SkeletonBracketLogo(size = 18.dp, accentColor = CyanNeon)
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(
-            text = "AUDIOBOOK CAPTION ENGINE",
-            color = CyanNeon,
-            fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-          )
+          Spacer(Modifier.width(8.dp))
+          Text("AUDIOBOOK & CAPTIONS", color = CyanNeon, fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
-
-        Icon(
-          imageVector = Icons.Filled.VolumeUp,
-          contentDescription = "Audio Engine",
-          tint = if (isPlaying) EmeraldMastery else SilverDim,
-          modifier = Modifier.size(22.dp)
-        )
+        Icon(Icons.Filled.VolumeUp, "Audio engine", tint = if (isPlaying) EmeraldMastery else SilverDim)
       }
 
-      Spacer(modifier = Modifier.height(10.dp))
+      Spacer(Modifier.height(12.dp))
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+          Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(ObsidianSurface)
+            .border(1.dp, ObsidianBorder, RoundedCornerShape(12.dp))
+            .clickable { importLauncher.launch(arrayOf("text/plain", "application/epub+zip", "application/epub", "application/pdf")) }
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+          Text("＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        }
+      }
+      importError?.let {
+        Text(it, color = Color(0xFFFF8A80), fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
+      }
 
-      // E-book Selector Carousel
-      LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        items(treatises) { treatise ->
-          val isSelected = treatise.id == selectedTreatise.id
+      Spacer(Modifier.height(10.dp))
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        samples.forEach { sample ->
+          val selected = document.title == sample.title
           Box(
-            modifier = Modifier
-              .clip(RoundedCornerShape(14.dp))
-              .background(if (isSelected) CyanNeon.copy(alpha = 0.15f) else ObsidianSurface)
-              .border(
-                1.dp,
-                if (isSelected) CyanNeon else ObsidianBorder,
-                RoundedCornerShape(14.dp)
-              )
+            Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+              .background(if (selected) CyanNeon.copy(alpha = 0.14f) else ObsidianSurface)
+              .border(1.dp, if (selected) CyanNeon else ObsidianBorder, RoundedCornerShape(12.dp))
               .clickable {
-                selectedTreatise = treatise
-                currentWordIndex = 0
-                isPlaying = false
-              }
-              .padding(horizontal = 12.dp, vertical = 8.dp)
+                tts?.stop(); isPlaying = false; document = sample
+                sentences = splitIntoSentences(sample.text); currentSentence = 0
+              }.padding(8.dp)
           ) {
-            Column {
-              Text(
-                text = treatise.title,
-                color = if (isSelected) CyanNeon else SilverText,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
-              )
-              Text(
-                text = treatise.author,
-                color = SilverMuted,
-                fontSize = 10.sp
-              )
-            }
+            Text(sample.title, color = if (selected) CyanNeon else SilverText, fontSize = 10.sp,
+              fontWeight = FontWeight.Bold, maxLines = 2)
           }
         }
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
-
-      // Active Treatise Details Header
+      Spacer(Modifier.height(12.dp))
       Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(20.dp))
-          .background(ObsidianSurface)
-          .border(1.dp, ObsidianBorder, RoundedCornerShape(20.dp))
-          .padding(14.dp)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(ObsidianSurface)
+          .border(1.dp, ObsidianBorder, RoundedCornerShape(20.dp)).padding(14.dp)
       ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Text(
-            text = selectedTreatise.chapter,
-            color = AmberAccent,
-            fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-          )
-          Text(
-            text = if (currentLanguage == LanguageSetting.SINHALA) "TTS: NATURAL SINHALA AUDIO // DASUN" else "TTS: NATURAL SPEECH // DASUN",
-            color = if (currentLanguage == LanguageSetting.SINHALA) AmberAccent else CyanNeon,
-            fontSize = 9.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-          )
-        }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-          text = selectedTreatise.title,
-          color = SilverText,
-          fontSize = 16.sp,
-          fontWeight = FontWeight.Bold
-        )
+        Text(document.chapter, color = AmberAccent, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Text(document.title, color = SilverText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text(document.author, color = SilverMuted, fontSize = 11.sp)
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
-
-      // 3. High-Contrast Word-by-Word Caption Highlighting Teleprompter Box
-      val scrollState = rememberScrollState()
-      Box(
-        modifier = Modifier
-          .weight(1f)
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(24.dp))
-          .background(Color(0xFF000000)) // Pure deep black background for contrast
-          .border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
-          .padding(20.dp)
-          .verticalScroll(scrollState)
+      Spacer(Modifier.height(12.dp))
+      Column(
+        Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(24.dp))
+          .background(Color.Black).border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
+          .verticalScroll(scrollState).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
       ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-          // Render flow of words with active highlighting
-          androidx.compose.foundation.layout.FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+        sentences.forEachIndexed { index, item ->
+          Text(
+            text = item,
+            color = when {
+              index == currentSentence -> Color(0xFF000000)
+              index < currentSentence -> SilverMuted
+              else -> SilverText
+            },
+            fontSize = 17.sp, lineHeight = 27.sp,
+            fontWeight = if (index == currentSentence) FontWeight.Bold else FontWeight.Normal,
             modifier = Modifier.fillMaxWidth()
-          ) {
-            words.forEachIndexed { index, word ->
-              val isSpoken = index < currentWordIndex
-              val isActive = index == currentWordIndex
-              val isPending = index > currentWordIndex
-
-              Box(
-                modifier = Modifier
-                  .clip(RoundedCornerShape(6.dp))
-                  .background(
-                    when {
-                      isActive -> CyanNeon
-                      isSpoken -> CyanNeon.copy(alpha = 0.12f)
-                      else -> Color.Transparent
-                    }
-                  )
-                  .clickable { currentWordIndex = index }
-                  .padding(horizontal = 4.dp, vertical = 2.dp)
-              ) {
-                Text(
-                  text = word,
-                  color = when {
-                    isActive -> ObsidianBg
-                    isSpoken -> SilverText
-                    else -> SilverDim
-                  },
-                  fontSize = 16.sp,
-                  fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Normal,
-                  fontFamily = FontFamily.Monospace
-                )
-              }
-            }
-          }
+              .then(if (index == currentSentence) Modifier.background(CyanNeon, RoundedCornerShape(8.dp)).padding(8.dp)
+                else Modifier.clickable { currentSentence = index; if (isPlaying) playFrom(index) }.padding(8.dp))
+          )
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
-
-      // 4. Playback Scrubber & Speed Controls
+      Spacer(Modifier.height(12.dp))
       Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(24.dp))
-          .background(ObsidianSurfaceElevated)
-          .border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
-          .padding(16.dp)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(ObsidianSurfaceElevated)
+          .border(1.dp, ObsidianBorder, RoundedCornerShape(22.dp)).padding(14.dp)
       ) {
-        // Scrubber Slider
         Slider(
-          value = if (words.isNotEmpty()) currentWordIndex.toFloat() / words.size.toFloat() else 0f,
-          onValueChange = { frac ->
-            currentWordIndex = (frac * words.size).toInt().coerceIn(0, words.size - 1)
+          value = if (sentences.isEmpty()) 0f else currentSentence.toFloat() / sentences.lastIndex.coerceAtLeast(1),
+          onValueChange = { fraction ->
+            currentSentence = (fraction * sentences.lastIndex.coerceAtLeast(0)).toInt()
           },
-          colors = SliderDefaults.colors(
-            thumbColor = CyanNeon,
-            activeTrackColor = CyanNeon,
-            inactiveTrackColor = ObsidianBorderLight
-          ),
-          modifier = Modifier.fillMaxWidth()
+          colors = SliderDefaults.colors(thumbColor = CyanNeon, activeTrackColor = CyanNeon, inactiveTrackColor = ObsidianBorderLight)
         )
-
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-          Text(
-            text = "WORD: ${currentWordIndex + 1} / ${words.size}",
-            color = SilverMuted,
-            fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace
-          )
-          Text(
-            text = "SPEED: ${playbackSpeed}x",
-            color = CyanNeon,
-            fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace
-          )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text("SENTENCE ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}",
+            color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+          Text("${playbackSpeed}x", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Transport Controls
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          // Rewind 5 words
-          IconButton(
-            onClick = {
-              currentWordIndex = (currentWordIndex - 5).coerceAtLeast(0)
-            }
-          ) {
-            Icon(
-              imageVector = Icons.Filled.FastRewind,
-              contentDescription = "Rewind",
-              tint = SilverMuted
-            )
+        Text(voiceStatus, color = if (voiceStatus.contains("unavailable") || voiceStatus.contains("failed")) AmberAccent else SilverMuted,
+          fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+          IconButton(onClick = { val target = (currentSentence - 1).coerceAtLeast(0); currentSentence = target; if (isPlaying) playFrom(target) }) {
+            Icon(Icons.Filled.FastRewind, "Previous sentence", tint = SilverMuted)
           }
-
-          // Play / Pause Primary Button
           Box(
-            modifier = Modifier
-              .size(54.dp)
-              .clip(CircleShape)
-              .background(CyanNeon)
-              .clickable { isPlaying = !isPlaying }
-              .testTag("audiobook_play_pause"),
+            Modifier.size(54.dp).clip(CircleShape).background(CyanNeon)
+              .clickable {
+                if (isPlaying) {
+                  tts?.stop()
+                  isPlaying = false
+                } else playFrom(currentSentence)
+              }.testTag("audiobook_play_pause"),
             contentAlignment = Alignment.Center
           ) {
-            Icon(
-              imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-              contentDescription = if (isPlaying) "Pause" else "Play",
-              tint = ObsidianBg,
-              modifier = Modifier.size(28.dp)
-            )
+            Icon(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+              if (isPlaying) "Pause" else "Play", tint = ObsidianBg, modifier = Modifier.size(28.dp))
           }
-
-          // Forward 5 words
-          IconButton(
-            onClick = {
-              currentWordIndex = (currentWordIndex + 5).coerceAtMost(words.size - 1)
-            }
-          ) {
-            Icon(
-              imageVector = Icons.Filled.FastForward,
-              contentDescription = "Forward",
-              tint = SilverMuted
-            )
+          IconButton(onClick = { val target = (currentSentence + 1).coerceAtMost(sentences.lastIndex.coerceAtLeast(0)); currentSentence = target; if (isPlaying) playFrom(target) }) {
+            Icon(Icons.Filled.FastForward, "Next sentence", tint = SilverMuted)
           }
-
-          // Speed Multiplier Cycle
           Box(
-            modifier = Modifier
-              .clip(RoundedCornerShape(10.dp))
-              .background(ObsidianSurface)
-              .border(0.8.dp, ObsidianBorder, RoundedCornerShape(10.dp))
+            Modifier.clip(RoundedCornerShape(10.dp)).background(ObsidianSurface)
+              .border(1.dp, ObsidianBorder, RoundedCornerShape(10.dp))
               .clickable {
                 playbackSpeed = when (playbackSpeed) {
                   0.75f -> 1.0f
@@ -451,21 +411,14 @@ fun AudiobookCaptionScreen(
                   1.5f -> 2.0f
                   else -> 0.75f
                 }
-              }
-              .padding(horizontal = 8.dp, vertical = 6.dp)
+                tts?.setSpeechRate(playbackSpeed)
+              }.padding(horizontal = 9.dp, vertical = 8.dp)
           ) {
-            Text(
-              text = "${playbackSpeed}x",
-              color = AmberAccent,
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Bold,
-              fontFamily = FontFamily.Monospace
-            )
+            Text("SPEED", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
           }
         }
       }
-
-      Spacer(modifier = Modifier.height(10.dp))
+      Spacer(Modifier.height(8.dp))
     }
   }
 }

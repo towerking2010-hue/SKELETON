@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,18 +15,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,15 +40,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
-import com.example.ui.components.MinimalFeedCardView
+import com.example.data.model.LearningSubject
+import com.example.ui.components.AuthStatusBar
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.EmeraldMastery
@@ -65,6 +73,7 @@ fun FeedScreen(
   currentUser: com.google.firebase.auth.FirebaseUser? = null,
   onSignInSuccess: (com.google.firebase.auth.FirebaseUser) -> Unit = {},
   onSignOut: () -> Unit = {},
+  onOpenEmailSignIn: () -> Unit = {},
   onAskDeepDive: (String) -> Unit,
   onToggleSave: (FeedCard) -> Unit,
   onTriggerGhostChallenge: () -> Unit,
@@ -73,184 +82,171 @@ fun FeedScreen(
 ) {
   val pendingChallenge = ghostChallenges.firstOrNull { it.status == "PENDING" }
   var challengeAnswerInput by remember { mutableStateOf("") }
+  var selectedSubject by remember { mutableStateOf(LearningSubject.ALL) }
+  val visibleCards = cards.filter { selectedSubject.matches(it) }
+  val masteredCount = cards.count { it.recallStage >= 4 }
+  val mastery = if (cards.isEmpty()) 0f else masteredCount.toFloat() / cards.size.toFloat()
 
-  LazyColumn(
-    modifier = modifier
-      .fillMaxSize()
-      .background(ObsidianBg)
-      .testTag("feed_lazy_column"),
-    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+  Column(
+    modifier = modifier.fillMaxSize().background(ObsidianBg).padding(horizontal = 14.dp, vertical = 6.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp)
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Column {
+        Text("DISCOVER", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
+        Text("Explore deeply. Learn at your own pace.", color = SilverMuted, fontSize = 11.sp)
+      }
+      Text("${visibleCards.size} lessons", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+    }
+
+    AuthStatusBar(currentUser = currentUser, onSignInSuccess = onSignInSuccess, onSignOut = onSignOut, onOpenEmailSignIn = onOpenEmailSignIn)
+
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+      items(LearningSubject.values().toList(), key = { it.name }) { subject ->
+        val selected = subject == selectedSubject
+        Box(
+          modifier = Modifier.clip(RoundedCornerShape(18.dp))
+            .background(if (selected) CyanNeon.copy(alpha = 0.15f) else ObsidianSurface)
+            .border(1.dp, if (selected) CyanNeon else ObsidianBorder, RoundedCornerShape(18.dp))
+            .clickable { selectedSubject = subject }
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+          Text(subject.label, color = if (selected) CyanNeon else SilverMuted, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
+        }
+      }
+    }
+
+    // Mastery is based on completed recall stages, not views or swipes.
+    Column(
+      modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
+        .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp))
+        .padding(horizontal = 13.dp, vertical = 10.dp),
+      verticalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("MASTERY", color = EmeraldMastery, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text("$masteredCount / ${cards.size} mastered  •  ${(mastery * 100).toInt()}%", color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+      }
+      Box(Modifier.fillMaxWidth().height(5.dp).clip(CircleShape).background(ObsidianBorder)) {
+        Box(Modifier.fillMaxWidth(mastery).height(5.dp).clip(CircleShape).background(EmeraldMastery))
+      }
+    }
+
+    if (pendingChallenge != null) {
+      Column(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
+          .background(Color(0xFF191222)).border(1.dp, AmberAccent, RoundedCornerShape(15.dp)).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp)
+      ) {
+        Text("GHOST OF MASTERY", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(pendingChallenge.promptQuestion, color = SilverText, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          BasicTextField(
+            value = challengeAnswerInput,
+            onValueChange = { challengeAnswerInput = it },
+            modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(ObsidianSurfaceElevated).padding(10.dp).testTag("ghost_answer_input"),
+            textStyle = TextStyle(color = SilverText, fontSize = 12.sp),
+            cursorBrush = SolidColor(AmberAccent),
+            decorationBox = { inner -> Box { if (challengeAnswerInput.isBlank()) Text("Your explanation…", color = SilverDim, fontSize = 12.sp); inner() } }
+          )
+          Spacer(Modifier.width(8.dp))
+          ElevatedButton(
+            onClick = { onAnswerGhostChallenge(pendingChallenge, challengeAnswerInput.trim()); challengeAnswerInput = "" },
+            enabled = challengeAnswerInput.isNotBlank(),
+            colors = ButtonDefaults.elevatedButtonColors(containerColor = AmberAccent, contentColor = ObsidianBg),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+          ) { Text("CHECK", fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+        }
+      }
+    } else {
+      Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(ObsidianSurface)
+          .clickable { onTriggerGhostChallenge() }.padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text("⚡ Quick mastery challenge", color = SilverMuted, fontSize = 11.sp)
+        Text("START", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+      }
+    }
+
+    if (visibleCards.isEmpty()) {
+      Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Text(if (cards.isEmpty()) "Your learning library is waiting. Ask CORE to explore a topic." else "No lessons in this subject yet.", color = SilverDim, fontSize = 13.sp)
+      }
+    } else {
+      LazyColumn(
+        modifier = Modifier.weight(1f).fillMaxWidth().testTag("discovery_learning_list"),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 22.dp)
+      ) {
+        items(visibleCards, key = { it.id }) { card ->
+          DiscoveryLessonCard(
+            card = card,
+            onAsk = { onAskDeepDive(card.id) },
+            onSave = { onToggleSave(card) }
+          )
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun DiscoveryLessonCard(
+  card: FeedCard,
+  onAsk: () -> Unit,
+  onSave: () -> Unit
+) {
+  Column(
+    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+      .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
+      .padding(18.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
-    // Cloud Auth & Persistence Status Bar
-    item(key = "auth_status_bar") {
-      com.example.ui.components.AuthStatusBar(
-        currentUser = currentUser,
-        onSignInSuccess = onSignInSuccess,
-        onSignOut = onSignOut
-      )
-    }
-    // Ghosts of Mastery Alert Card (if triggered)
-    if (pendingChallenge != null) {
-      item(key = "ghost_challenge_${pendingChallenge.id}") {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(26.dp))
-            .background(Color(0xFF191222))
-            .border(1.2.dp, AmberAccent, RoundedCornerShape(26.dp))
-            .padding(16.dp)
-            .testTag("ghost_challenge_card")
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Box(
-                modifier = Modifier
-                  .size(28.dp)
-                  .clip(CircleShape)
-                  .background(AmberAccent.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Shield,
-                  contentDescription = null,
-                  tint = AmberAccent,
-                  modifier = Modifier.size(16.dp)
-                )
-              }
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                text = "GHOST OF MASTERY",
-                color = AmberAccent,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = 1.sp
-              )
-            }
-
-            Text(
-              text = "Micro-Recall",
-              color = SilverDim,
-              fontSize = 11.sp,
-              fontFamily = FontFamily.Monospace
-            )
-          }
-
-          Spacer(modifier = Modifier.height(10.dp))
-
-          Text(
-            text = pendingChallenge.promptQuestion,
-            color = SilverText,
-            fontSize = 13.sp,
-            lineHeight = 18.sp
-          )
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // Answer actions
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            ElevatedButton(
-              onClick = {
-                onAnswerGhostChallenge(pendingChallenge, "Quorum consensus boundary / Invariant verified")
-              },
-              colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = AmberAccent,
-                contentColor = ObsidianBg
-              ),
-              shape = RoundedCornerShape(12.dp),
-              modifier = Modifier.weight(1f)
-            ) {
-              Text(
-                text = "Submit Recall Proof",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-              )
-            }
-
-            ElevatedButton(
-              onClick = {
-                onAnswerGhostChallenge(pendingChallenge, "Need review")
-              },
-              colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = ObsidianSurfaceElevated,
-                contentColor = SilverMuted
-              ),
-              shape = RoundedCornerShape(12.dp)
-            ) {
-              Text(
-                text = "Decay",
-                fontSize = 11.sp
-              )
-            }
-          }
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(card.branchDomain.uppercase(), color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
       }
-    } else {
-      // Small trigger button to test Ghost of Mastery
-      item(key = "ghost_trigger_banner") {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(ObsidianSurface)
-            .border(0.8.dp, ObsidianBorder, RoundedCornerShape(16.dp))
-            .clickable { onTriggerGhostChallenge() }
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "⚔️", fontSize = 14.sp)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (currentLanguage == LanguageSetting.SINHALA)
-                "GHOSTS OF MASTERY: Micro-challenge එකක් ආරම්භ කරන්න"
-              else
-                "GHOSTS OF MASTERY: Trigger Micro-Recall",
-              color = SilverMuted,
-              fontSize = 11.sp,
-              fontFamily = FontFamily.Monospace
-            )
-          }
-          Text(text = "ACTIVATE", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        }
+      Text(card.title, color = SilverText, fontSize = 27.sp, lineHeight = 33.sp, fontWeight = FontWeight.Bold)
+      Column(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).padding(15.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp)
+      ) {
+        Text("THE QUESTION", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(card.itch, color = SilverText, fontSize = 15.sp, lineHeight = 23.sp)
+      }
+      Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Text("THE IDEA", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(card.intuition, color = SilverMuted, fontSize = 14.sp, lineHeight = 22.sp)
+      }
+      Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Text("WHY IT WORKS", color = SilverDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(card.skeleton, color = SilverText, fontSize = 13.sp, lineHeight = 20.sp)
       }
     }
-
-    // Feed Cards List
-    if (cards.isEmpty()) {
-      item {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(40.dp),
-          contentAlignment = Alignment.Center
-        ) {
-          Text(
-            text = "No cognitive nodes in feed. Sync from CORE.",
-            color = SilverDim,
-            fontSize = 13.sp,
-            fontFamily = FontFamily.Monospace
-          )
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      if (card.recallStage > 0) {
+        Text(if (card.recallStage >= 4) "MASTERED" else "RECALL STAGE ${card.recallStage}/4", color = EmeraldMastery, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
       }
-    } else {
-      items(cards, key = { it.id }) { card ->
-        MinimalFeedCardView(
-          card = card,
-          cringeFilterEnabled = cringeFilterEnabled,
-          currentLanguage = currentLanguage,
-          onAskDeepDive = { onAskDeepDive(card.id) },
-          onToggleSave = { onToggleSave(card) }
-        )
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onSave, modifier = Modifier.size(46.dp).clip(CircleShape).background(ObsidianSurfaceElevated).testTag("save_card_button_${card.id}")) {
+          Icon(if (card.isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, contentDescription = if (card.isSaved) "Unsave discovery" else "Save discovery", tint = if (card.isSaved) AmberAccent else SilverMuted)
+        }
+        ElevatedButton(
+          onClick = onAsk,
+          modifier = Modifier.weight(1f).height(46.dp).testTag("open_deep_dive_${card.id}"),
+          colors = ButtonDefaults.elevatedButtonColors(containerColor = CyanNeon, contentColor = ObsidianBg),
+          shape = RoundedCornerShape(15.dp)
+        ) {
+          Icon(Icons.Filled.Psychology, contentDescription = null, modifier = Modifier.size(17.dp))
+          Spacer(Modifier.width(7.dp))
+          Text("Talk this through", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        }
       }
     }
   }

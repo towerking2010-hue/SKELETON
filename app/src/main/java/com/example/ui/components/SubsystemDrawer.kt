@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.QueryBuilder
 import androidx.compose.material.icons.filled.RecordVoiceOver
@@ -81,10 +82,14 @@ fun SubsystemDrawer(
   currentLanguage: LanguageSetting,
   cringeFilterEnabled: Boolean,
   adrenalMode: Boolean,
+  arenaEnabled: Boolean,
+  profileName: String = "",
+  accountEmail: String? = null,
   onDismiss: () -> Unit,
   onSelectMode: (DrawerMode) -> Unit,
   onToggleCringeFilter: () -> Unit,
   onToggleAdrenalMode: () -> Unit,
+  onToggleArenaEnabled: () -> Unit,
   onSetLanguage: (LanguageSetting) -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -145,10 +150,70 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Row(
+          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+            .background(ObsidianSurfaceElevated).border(1.dp, ObsidianBorder, RoundedCornerShape(18.dp))
+            .padding(14.dp),
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Box(
+            modifier = Modifier.size(42.dp).clip(CircleShape).background(CyanNeon.copy(alpha = 0.16f))
+              .border(1.dp, CyanNeon, CircleShape),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = profileName.trim().firstOrNull()?.uppercase() ?: accountEmail?.firstOrNull()?.uppercase() ?: "S",
+              color = CyanNeon, fontWeight = FontWeight.Black, fontSize = 18.sp
+            )
+          }
+          Spacer(Modifier.width(12.dp))
+          Column(Modifier.weight(1f)) {
+            Text(profileName.ifBlank { "Welcome to SKELETON" }, color = SilverText, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+            Text(accountEmail ?: "Local profile · Sign in to sync", color = SilverMuted, fontSize = 10.sp, maxLines = 1)
+          }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        SubsystemRowItem(
+          title = "SKELETON IDENTITY",
+          description = "Your name, email account and personal progress",
+          icon = Icons.Filled.Person,
+          accentColor = CyanNeon,
+          testTag = "mode_account",
+          onClick = { onSelectMode(DrawerMode.ACCOUNT) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Research Desk: free public bibliographic metadata, no model inference.
+        SubsystemRowItem(
+          title = "MODE [RESEARCH DESK]",
+          description = "Search open scholarly records and inspect original sources",
+          icon = Icons.Filled.TravelExplore,
+          accentColor = CyanNeon,
+          testTag = "mode_research_desk",
+          onClick = { onSelectMode(DrawerMode.RESEARCH) }
+        )
+
+        if (arenaEnabled) {
+          Spacer(modifier = Modifier.height(10.dp))
+          SubsystemRowItem(
+            title = "MODE [THE ARENA]",
+            description = "Optional offline game: trials, strategy campaigns and XP ranks",
+            icon = Icons.Filled.FlashOn,
+            accentColor = AmberAccent,
+            testTag = "mode_the_arena",
+            onClick = { onSelectMode(DrawerMode.ARENA) }
+          )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         // Tool: MODE [BIOSCIENCE LAB]
         SubsystemRowItem(
           title = "MODE [BIOSCIENCE LAB]",
-          description = "Molecular Genetics, Optogenetics & Synaptic LTP",
+          description = "Curated bioscience lessons and mechanism-focused study",
           icon = Icons.Filled.Science,
           accentColor = EmeraldMastery,
           testTag = "mode_bioscience",
@@ -160,7 +225,7 @@ fun SubsystemDrawer(
         // Tool: MODE [VOICE CONVERSATION]
         SubsystemRowItem(
           title = "MODE [VOICE CONVERSATION]",
-          description = "Real-Time Audio Session (Model: gemini-3.8-live)",
+          description = "On-device speech input, CORE replies and device text-to-speech",
           icon = Icons.Filled.RecordVoiceOver,
           accentColor = CyanNeon,
           testTag = "mode_live_voice",
@@ -172,7 +237,7 @@ fun SubsystemDrawer(
         // Tool: MODE [IMAGE STUDIO]
         SubsystemRowItem(
           title = "MODE [IMAGE STUDIO]",
-          description = "Create & Edit Visuals (Model: gemini-nano-banana-2.1)",
+          description = "Unavailable in the $0 build — no paid image service is called",
           icon = Icons.Filled.Image,
           accentColor = AmberAccent,
           testTag = "mode_image_studio",
@@ -184,7 +249,7 @@ fun SubsystemDrawer(
         // Tool: MODE [VIDEO STUDIO]
         SubsystemRowItem(
           title = "MODE [VIDEO STUDIO]",
-          description = "Text-to-Video & Animate Photo (Model: gemini-omni-1.1-flash)",
+          description = "Unavailable in the $0 build — no paid video service is called",
           icon = Icons.Filled.Videocam,
           accentColor = CyanNeon,
           testTag = "mode_video_studio",
@@ -196,7 +261,7 @@ fun SubsystemDrawer(
         // Tool: MODE [AUDIO TRANSCRIBE]
         SubsystemRowItem(
           title = "MODE [AUDIO TRANSCRIBE]",
-          description = "Speech Transcription (Model: gemini-3.5-transcribe)",
+          description = "Device speech recognition; supported languages vary by phone",
           icon = Icons.Filled.Mic,
           accentColor = EmeraldMastery,
           testTag = "mode_audio_transcribe",
@@ -208,7 +273,7 @@ fun SubsystemDrawer(
         // Tool: MODE [SEARCH & MAPS GROUNDING]
         SubsystemRowItem(
           title = "MODE [SEARCH & MAPS GROUNDING]",
-          description = "Real-time Verification (Model: gemini-3.8-flash)",
+          description = "Not active in the $0 offline-first build",
           icon = Icons.Filled.TravelExplore,
           accentColor = CyanNeon,
           testTag = "mode_grounding",
@@ -220,7 +285,7 @@ fun SubsystemDrawer(
         // Tool 1: MODE [YGGDRASIL / ATTRACTOR_GRAPH]
         SubsystemRowItem(
           title = "MODE [YGGDRASIL / GRAPH]",
-          description = "Dynamic 3D Attractor Placement & Node Map",
+          description = "Explore saved concepts and their cross-links",
           icon = Icons.Filled.AltRoute,
           accentColor = CyanNeon,
           testTag = "mode_yggdrasil",
@@ -232,7 +297,7 @@ fun SubsystemDrawer(
         // Tool 2: MODE [CONCEPT_COLLIDER]
         SubsystemRowItem(
           title = "MODE [CONCEPT_COLLIDER]",
-          description = "Synthesize 2 Vault Concepts into 30s Insight",
+          description = "Combine two saved concepts into one synthesis card",
           icon = Icons.Filled.AutoAwesome,
           accentColor = AmberAccent,
           testTag = "mode_concept_collider",
@@ -244,7 +309,7 @@ fun SubsystemDrawer(
         // Tool 3: MODE [GHOST_SNIPER_OCR]
         SubsystemRowItem(
           title = "MODE [GHOST_SNIPER_OCR]",
-          description = "Extract Itch + Skeleton from Textbook Captures",
+          description = "Camera or photo OCR; Latin-script recognition",
           icon = Icons.Filled.CameraAlt,
           accentColor = EmeraldMastery,
           testTag = "mode_ghost_sniper",
@@ -256,7 +321,7 @@ fun SubsystemDrawer(
         // Tool 4: MODE [SPACED_REPETITION_ENGINE]
         SubsystemRowItem(
           title = "MODE [SPACED_REPETITION]",
-          description = "Track 3d / 7d / 14d Decay & Silent Feed Re-injection",
+          description = "3 / 7 / 14 / 30-day review intervals with retry",
           icon = Icons.Filled.QueryBuilder,
           accentColor = Color(0xFFA78BFA),
           testTag = "mode_spaced_repetition",
@@ -268,7 +333,7 @@ fun SubsystemDrawer(
         // Tool 5: MODE [BOSS_BATTLE]
         SubsystemRowItem(
           title = "MODE [BOSS_BATTLE]",
-          description = "Multi-Variable Chained Stress Test (Timed)",
+          description = "Recall challenges generated from your learning vault",
           icon = Icons.Filled.Shield,
           accentColor = CrimsonAdrenal,
           testTag = "mode_boss_battle",
@@ -280,7 +345,7 @@ fun SubsystemDrawer(
         // Tool 6: MODE [AR_LENS]
         SubsystemRowItem(
           title = "MODE [AR_LENS]",
-          description = "Live Real-World Optical Scan & Vault Overlay",
+          description = "Live camera text recognition and Vault capture; no object recognition",
           icon = Icons.Filled.CenterFocusStrong,
           accentColor = CyanNeon,
           testTag = "mode_ar_lens",
@@ -292,7 +357,7 @@ fun SubsystemDrawer(
         // Tool 7: MODE [AUDIOBOOK_CAPTION_ENGINE]
         SubsystemRowItem(
           title = "MODE [AUDIOBOOK_CAPTION]",
-          description = "E-Book Player & High-Contrast Word Highlighting",
+          description = "Read TXT, EPUB and text-based PDF with sentence highlighting",
           icon = Icons.Filled.MenuBook,
           accentColor = AmberAccent,
           testTag = "mode_audiobook_caption",
@@ -304,7 +369,7 @@ fun SubsystemDrawer(
         // Tool 8: MODE [DREAM_STATE_ENGINE]
         SubsystemRowItem(
           title = "MODE [DREAM_STATE_ENGINE]",
-          description = "10-Min Briefing & Binaural Memory Consolidation",
+          description = "10-minute review briefing narrated with device text-to-speech",
           icon = Icons.Filled.Bedtime,
           accentColor = Color(0xFFA78BFA),
           testTag = "mode_dream_state",
@@ -316,7 +381,7 @@ fun SubsystemDrawer(
         // Tool 9: MODE [LANGUAGE_TEACHER]
         SubsystemRowItem(
           title = "MODE [LANGUAGE_TEACHER]",
-          description = "Immersive Mastery, Drills & Structural Syntax Diagrams",
+          description = "Language drills and device pronunciation where voices are installed",
           icon = Icons.Filled.School,
           accentColor = EmeraldMastery,
           testTag = "mode_language_teacher",
@@ -328,7 +393,7 @@ fun SubsystemDrawer(
         // Tool 10: MODE [GMAIL_VAULT_MAILER]
         SubsystemRowItem(
           title = "MODE [GMAIL_VAULT_MAILER]",
-          description = "Dispatch Digests & Flashcards to Dasun's Gmail",
+          description = "Prepare a digest email draft for you to review and send",
           icon = Icons.Filled.Email,
           accentColor = CyanNeon,
           testTag = "mode_vault_mailer",
@@ -353,6 +418,26 @@ fun SubsystemDrawer(
           fontFamily = FontFamily.Monospace,
           letterSpacing = 1.sp
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Optional Arena game layer
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Column(Modifier.weight(1f)) {
+            Text("FEATURE [THE ARENA]", color = if (arenaEnabled) AmberAccent else SilverText, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Text("Personal skill arena · private profile · offline", color = SilverDim, fontSize = 11.sp)
+          }
+          Switch(
+            checked = arenaEnabled,
+            onCheckedChange = { onToggleArenaEnabled() },
+            colors = SwitchDefaults.colors(checkedThumbColor = AmberAccent, checkedTrackColor = ObsidianBg),
+            modifier = Modifier.testTag("switch_arena_enabled")
+          )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

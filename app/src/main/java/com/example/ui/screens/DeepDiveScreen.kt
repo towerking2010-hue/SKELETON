@@ -106,10 +106,10 @@ fun DeepDiveScreen(
   }
 
   val probeChips = listOf(
-    "Edge case failure modes",
-    "Show exact code syntax",
-    "Mathematical invariant proof",
-    "How does it break at scale?"
+    "Explain that another way",
+    "Give me a real-life example",
+    "Let's go one layer deeper",
+    "Check if I'm understanding"
   )
 
   Column(
@@ -249,7 +249,7 @@ fun DeepDiveScreen(
             contentAlignment = Alignment.Center
           ) {
             Text(
-              text = "Thread isolated to ${card.title}. Ask any deep question.",
+              text = "We’ll explore ${card.title} together, one idea at a time.",
               color = SilverDim,
               fontSize = 12.sp,
               fontFamily = FontFamily.Monospace
@@ -279,7 +279,7 @@ fun DeepDiveScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "DEEPDIVE resolving invariants...",
+              text = "Thinking it through...",
               color = SilverDim,
               fontSize = 12.sp,
               fontFamily = FontFamily.Monospace
@@ -317,7 +317,7 @@ fun DeepDiveScreen(
         decorationBox = { innerTextField ->
           if (inputText.isEmpty()) {
             Text(
-              text = "Inquire into ${card.title}...",
+              text = "Ask a follow-up. Let’s figure it out together…",
               color = SilverDim,
               fontSize = 13.sp
             )
@@ -359,121 +359,31 @@ private fun DeepDiveMessageBubble(
   cringeFilterEnabled: Boolean
 ) {
   val isUser = message.isUser
-
   Column(
     modifier = Modifier.fillMaxWidth(),
     horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
   ) {
-    if (isUser) {
-      Box(
-        modifier = Modifier
-          .clip(RoundedCornerShape(18.dp))
-          .background(Color(0xFF1E293B))
-          .border(0.8.dp, ObsidianBorderLight, RoundedCornerShape(18.dp))
-          .padding(horizontal = 14.dp, vertical = 10.dp)
-      ) {
-        Text(
-          text = message.text,
-          color = SilverText,
-          fontSize = 14.sp
+    Box(
+      modifier = Modifier
+        .fillMaxWidth(if (isUser) 0.86f else 0.96f)
+        .clip(
+          RoundedCornerShape(
+            topStart = 20.dp,
+            topEnd = 20.dp,
+            bottomStart = if (isUser) 20.dp else 5.dp,
+            bottomEnd = if (isUser) 5.dp else 20.dp
+          )
         )
-      }
-    } else {
-      // 2-Layer Breakdown View
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(22.dp))
-          .background(ObsidianSurface)
-          .border(1.dp, ObsidianBorder, RoundedCornerShape(22.dp))
-          .padding(16.dp)
-      ) {
-        // Layer 1: Intuition Bridge
-        if (!message.intuitionBridge.isNullOrBlank()) {
-          Text(
-            text = "LAYER 1 // INTUITION BRIDGE",
-            color = CyanNeon,
-            fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-          )
-          Spacer(modifier = Modifier.height(4.dp))
-          Text(
-            text = SkeletonCognitiveEngine.applyCringeFilter(message.intuitionBridge, cringeFilterEnabled),
-            color = SilverText,
-            fontSize = 13.sp,
-            lineHeight = 19.sp
-          )
-          Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // Layer 2: Raw Technical Rules / Code Syntax
-        if (!message.technicalBreakdown.isNullOrBlank()) {
-          Column(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clip(RoundedCornerShape(14.dp))
-              .background(Color(0xFF0D0D12))
-              .border(0.8.dp, ObsidianBorder, RoundedCornerShape(14.dp))
-              .padding(12.dp)
-          ) {
-            Text(
-              text = "LAYER 2 // RAW TECHNICAL RULES & SYNTAX",
-              color = AmberAccent,
-              fontSize = 10.sp,
-              fontFamily = FontFamily.Monospace,
-              fontWeight = FontWeight.Bold,
-              letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-              text = SkeletonCognitiveEngine.applyCringeFilter(message.technicalBreakdown, cringeFilterEnabled),
-              color = SilverText,
-              fontSize = 12.sp,
-              fontFamily = FontFamily.Monospace,
-              lineHeight = 17.sp
-            )
-          }
-          Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        // Layer 3: Active Scenario Challenge
-        if (!message.scenarioChallenge.isNullOrBlank()) {
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clip(RoundedCornerShape(12.dp))
-              .background(Color(0xFF161420))
-              .border(0.8.dp, Color(0xFFA78BFA), RoundedCornerShape(12.dp))
-              .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text(
-              text = "⚡",
-              fontSize = 14.sp,
-              modifier = Modifier.padding(end = 6.dp)
-            )
-            Text(
-              text = message.scenarioChallenge,
-              color = SilverText,
-              fontSize = 12.sp,
-              lineHeight = 17.sp,
-              fontWeight = FontWeight.Medium
-            )
-          }
-        }
-
-        // Fallback for raw text if layers are null
-        if (message.intuitionBridge.isNullOrBlank() && message.technicalBreakdown.isNullOrBlank()) {
-          Text(
-            text = SkeletonCognitiveEngine.applyCringeFilter(message.text, cringeFilterEnabled),
-            color = SilverText,
-            fontSize = 13.sp,
-            lineHeight = 19.sp
-          )
-        }
-      }
+        .background(if (isUser) Color(0xFF1E293B) else ObsidianSurface)
+        .border(0.8.dp, if (isUser) ObsidianBorderLight else ObsidianBorder, RoundedCornerShape(20.dp))
+        .padding(horizontal = 15.dp, vertical = 12.dp)
+    ) {
+      Text(
+        text = SkeletonCognitiveEngine.applyCringeFilter(message.text, cringeFilterEnabled),
+        color = SilverText,
+        fontSize = 14.sp,
+        lineHeight = 21.sp
+      )
     }
   }
 }

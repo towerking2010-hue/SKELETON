@@ -8,12 +8,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.IntelligenceMode
 import com.example.ui.components.BottomNavBar
 import com.example.ui.components.SubsystemDrawer
 import com.example.ui.components.TopHeaderBar
+import com.example.ui.screens.ArenaScreen
+import com.example.ui.screens.AccountScreen
 import com.example.ui.screens.ArLensScreen
 import com.example.ui.screens.AudioTranscribeScreen
 import com.example.ui.screens.AudiobookCaptionScreen
@@ -29,6 +32,7 @@ import com.example.ui.screens.GroundingScreen
 import com.example.ui.screens.ImageStudioScreen
 import com.example.ui.screens.LanguageTeacherScreen
 import com.example.ui.screens.SavedVaultScreen
+import com.example.ui.screens.ResearchScreen
 import com.example.ui.screens.SpacedRepetitionScreen
 import com.example.ui.screens.VaultMailerScreen
 import com.example.ui.screens.VideoStudioScreen
@@ -40,9 +44,13 @@ import com.example.ui.theme.ObsidianBg
 fun SkeletonApp(
   viewModel: SkeletonViewModel = viewModel()
 ) {
+  val context = LocalContext.current
   val systemLanguage by viewModel.systemLanguage.collectAsState()
   val cringeFilterEnabled by viewModel.cringeFilterEnabled.collectAsState()
   val adrenalMode by viewModel.adrenalMode.collectAsState()
+  val arenaEnabled by viewModel.arenaEnabled.collectAsState()
+  val arenaProfile by viewModel.arenaProfile.collectAsState()
+  val profileName by viewModel.profileName.collectAsState()
   val currentTab by viewModel.currentTab.collectAsState()
   val isDrawerOpen by viewModel.isDrawerOpen.collectAsState()
   val activeDrawerMode by viewModel.activeDrawerMode.collectAsState()
@@ -52,6 +60,7 @@ fun SkeletonApp(
   val isProcessingAi by viewModel.isProcessingAi.collectAsState()
 
   val feedCards by viewModel.feedCards.collectAsState()
+  val dueReviewCards by viewModel.dueReviewCards.collectAsState()
   val savedCards by viewModel.savedCards.collectAsState()
   val coreMessages by viewModel.coreMessages.collectAsState()
   val ghostChallenges by viewModel.ghostChallenges.collectAsState()
@@ -82,6 +91,36 @@ fun SkeletonApp(
 
   // 2. If a Subsystem mode was opened from Drawer, display it
   when (activeDrawerMode) {
+    DrawerMode.ACCOUNT -> {
+      AccountScreen(
+        profileName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
+        signedInEmail = currentUser?.email,
+        onSaveName = { viewModel.saveProfileName(it) },
+        onAuthenticate = { email, password, name, create, success, error ->
+          viewModel.authenticateEmail(email, password, name, create, success, error)
+        },
+        onSignOut = { viewModel.signOut() },
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
+    DrawerMode.ARENA -> {
+      ArenaScreen(
+        profile = arenaProfile,
+        displayName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
+        onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
+        onRecordAttempt = { skillId, correct -> viewModel.recordArenaAttempt(skillId, correct) },
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
+    DrawerMode.RESEARCH -> {
+      ResearchScreen(
+        currentLanguage = systemLanguage,
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
     DrawerMode.BIOSCIENCE -> {
       BioscienceScreen(
         currentLanguage = systemLanguage,
@@ -97,6 +136,7 @@ fun SkeletonApp(
     }
     DrawerMode.LIVE_VOICE -> {
       VoiceConversationScreen(
+        currentLanguage = systemLanguage,
         onBack = { viewModel.closeDrawerMode() }
       )
       return
@@ -115,7 +155,9 @@ fun SkeletonApp(
     }
     DrawerMode.AUDIO_TRANSCRIBE -> {
       AudioTranscribeScreen(
-        onBack = { viewModel.closeDrawerMode() }
+        currentLanguage = systemLanguage,
+        onBack = { viewModel.closeDrawerMode() },
+        onAddToFeed = { transcript -> viewModel.runSniperOcr(transcript) }
       )
       return
     }
@@ -159,7 +201,7 @@ fun SkeletonApp(
     }
     DrawerMode.SPACED_REPETITION -> {
       SpacedRepetitionScreen(
-        cards = feedCards,
+        cards = dueReviewCards,
         currentLanguage = systemLanguage,
         onRecordRecall = { cardId, success ->
           viewModel.recordSpacedRepetition(cardId, success)
@@ -179,7 +221,7 @@ fun SkeletonApp(
     DrawerMode.AR_LENS -> {
       ArLensScreen(
         currentLanguage = systemLanguage,
-        onSaveToVault = { card -> viewModel.toggleSaveCard(card) },
+        onSaveToVault = { card -> viewModel.saveCapturedCard(card) },
         onBack = { viewModel.closeDrawerMode() }
       )
       return
@@ -210,8 +252,8 @@ fun SkeletonApp(
       VaultMailerScreen(
         vaultCards = savedCards.ifEmpty { feedCards },
         currentLanguage = systemLanguage,
-        userEmail = currentUser?.email ?: "towerking2010@gmail.com",
-        userName = currentUser?.displayName ?: "Dasun",
+        userEmail = currentUser?.email.orEmpty(),
+        userName = profileName.ifBlank { currentUser?.displayName ?: currentUser?.email?.substringBefore("@").orEmpty() },
         onBack = { viewModel.closeDrawerMode() }
       )
       return
@@ -266,8 +308,9 @@ fun SkeletonApp(
             currentLanguage = systemLanguage,
             cringeFilterEnabled = cringeFilterEnabled,
             currentUser = currentUser,
-            onSignInSuccess = {},
+            onSignInSuccess = { user -> user.displayName?.takeIf { it.isNotBlank() }?.let { viewModel.saveProfileName(it) } },
             onSignOut = {},
+            onOpenEmailSignIn = { viewModel.selectDrawerMode(DrawerMode.ACCOUNT) },
             onAskDeepDive = { cardId -> viewModel.openDeepDive(cardId) },
             onToggleSave = { card -> viewModel.toggleSaveCard(card) },
             onTriggerGhostChallenge = { viewModel.triggerMicroChallenge() },
@@ -311,10 +354,14 @@ fun SkeletonApp(
       currentLanguage = systemLanguage,
       cringeFilterEnabled = cringeFilterEnabled,
       adrenalMode = adrenalMode,
+      arenaEnabled = arenaEnabled,
+      profileName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
+      accountEmail = currentUser?.email,
       onDismiss = { viewModel.closeDrawer() },
       onSelectMode = { mode -> viewModel.selectDrawerMode(mode) },
       onToggleCringeFilter = { viewModel.toggleCringeFilter() },
       onToggleAdrenalMode = { viewModel.toggleAdrenalMode() },
+      onToggleArenaEnabled = { viewModel.toggleArenaEnabled() },
       onSetLanguage = { lang -> viewModel.setSystemLanguage(lang) }
     )
   }

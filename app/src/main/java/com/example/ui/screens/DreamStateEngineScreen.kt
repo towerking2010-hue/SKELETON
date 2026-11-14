@@ -36,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -69,7 +71,10 @@ import com.example.ui.theme.PurpleAether
 import com.example.ui.theme.SilverDim
 import com.example.ui.theme.SilverMuted
 import com.example.ui.theme.SilverText
+import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import kotlinx.coroutines.delay
+import java.util.Locale
 import kotlin.math.sin
 
 enum class BinauralMode(val title: String, val freq: String, val targetState: String) {
@@ -85,6 +90,38 @@ fun DreamStateEngineScreen(
   onBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val context = LocalContext.current
+  var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+  var ttsReady by remember { mutableStateOf(false) }
+  var voiceStatus by remember { mutableStateOf("Preparing narration…") }
+
+  DisposableEffect(currentLanguage) {
+    val engine = TextToSpeech(context) { result ->
+      if (result == TextToSpeech.SUCCESS) {
+        val locale = if (currentLanguage == LanguageSetting.SINHALA) Locale("si", "LK") else Locale.US
+        val availability = tts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
+        if (availability >= TextToSpeech.LANG_AVAILABLE) {
+          tts?.language = locale
+          ttsReady = true
+          voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala narration ready" else "English narration ready"
+        } else {
+          ttsReady = false
+          voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala voice unavailable on this device." else "English voice unavailable."
+        }
+      } else {
+        ttsReady = false
+        voiceStatus = "Device speech engine unavailable."
+      }
+    }
+    tts = engine
+    onDispose {
+      engine.stop()
+      engine.shutdown()
+      tts = null
+      ttsReady = false
+    }
+  }
+
   // Select top 5 hardest concepts
   val consolidationNodes = remember(weakCards) {
     if (weakCards.isNotEmpty()) {
@@ -119,10 +156,20 @@ fun DreamStateEngineScreen(
       if (remainingSeconds % 45 == 0 && consolidationNodes.isNotEmpty()) {
         activeNodeIndex = (activeNodeIndex + 1) % consolidationNodes.size
       }
+      if (remainingSeconds == 0) isPlaying = false
     }
   }
 
   val activeCard = consolidationNodes.getOrNull(activeNodeIndex)
+
+  LaunchedEffect(isPlaying, activeCard?.id, ttsReady) {
+    if (isPlaying && activeCard != null && ttsReady) {
+      val narration = "${activeCard.title}. ${activeCard.itch}. ${activeCard.skeleton}. ${activeCard.intuition}"
+      tts?.speak(narration, TextToSpeech.QUEUE_FLUSH, Bundle(), "dream_${activeCard.id}")
+    } else {
+      tts?.stop()
+    }
+  }
 
   Box(
     modifier = modifier
@@ -208,7 +255,7 @@ fun DreamStateEngineScreen(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-          text = "10-Minute Ambient Audio Briefing Layered with Binaural Beats for Sleep Consolidation",
+          text = "10-minute spoken recall briefing. Frequency visuals are optional; binaural audio is not played in this build.",
           color = SilverText,
           fontSize = 12.sp,
           lineHeight = 16.sp
@@ -325,7 +372,7 @@ fun DreamStateEngineScreen(
                   fontWeight = FontWeight.Bold
                 )
                 Text(
-                  text = "SLEEP REWIRING",
+                  text = "REVIEW BRIEFING",
                   color = EmeraldMastery,
                   fontSize = 9.sp,
                   fontFamily = FontFamily.Monospace
@@ -344,7 +391,7 @@ fun DreamStateEngineScreen(
               Spacer(modifier = Modifier.height(10.dp))
 
               Text(
-                text = "HYPNOTIC CONSOLIDATION ESSENCE",
+                text = "KEY QUESTION",
                 color = AmberAccent,
                 fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
@@ -360,7 +407,7 @@ fun DreamStateEngineScreen(
               Spacer(modifier = Modifier.height(8.dp))
 
               Text(
-                text = "SUB-CONSCIOUS SKELETON RULE",
+                text = "CORE MECHANISM",
                 color = CyanNeon,
                 fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
@@ -396,7 +443,7 @@ fun DreamStateEngineScreen(
             contentAlignment = Alignment.Center
           ) {
             Text(
-              text = "No weak nodes logged. All 16 foundational matrix concepts are in balanced equilibrium.",
+              text = "No review cards are queued yet. Add and review concepts to populate Dream State.",
               color = SilverMuted,
               fontSize = 12.sp,
               fontFamily = FontFamily.Monospace
@@ -407,6 +454,7 @@ fun DreamStateEngineScreen(
 
       Spacer(modifier = Modifier.height(12.dp))
 
+      Text(voiceStatus, color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
       // 4. Timer, Mode Selector & Play Control
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -466,7 +514,10 @@ fun DreamStateEngineScreen(
             .size(50.dp)
             .clip(CircleShape)
             .background(PurpleAether)
-            .clickable { isPlaying = !isPlaying }
+            .clickable {
+              if (!isPlaying && remainingSeconds == 0) remainingSeconds = 600
+              isPlaying = !isPlaying
+            }
             .testTag("dream_state_play_pause"),
           contentAlignment = Alignment.Center
         ) {

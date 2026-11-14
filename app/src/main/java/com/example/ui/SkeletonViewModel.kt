@@ -14,16 +14,20 @@ import com.example.data.model.LanguageSetting
 import com.example.data.repository.FirestoreKnowledgeRepository
 import com.example.data.repository.SkeletonRepository
 import com.example.engine.SkeletonCognitiveEngine
+import com.example.engine.arena.ArenaProfile
+import com.example.engine.arena.ArenaSkillEvidence
 import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
 import com.example.engine.bio.BioscienceModule
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -35,21 +39,24 @@ enum class MainTab {
 }
 
 enum class DrawerMode(val title: String, val subtitle: String) {
-  YGGDRASIL("YGGDRASIL", "3D Dynamic Attractor Graph"),
+  ACCOUNT("SKELETON IDENTITY", "Your profile, sign-in and progress preferences"),
+  ARENA("THE ARENA", "Personal adaptive skill training · private local profile"),
+  RESEARCH("RESEARCH DESK", "Free source discovery · no AI calls or paid APIs"),
+  YGGDRASIL("YGGDRASIL", "Multiversal knowledge tree & concept links"),
   CONCEPT_COLLIDER("CONCEPT COLLIDER", "Synthesize 2 Vault Nodes"),
   AR_LENS("AR LENS", "Real-World Camera & Vault Cross-Reference"),
-  AUDIOBOOK_CAPTION("AUDIOBOOK CAPTION ENGINE", "E-Book Player & Word-by-Word Highlighting"),
-  DREAM_STATE("DREAM STATE ENGINE", "10-Min Ambient Briefing & Binaural Beats"),
+  AUDIOBOOK_CAPTION("AUDIOBOOK CAPTION ENGINE", "Read & listen with synchronized sentence highlighting"),
+  DREAM_STATE("DREAM STATE ENGINE", "10-minute spoken recall briefing · device TTS"),
   LANGUAGE_TEACHER("LANGUAGE TEACHER", "Dedicated Immersive Language Mastery"),
-  VAULT_MAILER("GMAIL VAULT MAILER", "Dispatch Digests & Flashcards to Dasun"),
+  VAULT_MAILER("VAULT MAILER", "Manual email drafts · automatic sending disabled"),
   BIOSCIENCE("BIOSCIENCE LAB", "Molecular & Cognitive Neuroscience"),
-  LIVE_VOICE("VOICE CONVERSATION", "Real-Time Model: gemini-3.8-live"),
-  IMAGE_STUDIO("IMAGE STUDIO", "Create & Edit: gemini-nano-banana-2.1"),
-  VIDEO_STUDIO("VIDEO STUDIO", "Text-to-Video & Animate Photo (gemini-omni-1.1-flash)"),
-  AUDIO_TRANSCRIBE("AUDIO TRANSCRIBE", "Model: gemini-3.5-transcribe"),
-  GROUNDING("SEARCH & MAPS GROUNDING", "Model: gemini-3.8-flash"),
+  LIVE_VOICE("VOICE CONVERSATION", "Android speech input + CORE + device TTS"),
+  IMAGE_STUDIO("IMAGE STUDIO", "Local prompt lab · paid rendering disabled"),
+  VIDEO_STUDIO("VIDEO STUDIO", "Preview only · video rendering disabled"),
+  AUDIO_TRANSCRIBE("AUDIO TRANSCRIBE", "Android device speech recognition"),
+  GROUNDING("SEARCH & MAPS", "External grounding disabled · zero-billing mode"),
   GHOST_SNIPER_OCR("GHOST SNIPER OCR", "Extract Itch + Skeleton from Text"),
-  SPACED_REPETITION("SPACED REPETITION", "3d / 7d / 14d Decay Tracker"),
+  SPACED_REPETITION("SPACED REPETITION", "Recall progress · 3 / 7 / 14 / 30-day intervals"),
   BOSS_BATTLE("BOSS BATTLE", "Multi-Variable Stress Test"),
   SETTINGS("SETTINGS", "Language & Engine Controls")
 }
@@ -59,13 +66,33 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   private val repository: SkeletonRepository
   private val firestoreRepo: FirestoreKnowledgeRepository
 
-  private val _systemLanguage = MutableStateFlow(LanguageSetting.ENGLISH)
+  private val settings = application.getSharedPreferences("skeleton_settings", android.content.Context.MODE_PRIVATE)
+  private val _systemLanguage = MutableStateFlow(
+    runCatching { LanguageSetting.valueOf(settings.getString("language", "ENGLISH") ?: "ENGLISH") }
+      .getOrDefault(LanguageSetting.ENGLISH)
+  )
   val systemLanguage: StateFlow<LanguageSetting> = _systemLanguage.asStateFlow()
 
-  private val _cringeFilterEnabled = MutableStateFlow(true)
+  private val _arenaEnabled = MutableStateFlow(settings.getBoolean("arena_enabled", false))
+  val arenaEnabled: StateFlow<Boolean> = _arenaEnabled.asStateFlow()
+
+  private val _arenaProfile = MutableStateFlow(
+    ArenaProfile(
+      xp = settings.getInt("arena_xp", 0).coerceAtLeast(0),
+      completedChallengeIds = settings.getStringSet("arena_completed", mutableSetOf<String>())?.toSet() ?: emptySet(),
+      skillEvidence = settings.getStringSet("arena_skill_evidence", mutableSetOf<String>())
+        ?.mapNotNull { entry ->
+          val parts = entry.split(":")
+          if (parts.size == 3) parts[0] to ArenaSkillEvidence(parts[1].toIntOrNull() ?: 0, parts[2].toIntOrNull() ?: 0) else null
+        }?.toMap() ?: emptyMap()
+    )
+  )
+  val arenaProfile: StateFlow<ArenaProfile> = _arenaProfile.asStateFlow()
+
+  private val _cringeFilterEnabled = MutableStateFlow(settings.getBoolean("cringe_filter", true))
   val cringeFilterEnabled: StateFlow<Boolean> = _cringeFilterEnabled.asStateFlow()
 
-  private val _adrenalMode = MutableStateFlow(false)
+  private val _adrenalMode = MutableStateFlow(settings.getBoolean("adrenal_mode", false))
   val adrenalMode: StateFlow<Boolean> = _adrenalMode.asStateFlow()
 
   private val _currentTab = MutableStateFlow(MainTab.FEED)
@@ -87,15 +114,59 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   val isProcessingAi: StateFlow<Boolean> = _isProcessingAi.asStateFlow()
 
   // Gemini Role and Model Tier State
-  private val _selectedModelTier = MutableStateFlow(ModelTier.GENERAL)
+  private val _selectedModelTier = MutableStateFlow(
+    runCatching { ModelTier.valueOf(settings.getString("model_tier", "GENERAL") ?: "GENERAL") }
+      .getOrDefault(ModelTier.GENERAL)
+  )
   val selectedModelTier: StateFlow<ModelTier> = _selectedModelTier.asStateFlow()
 
-  private val _selectedAiRole = MutableStateFlow(AiRole.SKELETON_CORE)
+  private val _selectedAiRole = MutableStateFlow(
+    runCatching { AiRole.valueOf(settings.getString("ai_role", "SKELETON_CORE") ?: "SKELETON_CORE") }
+      .getOrDefault(AiRole.SKELETON_CORE)
+  )
   val selectedAiRole: StateFlow<AiRole> = _selectedAiRole.asStateFlow()
 
   val currentUser: StateFlow<FirebaseUser?> = AuthManager.currentUser
 
+  private val _profileName = MutableStateFlow(settings.getString("profile_name", "")?.trim().orEmpty())
+  val profileName: StateFlow<String> = _profileName.asStateFlow()
+
+  fun saveProfileName(name: String) {
+    val cleanName = name.trim().take(40)
+    _profileName.value = cleanName
+    settings.edit().putString("profile_name", cleanName).apply()
+  }
+
+  fun authenticateEmail(
+    email: String,
+    password: String,
+    displayName: String,
+    createAccount: Boolean,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+  ) {
+    if (displayName.isNotBlank()) saveProfileName(displayName)
+    AuthManager.signInWithEmail(
+      email = email,
+      password = password,
+      displayName = displayName,
+      createAccount = createAccount,
+      scope = viewModelScope,
+      onSuccess = { user ->
+        user.displayName?.takeIf { it.isNotBlank() }?.let { saveProfileName(it) }
+        onSuccess()
+      },
+      onError = onError
+    )
+  }
+
+  fun signOut() {
+    AuthManager.signOut(getApplication(), viewModelScope)
+  }
+
+
   val feedCards: StateFlow<List<FeedCard>>
+  val dueReviewCards: StateFlow<List<FeedCard>>
   val savedCards: StateFlow<List<FeedCard>>
   val coreMessages: StateFlow<List<CoreChatMessage>>
   val ghostChallenges: StateFlow<List<GhostChallenge>>
@@ -107,6 +178,12 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     val dao = SkeletonDatabase.getDatabase(application).skeletonDao()
     repository = SkeletonRepository(dao)
     firestoreRepo = FirestoreKnowledgeRepository.create(application)
+
+    dueReviewCards = repository.dueReviewCards().stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      emptyList()
+    )
 
     feedCards = repository.feedCards.stateIn(
       viewModelScope,
@@ -143,6 +220,22 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     viewModelScope.launch {
+      currentUser.collectLatest { user ->
+        if (user != null) {
+          val remoteAtSignIn = firestoreRepo.observeCloudCards().firstOrNull().orEmpty()
+          remoteAtSignIn.forEach { repository.insertFeedCard(it) }
+          // Never upload the device-wide local library automatically at sign-in.
+          // It may contain data created before authentication or under another account.
+          // Cloud-to-device sync is scoped to the authenticated UID; individual uploads
+          // happen only after an explicit save/capture action while signed in.
+          firestoreRepo.observeCloudCards().collectLatest { remoteCards ->
+            remoteCards.forEach { repository.insertFeedCard(it) }
+          }
+        }
+      }
+    }
+
+    viewModelScope.launch {
       repository.initializeStarterCardsIfEmpty()
       // Auto-sign in if credentials exist
       AuthManager.attemptAutoSignIn(application, viewModelScope)
@@ -151,14 +244,17 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   fun setModelTier(tier: ModelTier) {
     _selectedModelTier.value = tier
+    settings.edit().putString("model_tier", tier.name).apply()
   }
 
   fun setAiRole(role: AiRole) {
     _selectedAiRole.value = role
+    settings.edit().putString("ai_role", role.name).apply()
   }
 
   fun setSystemLanguage(lang: LanguageSetting) {
     _systemLanguage.value = lang
+    settings.edit().putString("language", lang.name).apply()
     viewModelScope.launch {
       repository.switchCurriculumLanguage(lang)
     }
@@ -167,17 +263,60 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   fun toggleSystemLanguage() {
     val next = _systemLanguage.value.toggle()
     _systemLanguage.value = next
+    settings.edit().putString("language", next.name).apply()
     viewModelScope.launch {
       repository.switchCurriculumLanguage(next)
     }
   }
 
+  fun toggleArenaEnabled() {
+    val next = !_arenaEnabled.value
+    _arenaEnabled.value = next
+    settings.edit().putBoolean("arena_enabled", next).apply()
+    if (!next && _activeDrawerMode.value == DrawerMode.ARENA) _activeDrawerMode.value = null
+  }
+
+  fun recordArenaAttempt(skillId: String, correct: Boolean) {
+    if (skillId.isBlank()) return
+    val current = _arenaProfile.value
+    val previous = current.skillEvidence[skillId] ?: ArenaSkillEvidence()
+    val updatedEvidence = previous.copy(
+      attempts = previous.attempts + 1,
+      correct = previous.correct + if (correct) 1 else 0
+    )
+    val updated = current.copy(skillEvidence = current.skillEvidence + (skillId to updatedEvidence))
+    _arenaProfile.value = updated
+    settings.edit().putStringSet(
+      "arena_skill_evidence",
+      updated.skillEvidence.map { (id, evidence) -> "$id:${evidence.attempts}:${evidence.correct}" }.toMutableSet()
+    ).apply()
+  }
+
+  fun completeArenaChallenge(challengeId: String, rewardXp: Int) {
+    if (challengeId.isBlank() || rewardXp <= 0) return
+    val current = _arenaProfile.value
+    if (challengeId in current.completedChallengeIds) return
+    val updated = current.copy(
+      xp = current.xp + rewardXp,
+      completedChallengeIds = current.completedChallengeIds + challengeId
+    )
+    _arenaProfile.value = updated
+    settings.edit()
+      .putInt("arena_xp", updated.xp)
+      .putStringSet("arena_completed", updated.completedChallengeIds.toMutableSet())
+      .apply()
+  }
+
   fun toggleCringeFilter() {
-    _cringeFilterEnabled.value = !_cringeFilterEnabled.value
+    val next = !_cringeFilterEnabled.value
+    _cringeFilterEnabled.value = next
+    settings.edit().putBoolean("cringe_filter", next).apply()
   }
 
   fun toggleAdrenalMode() {
-    _adrenalMode.value = !_adrenalMode.value
+    val next = !_adrenalMode.value
+    _adrenalMode.value = next
+    settings.edit().putBoolean("adrenal_mode", next).apply()
   }
 
   fun selectTab(tab: MainTab) {
@@ -251,7 +390,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       _isProcessingAi.value = true
       try {
-        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value)
+        repository.sendCoreUserMessage(text.trim(), _systemLanguage.value, _selectedModelTier.value, _selectedAiRole.value)
       } finally {
         _isProcessingAi.value = false
       }
@@ -269,7 +408,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       _isProcessingAi.value = true
       try {
-        repository.sendDeepDiveMessage(cardId, query.trim(), _systemLanguage.value)
+        repository.sendDeepDiveMessage(cardId, query.trim(), _systemLanguage.value, _selectedModelTier.value)
       } finally {
         _isProcessingAi.value = false
       }
@@ -278,7 +417,49 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
   fun runConceptCollider(cardA: FeedCard, cardB: FeedCard) {
     viewModelScope.launch {
-      val collided = SkeletonCognitiveEngine.collideConcepts(cardA, cardB, _systemLanguage.value)
+      val lang = _systemLanguage.value
+      val languageRule = if (lang == LanguageSetting.SINHALA) {
+        "Write all learning content in natural Sinhala script, keeping technical terms in English."
+      } else "Write in clear English."
+      val prompt = """
+        $languageRule
+        Synthesize these two saved concepts into one accurate, memorable 30-second cross-domain insight.
+        Concept A: ${cardA.title}
+        Domain A: ${cardA.branchDomain}
+        Core A: ${cardA.skeleton}
+        Concept B: ${cardB.title}
+        Domain B: ${cardB.branchDomain}
+        Core B: ${cardB.skeleton}
+        Do not invent a mathematical equivalence. State where the analogy holds and where it breaks.
+        Return exactly three labeled sections:
+        INTUITION: one vivid analogy
+        MECHANISM: the actual shared mechanism and limits
+        NEW INSIGHT: one useful implication or testable question
+      """.trimIndent()
+      val generated = GeminiCognitiveService.chatGenerate(prompt, AiRole.SKELETON_CORE, ModelTier.FAST)
+      val collided = if (generated.startsWith("Inference error") || generated.startsWith("Synthesis complete without output")) {
+        SkeletonCognitiveEngine.collideConcepts(cardA, cardB, lang)
+      } else {
+        fun section(label: String): String = Regex(
+          """(?is)${label}:\s*(.*?)(?=\n(?:INTUITION|MECHANISM|NEW INSIGHT):|$)"""
+        ).find(generated)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val intuition = section("INTUITION").ifBlank { generated.take(500) }
+        val mechanism = section("MECHANISM").ifBlank { generated }
+        val insight = section("NEW INSIGHT").ifBlank { "Ask CORE to test this connection against a counterexample." }
+        FeedCard(
+          id = "collider_" + java.util.UUID.randomUUID().toString().take(8),
+          title = "${cardA.title} ⊗ ${cardB.title}",
+          itch = insight,
+          skeleton = mechanism,
+          intuition = intuition,
+          branchDomain = "Cross-Domain Synthesis",
+          crossLinkTarget = "${cardA.title} + ${cardB.title}",
+          isSaved = true,
+          challengeScenario = "Give one real example where this cross-domain connection is useful, and one where it breaks.",
+          challengeExpectedKey = "A correct explanation of the shared mechanism and its limits.",
+          language = if (lang == LanguageSetting.SINHALA) "si" else "en"
+        )
+      }
       repository.insertFeedCard(collided)
       if (currentUser.value != null) {
         try { firestoreRepo.saveCardToCloud(collided) } catch (_: Exception) {}
@@ -286,10 +467,63 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     }
   }
 
+  fun saveCapturedCard(card: FeedCard) {
+    viewModelScope.launch {
+      val saved = card.copy(isSaved = true)
+      repository.insertFeedCard(saved)
+      if (currentUser.value != null) {
+        try { firestoreRepo.saveCardToCloud(saved) } catch (_: Exception) {}
+      }
+    }
+  }
+
   fun runSniperOcr(scannedText: String) {
     if (scannedText.isBlank()) return
     viewModelScope.launch {
-      val extracted = SkeletonCognitiveEngine.sniperOcrExtraction(scannedText, _systemLanguage.value)
+      val lang = _systemLanguage.value
+      val languageRule = if (lang == LanguageSetting.SINHALA) {
+        "Write all educational fields in natural Sinhala script. Keep established technical terms and equations in English."
+      } else "Write in clear English."
+      val prompt = """
+        $languageRule
+        Turn the following OCR text into one accurate micro-learning card.
+        Extract the central question, actual mechanism, an intuitive analogy, the best-fit subject/domain,
+        and one active-recall challenge. Do not add facts that are not supported by the source.
+        If the source is ambiguous or incomplete, say so instead of inventing details.
+        Return exactly these labeled fields:
+        TITLE: short title
+        ITCH: the central question or tension
+        SKELETON: the actual mechanism, rules, or equations
+        INTUITION: a helpful analogy
+        DOMAIN: one of the 19 SKELETON master domains or the closest accurate subject
+        CHALLENGE: one recall question
+        ANSWER KEY: essential points a correct answer must contain
+        OCR SOURCE:
+        ${scannedText.take(12000)}
+      """.trimIndent()
+      val generated = GeminiCognitiveService.chatGenerate(prompt, AiRole.SKELETON_CORE, ModelTier.FAST)
+      val extracted = if (generated.startsWith("Inference error") || generated.startsWith("Synthesis complete without output")) {
+        SkeletonCognitiveEngine.sniperOcrExtraction(scannedText, lang)
+      } else {
+        fun field(label: String): String = Regex(
+          """(?is)^\s*${label}:\s*(.*?)(?=^\s*(?:TITLE|ITCH|SKELETON|INTUITION|DOMAIN|CHALLENGE|ANSWER KEY):|$)""",
+          setOf(RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
+        ).find(generated)?.groupValues?.getOrNull(1)?.trim().orEmpty()
+        val title = field("TITLE").ifBlank { scannedText.lineSequence().firstOrNull { it.isNotBlank() }?.take(70) ?: "OCR Learning Card" }
+        FeedCard(
+          id = "ocr_" + java.util.UUID.randomUUID().toString().take(8),
+          title = title,
+          itch = field("ITCH").ifBlank { "Question extracted from source text." },
+          skeleton = field("SKELETON").ifBlank { generated },
+          intuition = field("INTUITION").ifBlank { "Ask CORE to explain this concept with an analogy." },
+          branchDomain = field("DOMAIN").ifBlank { "OCR Extraction" },
+          crossLinkTarget = "Ghost Sniper OCR",
+          isSaved = true,
+          challengeScenario = field("CHALLENGE"),
+          challengeExpectedKey = field("ANSWER KEY"),
+          language = if (lang == LanguageSetting.SINHALA) "si" else "en"
+        )
+      }
       repository.insertFeedCard(extracted)
       if (currentUser.value != null) {
         try { firestoreRepo.saveCardToCloud(extracted) } catch (_: Exception) {}

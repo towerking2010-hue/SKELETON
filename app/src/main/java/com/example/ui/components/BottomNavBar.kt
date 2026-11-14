@@ -72,7 +72,7 @@ fun BottomNavBar(
       verticalAlignment = Alignment.CenterVertically
     ) {
       // 1. Feed
-      val feedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Feed" else "Feed"
+      val feedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Discover" else "Discover"
       BottomNavItem(
         label = feedLabel,
         selected = currentTab == MainTab.FEED,
@@ -94,7 +94,7 @@ fun BottomNavBar(
       )
 
       // 3. Saved
-      val savedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Saved" else "Saved"
+      val savedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Vault" else "Vault"
       BottomNavItem(
         label = savedLabel,
         selected = currentTab == MainTab.SAVED,
@@ -127,7 +127,9 @@ private fun BottomNavItem(
 
   Column(
     modifier = Modifier
-      .clip(RoundedCornerShape(20.dp))
+      .clip(RoundedCornerShape(18.dp))
+      .background(if (selected) CyanNeon.copy(alpha = 0.10f) else androidx.compose.ui.graphics.Color.Transparent)
+      .border(1.dp, if (selected) CyanNeon.copy(alpha = 0.24f) else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(18.dp))
       .clickable { onClick() }
       .padding(horizontal = 16.dp, vertical = 6.dp)
       .testTag(testTag),

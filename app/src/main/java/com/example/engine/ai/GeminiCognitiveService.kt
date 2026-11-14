@@ -12,9 +12,9 @@ import kotlinx.coroutines.withTimeout
 private const val TAG = "GeminiService"
 
 enum class ModelTier(val modelName: String, val displayName: String) {
-  FAST("gemini-3.1-flash-lite", "Flash-Lite (Ultra Fast)"),
+  FAST("gemini-3.5-flash-lite", "Flash-Lite (Free tier)"),
   GENERAL("gemini-3.8-flash", "Gemini 3.8 Flash (General)"),
-  REASONING("gemini-4-argon", "Gemini 4 Argon (Deep Reasoning)")
+  REASONING("gemini-3.8-flash", "Gemini 3.8 Flash (Reasoning prompt)")
 }
 
 enum class VideoAspectRatio(val ratioString: String, val label: String) {
@@ -24,20 +24,27 @@ enum class VideoAspectRatio(val ratioString: String, val label: String) {
 
 enum class AiRole(val roleName: String, val systemInstruction: String) {
   SKELETON_CORE(
-    "CORE Omniscient Twin",
-    "You are SKELETON's CORE engine. Act like a brilliant, casual friend (Meta AI style)—relaxed, direct, zero text walls, zero corporate fluff, using high-impact analogies. Conclude novel concepts with [FEED SYNC]."
+    "CORE Learning Companion",
+    "You are SKELETON's CORE learning companion. Speak like a relaxed, sharp friend: direct, warm, concise, and clear. Explain with useful analogies, then give the real mechanism. Never claim omniscience. Separate established evidence from hypotheses, uncertainty, and symbolic or esoteric interpretations. Do not invent sources, facts, or capabilities. Offer [FEED SYNC: topic] only when the exchange produced a genuinely useful, reusable learning insight."
   ),
   DEEPDIVE_SCIENTIST(
     "DEEPDIVE Deconstructor",
-    "You are SKELETON's DEEPDIVE engine. Provide a two-layer breakdown: 1) Brief intuition bridge, followed immediately by 2) Raw mathematical, technical, or code syntax invariants. Conclude with a crisp active-recall scenario challenge."
+    "You are SKELETON's DEEPDIVE learning companion. Teach through a natural back-and-forth conversation, like a curious and thoughtful friend. Respond to the learner's exact point first, then offer one clear insight or example and pause. Keep replies short by default; do not lecture, dump facts, or force headings, equations, or quizzes. Ask one thoughtful question only when it helps the learner discover the next step. Gradually deepen the explanation when the learner asks. Be rigorous without sounding like a textbook: explain assumptions and evidence in plain language, and distinguish established findings from hypotheses. Never invent proofs or citations."
   ),
   BIOSCIENCE_EXPERT(
     "Bioscience & Neuro Specialist",
-    "You are a specialized Bioscience & Cognitive Neuroscientist. Analyze molecular mechanisms (CRISPR, epigenetics, synaptic plasticity, optogenetics, ion channels) with absolute precision and biochemical rigor."
+    "You are SKELETON's bioscience learning specialist. Explain molecular and cognitive mechanisms with biochemical rigor. State assumptions, distinguish established findings from emerging hypotheses, and acknowledge uncertainty rather than overstating precision."
   )
 }
 
 object GeminiCognitiveService {
+
+  /**
+   * Hard $0 safety gate. Firebase AI model pricing/free quotas depend on project,
+   * region and current provider policy, so the app must never assume a model is free.
+   * Keep disabled until a verified no-billing route is configured and tested.
+   */
+  private const val CLOUD_INFERENCE_ENABLED = false
 
   /**
    * Multi-turn chat generation with system instruction role and selectable model tier
@@ -47,11 +54,19 @@ object GeminiCognitiveService {
     role: AiRole,
     tier: ModelTier = ModelTier.GENERAL
   ): String = withContext(Dispatchers.IO) {
+    if (!CLOUD_INFERENCE_ENABLED) {
+      return@withContext "Inference error [zero-billing policy]: Cloud inference is disabled. No model request was sent."
+    }
     try {
       withTimeout(60_000L) {
+        val tierInstruction = if (tier == ModelTier.REASONING) {
+          role.systemInstruction + " For difficult questions, check assumptions, compare plausible explanations, verify the logic and calculations, and present a concise, well-structured answer. Do not reveal private chain-of-thought; provide the conclusion and useful verification."
+        } else {
+          role.systemInstruction
+        }
         val model = Firebase.ai.generativeModel(
           modelName = tier.modelName,
-          systemInstruction = content { text(role.systemInstruction) }
+          systemInstruction = content { text(tierInstruction) }
         )
         val response = model.generateContent(userPrompt)
         response.text ?: "Synthesis complete without output."
@@ -62,168 +77,31 @@ object GeminiCognitiveService {
     }
   }
 
-  /**
-   * Search Grounding using gemini-3.8-flash
-   */
-  suspend fun searchGroundedQuery(query: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-flash",
-          systemInstruction = content {
-            text("You are SKELETON Search Grounding agent. Use real-time Google Search data to find verifiable scientific citations, papers, and current empirical findings. Format concisely.")
-          }
-        )
-        val response = model.generateContent("[SEARCH GROUNDING]: $query")
-        response.text ?: "No search telemetry returned."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Search grounding error", e)
-      "Search Grounding error: ${e.localizedMessage ?: "Failed to retrieve search data"}"
-    }
-  }
+  /** External Search grounding is intentionally disabled in zero-billing mode. */
+  suspend fun searchGroundedQuery(query: String): String =
+    "Google Search grounding is disabled in zero-billing mode. No search request was sent."
 
-  /**
-   * Maps Grounding using gemini-3.8-flash
-   */
-  suspend fun mapsGroundedQuery(query: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-flash",
-          systemInstruction = content {
-            text("You are SKELETON Maps Grounding agent. Locate real-world laboratories, bioscience facilities, universities, and tech research centers. Return precise geographic details.")
-          }
-        )
-        val response = model.generateContent("[MAPS GROUNDING]: $query")
-        response.text ?: "No maps telemetry returned."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Maps grounding error", e)
-      "Maps Grounding error: ${e.localizedMessage ?: "Failed to retrieve location data"}"
-    }
-  }
+  /** External Maps grounding is intentionally disabled in zero-billing mode. */
+  suspend fun mapsGroundedQuery(query: String): String =
+    "Google Maps grounding is disabled in zero-billing mode. No Maps request was sent."
 
-  /**
-   * Audio Transcription using gemini-3.5-transcribe
-   */
-  suspend fun transcribeAudio(audioDescriptionOrBytes: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(modelName = "gemini-3.5-transcribe")
-        val response = model.generateContent(
-          content {
-            text("Transcribe the speech audio with absolute precision: $audioDescriptionOrBytes")
-          }
-        )
-        response.text ?: "Transcription empty."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Audio transcription error", e)
-      "Transcription error [gemini-3.5-transcribe]: ${e.localizedMessage ?: "Audio buffer error"}"
-    }
-  }
+  /** Legacy text-only transcription entry point; real microphone capture uses Android SpeechRecognizer. */
+  suspend fun transcribeAudio(audioDescriptionOrBytes: String): String =
+    "Audio transcription now uses Android SpeechRecognizer. This legacy text-only API makes no network request."
 
-  /**
-   * Voice Conversations using gemini-3.8-live
-   */
-  suspend fun liveVoiceSession(speechInput: String): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-3.8-live",
-          systemInstruction = content {
-            text("You are SKELETON Live Voice Conversational Partner. Keep answers under 2 punchy spoken sentences. Ultra-fast, direct, energetic voice output.")
-          }
-        )
-        val response = model.generateContent(speechInput)
-        response.text ?: "Live voice stream acknowledged."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Live voice session error", e)
-      "Live Voice error [gemini-3.8-live]: ${e.localizedMessage ?: "Connection reset"}"
-    }
-  }
+  /** Legacy live-audio entry point; the current voice screen uses device speech services. */
+  suspend fun liveVoiceSession(speechInput: String): String =
+    "Live audio streaming is not implemented. Use the app's Android speech input and CORE response flow."
 
-  /**
-   * Create or edit images using gemini-nano-banana-2.1
-   */
-  suspend fun generateOrEditImage(
-    prompt: String,
-    existingImage: Bitmap? = null
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(modelName = "gemini-nano-banana-2.1")
-        val response = if (existingImage != null) {
-          model.generateContent(
-            content {
-              image(existingImage)
-              text("Edit this visual conceptual diagram according to: $prompt")
-            }
-          )
-        } else {
-          model.generateContent("Create a high-fidelity minimalist scientific concept visualization: $prompt")
-        }
-        response.text ?: "Image generation initiated."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Image generation with gemini-nano-banana-2.1 error", e)
-      "Image Generator [gemini-nano-banana-2.1]: ${e.localizedMessage ?: "Generation failed"}"
-    }
-  }
+  /** Image generation is disabled so the app cannot make a paid media request. */
+  suspend fun generateOrEditImage(prompt: String, existingImage: Bitmap? = null): String =
+    "Image generation is disabled in zero-billing mode. No paid model request was sent."
 
-  /**
-   * Video Generation from text using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
-   */
-  suspend fun generateVideo(
-    prompt: String,
-    aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-omni-1.1-flash",
-          systemInstruction = content {
-            text("You are SKELETON Video Generation Engine (Model: gemini-omni-1.1-flash via Interactions API). Generate high-fidelity video stream sequences with aspect ratio ${aspectRatio.ratioString}. Output camera choreography, keyframe lighting, and fluid motion dynamics.")
-          }
-        )
-        val response = model.generateContent("Render ${aspectRatio.ratioString} video sequence: $prompt")
-        response.text ?: "Video generation stream initialized."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Video generation error [gemini-omni-1.1-flash]", e)
-      "Video Generation [gemini-omni-1.1-flash (${aspectRatio.ratioString})]: ${e.localizedMessage ?: "Stream synthesis initialized"}"
-    }
-  }
+  /** Video rendering is not available in the current zero-billing build. */
+  suspend fun generateVideo(prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
+    "Video rendering is not implemented. No external API request was sent."
 
-  /**
-   * Animate Photo into Video using gemini-omni-1.1-flash (Aspect Ratio: 16:9 or 9:16)
-   */
-  suspend fun animateImageToVideo(
-    image: Bitmap,
-    prompt: String,
-    aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9
-  ): String = withContext(Dispatchers.IO) {
-    try {
-      withTimeout(60_000L) {
-        val model = Firebase.ai.generativeModel(
-          modelName = "gemini-omni-1.1-flash",
-          systemInstruction = content {
-            text("You are SKELETON Image Animation Engine (Model: gemini-omni-1.1-flash via Interactions API). Animate the provided user photo into a fluid cinematic video with aspect ratio ${aspectRatio.ratioString}. Synthesize temporal interpolation, particle vectors, and cinematic depth transitions.")
-          }
-        )
-        val response = model.generateContent(
-          content {
-            image(image)
-            text("Animate this photo into a ${aspectRatio.ratioString} video: $prompt")
-          }
-        )
-        response.text ?: "Photo animation rendering initiated."
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Photo animation error [gemini-omni-1.1-flash]", e)
-      "Photo Animation [gemini-omni-1.1-flash (${aspectRatio.ratioString})]: ${e.localizedMessage ?: "Animation motion synthesized"}"
-    }
-  }
+  /** Photo animation is not available in the current zero-billing build. */
+  suspend fun animateImageToVideo(image: Bitmap, prompt: String, aspectRatio: VideoAspectRatio = VideoAspectRatio.LANDSCAPE_16_9): String =
+    "Photo animation is not implemented. No external API request was sent."
 }

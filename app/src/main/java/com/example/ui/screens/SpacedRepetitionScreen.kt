@@ -102,7 +102,7 @@ fun SpacedRepetitionScreen(
           letterSpacing = 1.sp
         )
         Text(
-          text = "3-Day, 7-Day & 14-Day Memory Decay Intervals",
+          text = "3, 7, 14 & 30-Day Recall Intervals",
           color = SilverMuted,
           fontSize = 10.sp
         )
@@ -178,7 +178,7 @@ fun SpacedRepetitionScreen(
               1 -> "3d Interval"
               2 -> "7d Interval"
               3 -> "14d Interval"
-              4 -> "Permanent"
+              4 -> "30d Interval"
               else -> "Fresh Node"
             }
             Text(
@@ -231,7 +231,7 @@ fun SpacedRepetitionScreen(
             ) {
               Icon(imageVector = Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(14.dp))
               Spacer(modifier = Modifier.width(4.dp))
-              Text("Decayed (Reset 3d)", fontSize = 11.sp)
+              Text("Need a 10m retry", fontSize = 11.sp)
             }
           }
         }

@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -80,8 +81,8 @@ data class MailTransmissionLog(
 )
 
 enum class ReportType(val title: String, val desc: String) {
-  DAILY_SYNTHESIS("Daily Pinnacle Synthesis", "Full summary of the 16 Master Curriculum keys and active feed nodes"),
-  SPACED_RECALL("Spaced-Repetition Deck", "Active recall cards due for 3-day, 7-day, and 14-day memory consolidation"),
+  DAILY_SYNTHESIS("Daily Pinnacle Synthesis", "Full summary of the 19 Master Domains and active feed nodes"),
+  SPACED_RECALL("Spaced-Repetition Deck", "Active recall cards due for 3, 7, 14, and 30-day reviews"),
   CONCEPT_COLLIDER("Cross-Domain Collider Report", "High-impact synthesis between 2 disparate knowledge vault nodes")
 }
 
@@ -89,34 +90,17 @@ enum class ReportType(val title: String, val desc: String) {
 fun VaultMailerScreen(
   vaultCards: List<FeedCard>,
   currentLanguage: LanguageSetting,
-  userEmail: String = "towerking2010@gmail.com",
+  userEmail: String = "",
   userName: String = "Dasun",
   onBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
   var selectedReport by remember { mutableStateOf(ReportType.DAILY_SYNTHESIS) }
-  var isAutoScheduleActive by remember { mutableStateOf(true) }
+  var isAutoScheduleActive by remember { mutableStateOf(false) }
   var lastSentMessage by remember { mutableStateOf<String?>(null) }
 
-  val transmissionLogs = remember {
-    mutableListOf(
-      MailTransmissionLog(
-        id = "log_01",
-        timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date(System.currentTimeMillis() - 86400000L)),
-        subject = "[SKELETON VAULT]: Daily Synthesis Digest #102",
-        recipient = userEmail,
-        status = "DISPATCHED"
-      ),
-      MailTransmissionLog(
-        id = "log_02",
-        timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date(System.currentTimeMillis() - 86400000L * 2)),
-        subject = "[SKELETON VAULT]: Spaced Recall Flashcards (3d)",
-        recipient = userEmail,
-        status = "DISPATCHED"
-      )
-    )
-  }
+  val transmissionLogs = remember { mutableStateListOf<MailTransmissionLog>() }
 
   Box(
     modifier = modifier
@@ -228,7 +212,7 @@ fun VaultMailerScreen(
               .padding(horizontal = 8.dp, vertical = 4.dp)
           ) {
             Text(
-              text = "VERIFIED",
+              text = if (userEmail.isBlank()) "SIGN IN REQUIRED" else "SIGNED IN",
               color = EmeraldMastery,
               fontSize = 9.sp,
               fontWeight = FontWeight.Bold,
@@ -323,7 +307,7 @@ fun VaultMailerScreen(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = "AUTOMATED SCHEDULE (08:00 AM)",
+              text = "AUTOMATIC SCHEDULE UNAVAILABLE",
               color = SilverText,
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
@@ -331,44 +315,42 @@ fun VaultMailerScreen(
             )
           }
           Text(
-            text = "Dispatches daily synthesis directly to $userEmail",
+            text = "Manual email drafts only. This build does not schedule or send emails automatically.",
             color = SilverDim,
             fontSize = 10.sp
           )
         }
 
-        Switch(
-          checked = isAutoScheduleActive,
-          onCheckedChange = { isAutoScheduleActive = it },
-          colors = SwitchDefaults.colors(
-            checkedThumbColor = AmberAccent,
-            checkedTrackColor = ObsidianBg
-          )
-        )
+        Text("MANUAL", color = AmberAccent, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
       }
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Dispatch Button (1-Click Gmail Intent)
+      // Open a user-reviewed email draft; the app does not claim to send it.
       ElevatedButton(
         onClick = {
-          dispatchEmailDigest(
+          val opened = dispatchEmailDigest(
             context = context,
             userEmail = userEmail,
             userName = userName,
             reportType = selectedReport,
             cards = vaultCards
           )
-          val newLog = MailTransmissionLog(
-            id = "log_${System.currentTimeMillis()}",
-            timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date()),
-            subject = "[SKELETON VAULT]: ${selectedReport.title}",
-            recipient = userEmail,
-            status = "SENT_VIA_CLIENT"
-          )
-          transmissionLogs.add(0, newLog)
-          lastSentMessage = "Dispatched ${selectedReport.title} to $userEmail"
+          if (opened) {
+            val newLog = MailTransmissionLog(
+              id = "log_${System.currentTimeMillis()}",
+              timestamp = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date()),
+              subject = "[SKELETON VAULT]: ${selectedReport.title}",
+              recipient = userEmail,
+              status = "COMPOSER OPENED"
+            )
+            transmissionLogs.add(0, newLog)
+            lastSentMessage = "Opened an email draft addressed to $userEmail. Review and send it in your email app."
+          } else {
+            lastSentMessage = "No email app could open the draft. Nothing was sent."
+          }
         },
+        enabled = userEmail.isNotBlank(),
         modifier = Modifier
           .fillMaxWidth()
           .height(48.dp)
@@ -386,7 +368,7 @@ fun VaultMailerScreen(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-          text = "DISPATCH REPORT TO GMAIL",
+          text = if (userEmail.isBlank()) "SIGN IN TO USE VAULT MAILER" else "OPEN EMAIL DRAFT",
           fontWeight = FontWeight.Bold,
           fontSize = 12.sp,
           letterSpacing = 0.5.sp
@@ -467,7 +449,7 @@ private fun dispatchEmailDigest(
   userName: String,
   reportType: ReportType,
   cards: List<FeedCard>
-) {
+): Boolean {
   val subject = "[SKELETON VAULT]: ${reportType.title} for $userName"
   val bodyBuilder = StringBuilder()
   bodyBuilder.append("SKELETON // OMNISCIENT COGNITIVE VAULT REPORT\n")
@@ -497,8 +479,10 @@ private fun dispatchEmailDigest(
   }
 
   try {
-    context.startActivity(Intent.createChooser(intent, "Dispatch via Gmail"))
+    context.startActivity(Intent.createChooser(intent, "Review email draft"))
+    return true
   } catch (e: Exception) {
-    Toast.makeText(context, "Email client not found. Digest copied.", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Email client not found. Nothing was sent.", Toast.LENGTH_SHORT).show()
+    return false
   }
 }

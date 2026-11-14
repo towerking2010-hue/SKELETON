@@ -69,19 +69,23 @@ fun BossBattleScreen(
 ) {
   BackHandler { onBack() }
 
+  val activeCard = remember(vaultCards) { vaultCards.randomOrNull() }
   var timerSeconds by remember { mutableIntStateOf(30) }
-  var battleActive by remember { mutableStateOf(true) }
+  var battleActive by remember { mutableStateOf(activeCard != null) }
   var selectedChoiceIndex by remember { mutableStateOf<Int?>(null) }
   var score by remember { mutableIntStateOf(0) }
 
-  val questionTitle = "MULTI-VARIABLE STRESS TEST: CP Partition vs ZK Constraint"
-  val questionScenario =
-    "A distributed consensus cluster experiences a network partition while verifying a zero-knowledge roll-up proof. Node A has 3/5 quorum, Node B has 2/5 quorum. What invariant must Node B enforce to avoid an invalid state split?"
+  val questionTitle = activeCard?.let { "STRESS TEST // " + it.title } ?: "NO VAULT CONCEPT AVAILABLE"
+  val questionScenario = activeCard?.challengeScenario?.takeIf { it.isNotBlank() }
+    ?: activeCard?.let { "Explain the central mechanism of " + it.title + " and identify the condition under which it can fail." }
+    ?: "Save or create a learning card first, then launch Boss Battle."
+  val expectedKey = activeCard?.challengeExpectedKey?.takeIf { it.isNotBlank() }
+    ?: "Identify the governing mechanism, its invariant, and the relevant failure boundary."
   val options = listOf(
-    "A) Accept the proof locally and defer commit to disk later",
-    "B) Abort transitions immediately: quorum invariant < (N/2 + 1) fails",
-    "C) Switch to AP mode automatically and serve unverified proofs",
-    "D) Send a broadcast ping with zero backoff delay"
+    "A) Ignore the input conditions and assume the result is always valid.",
+    "B) Apply the governing mechanism: " + expectedKey,
+    "C) Repeat the title without explaining the underlying rule.",
+    "D) Skip validation and infer the outcome from intuition alone."
   )
   val correctIndex = 1
 
@@ -258,7 +262,7 @@ fun BossBattleScreen(
           Spacer(modifier = Modifier.height(16.dp))
           val won = selectedChoiceIndex == correctIndex
           Text(
-            text = if (won) "✓ MASTERED: Correct invariant abort applied (+100 PTS)" else "✗ FAILED: Partition split-brain occurred.",
+            text = if (won) "✓ MASTERED: Correct mechanism selected (+100 PTS)" else "✗ FAILED: Revisit this concept and inspect its failure boundary.",
             color = if (won) EmeraldMastery else CrimsonAdrenal,
             fontSize = 12.sp,
             fontFamily = FontFamily.Monospace,
