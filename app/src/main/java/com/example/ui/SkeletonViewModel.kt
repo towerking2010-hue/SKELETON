@@ -224,11 +224,10 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
         if (user != null) {
           val remoteAtSignIn = firestoreRepo.observeCloudCards().firstOrNull().orEmpty()
           remoteAtSignIn.forEach { repository.insertFeedCard(it) }
-          val remoteIds = remoteAtSignIn.map { it.id }.toSet()
-          val localCards = repository.feedCards.firstOrNull().orEmpty()
-          localCards.filterNot { it.id in remoteIds }.forEach { card ->
-            try { firestoreRepo.saveCardToCloud(card) } catch (_: Exception) {}
-          }
+          // Never upload the device-wide local library automatically at sign-in.
+          // It may contain data created before authentication or under another account.
+          // Cloud-to-device sync is scoped to the authenticated UID; individual uploads
+          // happen only after an explicit save/capture action while signed in.
           firestoreRepo.observeCloudCards().collectLatest { remoteCards ->
             remoteCards.forEach { repository.insertFeedCard(it) }
           }
