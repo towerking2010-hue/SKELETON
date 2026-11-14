@@ -91,7 +91,7 @@ fun SkeletonApp(
   when (activeDrawerMode) {
     DrawerMode.ACCOUNT -> {
       AccountScreen(
-        profileName = profileName,
+        profileName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
         signedInEmail = currentUser?.email,
         onSaveName = { viewModel.saveProfileName(it) },
         onAuthenticate = { email, password, name, create, success, error ->
@@ -105,7 +105,7 @@ fun SkeletonApp(
     DrawerMode.ARENA -> {
       ArenaScreen(
         profile = arenaProfile,
-        displayName = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: profileName,
+        displayName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
         onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
         onRecordAttempt = { skillId, correct -> viewModel.recordArenaAttempt(skillId, correct) },
         onBack = { viewModel.closeDrawerMode() }
