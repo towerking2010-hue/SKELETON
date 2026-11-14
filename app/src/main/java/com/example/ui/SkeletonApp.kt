@@ -15,6 +15,7 @@ import com.example.ui.components.BottomNavBar
 import com.example.ui.components.SubsystemDrawer
 import com.example.ui.components.TopHeaderBar
 import com.example.ui.screens.ArenaScreen
+import com.example.ui.screens.AccountScreen
 import com.example.ui.screens.ArLensScreen
 import com.example.ui.screens.AudioTranscribeScreen
 import com.example.ui.screens.AudiobookCaptionScreen
@@ -47,6 +48,7 @@ fun SkeletonApp(
   val adrenalMode by viewModel.adrenalMode.collectAsState()
   val arenaEnabled by viewModel.arenaEnabled.collectAsState()
   val arenaProfile by viewModel.arenaProfile.collectAsState()
+  val profileName by viewModel.profileName.collectAsState()
   val currentTab by viewModel.currentTab.collectAsState()
   val isDrawerOpen by viewModel.isDrawerOpen.collectAsState()
   val activeDrawerMode by viewModel.activeDrawerMode.collectAsState()
@@ -87,9 +89,23 @@ fun SkeletonApp(
 
   // 2. If a Subsystem mode was opened from Drawer, display it
   when (activeDrawerMode) {
+    DrawerMode.ACCOUNT -> {
+      AccountScreen(
+        profileName = profileName,
+        signedInEmail = currentUser?.email,
+        onSaveName = { viewModel.saveProfileName(it) },
+        onAuthenticate = { email, password, name, create, success, error ->
+          viewModel.authenticateEmail(email, password, name, create, success, error)
+        },
+        onSignOut = { viewModel.signOut() },
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
     DrawerMode.ARENA -> {
       ArenaScreen(
         profile = arenaProfile,
+        displayName = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: profileName,
         onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
         onRecordAttempt = { skillId, correct -> viewModel.recordArenaAttempt(skillId, correct) },
         onBack = { viewModel.closeDrawerMode() }
