@@ -14,8 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -85,14 +84,8 @@ fun FeedScreen(
   var challengeAnswerInput by remember { mutableStateOf("") }
   var selectedSubject by remember { mutableStateOf(LearningSubject.ALL) }
   val visibleCards = cards.filter { selectedSubject.matches(it) }
-  val pagerState = rememberPagerState(pageCount = { visibleCards.size })
   val masteredCount = cards.count { it.recallStage >= 4 }
   val mastery = if (cards.isEmpty()) 0f else masteredCount.toFloat() / cards.size.toFloat()
-  val currentPage = if (visibleCards.isEmpty()) 0 else pagerState.currentPage + 1
-
-  LaunchedEffect(selectedSubject) {
-    if (visibleCards.isNotEmpty()) pagerState.scrollToPage(0)
-  }
 
   Column(
     modifier = modifier.fillMaxSize().background(ObsidianBg).padding(horizontal = 14.dp, vertical = 6.dp),
@@ -105,9 +98,9 @@ fun FeedScreen(
     ) {
       Column {
         Text("DISCOVER", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-        Text("Swipe into something new", color = SilverMuted, fontSize = 11.sp)
+        Text("Explore deeply. Learn at your own pace.", color = SilverMuted, fontSize = 11.sp)
       }
-      Text(if (visibleCards.isEmpty()) "0 / 0" else "$currentPage / ${visibleCards.size}", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+      Text("${visibleCards.size} lessons", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     }
 
     AuthStatusBar(currentUser = currentUser, onSignInSuccess = onSignInSuccess, onSignOut = onSignOut, onOpenEmailSignIn = onOpenEmailSignIn)
@@ -183,61 +176,57 @@ fun FeedScreen(
 
     if (visibleCards.isEmpty()) {
       Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Text(if (cards.isEmpty()) "Your learning stream is waiting. Ask CORE to explore a topic." else "No discoveries in this subject yet.", color = SilverDim, fontSize = 13.sp)
+        Text(if (cards.isEmpty()) "Your learning library is waiting. Ask CORE to explore a topic." else "No lessons in this subject yet.", color = SilverDim, fontSize = 13.sp)
       }
     } else {
-      VerticalPager(
-        state = pagerState,
-        modifier = Modifier.weight(1f).fillMaxWidth().testTag("doomscroll_vertical_pager"),
-        pageSpacing = 12.dp
-      ) { page ->
-        val card = visibleCards[page]
-        DoomscrollDiscoveryCard(
-          card = card,
-          page = page + 1,
-          total = visibleCards.size,
-          onAsk = { onAskDeepDive(card.id) },
-          onSave = { onToggleSave(card) }
-        )
+      LazyColumn(
+        modifier = Modifier.weight(1f).fillMaxWidth().testTag("discovery_learning_list"),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 22.dp)
+      ) {
+        items(visibleCards, key = { it.id }) { card ->
+          DiscoveryLessonCard(
+            card = card,
+            onAsk = { onAskDeepDive(card.id) },
+            onSave = { onToggleSave(card) }
+          )
+        }
       }
     }
   }
 }
 
 @Composable
-private fun DoomscrollDiscoveryCard(
+private fun DiscoveryLessonCard(
   card: FeedCard,
-  page: Int,
-  total: Int,
   onAsk: () -> Unit,
   onSave: () -> Unit
 ) {
   Column(
-    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp))
-      .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(28.dp))
-      .padding(20.dp),
-    verticalArrangement = Arrangement.SpaceBetween
+    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+      .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(24.dp))
+      .padding(18.dp),
+    verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(card.branchDomain.uppercase(), color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        Text("$page / $total", color = SilverDim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
       }
-      Text(card.title, color = SilverText, fontSize = 27.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold, maxLines = 4, overflow = TextOverflow.Ellipsis)
+      Text(card.title, color = SilverText, fontSize = 27.sp, lineHeight = 33.sp, fontWeight = FontWeight.Bold)
       Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).padding(15.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp)
       ) {
         Text("THE QUESTION", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text(card.itch, color = SilverText, fontSize = 15.sp, lineHeight = 22.sp, maxLines = 5, overflow = TextOverflow.Ellipsis)
+        Text(card.itch, color = SilverText, fontSize = 15.sp, lineHeight = 23.sp)
       }
       Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text("THE IDEA", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text(card.intuition, color = SilverMuted, fontSize = 14.sp, lineHeight = 21.sp, maxLines = 5, overflow = TextOverflow.Ellipsis)
+        Text(card.intuition, color = SilverMuted, fontSize = 14.sp, lineHeight = 22.sp)
       }
       Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text("WHY IT WORKS", color = SilverDim, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text(card.skeleton, color = SilverText, fontSize = 13.sp, lineHeight = 19.sp, maxLines = 5, overflow = TextOverflow.Ellipsis)
+        Text(card.skeleton, color = SilverText, fontSize = 13.sp, lineHeight = 20.sp)
       }
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -259,7 +248,6 @@ private fun DoomscrollDiscoveryCard(
           Text("Talk this through", fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
       }
-      Text("SWIPE UP FOR THE NEXT DISCOVERY", color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.align(Alignment.CenterHorizontally))
     }
   }
 }
