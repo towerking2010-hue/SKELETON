@@ -15,6 +15,7 @@ import com.example.data.repository.FirestoreKnowledgeRepository
 import com.example.data.repository.SkeletonRepository
 import com.example.engine.SkeletonCognitiveEngine
 import com.example.engine.arena.ArenaProfile
+import com.example.engine.arena.ArenaSkillEvidence
 import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
@@ -77,7 +78,12 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   private val _arenaProfile = MutableStateFlow(
     ArenaProfile(
       xp = settings.getInt("arena_xp", 0).coerceAtLeast(0),
-      completedChallengeIds = settings.getStringSet("arena_completed", mutableSetOf<String>())?.toSet() ?: emptySet()
+      completedChallengeIds = settings.getStringSet("arena_completed", mutableSetOf<String>())?.toSet() ?: emptySet(),
+      skillEvidence = settings.getStringSet("arena_skill_evidence", mutableSetOf<String>())
+        ?.mapNotNull { entry ->
+          val parts = entry.split(":")
+          if (parts.size == 3) parts[0] to ArenaSkillEvidence(parts[1].toIntOrNull() ?: 0, parts[2].toIntOrNull() ?: 0) else null
+        }?.toMap() ?: emptyMap()
     )
   )
   val arenaProfile: StateFlow<ArenaProfile> = _arenaProfile.asStateFlow()
@@ -233,6 +239,22 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     if (!next && _activeDrawerMode.value == DrawerMode.ARENA) _activeDrawerMode.value = null
   }
 
+  fun recordArenaAttempt(skillId: String, correct: Boolean) {
+    if (skillId.isBlank()) return
+    val current = _arenaProfile.value
+    val previous = current.skillEvidence[skillId] ?: ArenaSkillEvidence()
+    val updatedEvidence = previous.copy(
+      attempts = previous.attempts + 1,
+      correct = previous.correct + if (correct) 1 else 0
+    )
+    val updated = current.copy(skillEvidence = current.skillEvidence + (skillId to updatedEvidence))
+    _arenaProfile.value = updated
+    settings.edit().putStringSet(
+      "arena_skill_evidence",
+      updated.skillEvidence.map { (id, evidence) -> "$id:${evidence.attempts}:${evidence.correct}" }.toMutableSet()
+    ).apply()
+  }
+
   fun completeArenaChallenge(challengeId: String, rewardXp: Int) {
     if (challengeId.isBlank() || rewardXp <= 0) return
     val current = _arenaProfile.value
@@ -244,7 +266,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     _arenaProfile.value = updated
     settings.edit()
       .putInt("arena_xp", updated.xp)
-      .putStringSet("arena_completed", updated.completedChallengeIds)
+      .putStringSet("arena_completed", updated.completedChallengeIds.toMutableSet())
       .apply()
   }
 
