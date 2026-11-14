@@ -33,14 +33,11 @@ object AuthManager {
     return context.getString(resourceId)
   }
 
-  private val _currentUser = MutableStateFlow<FirebaseUser?>(Firebase.auth.currentUser)
+  private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
   val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
-  init {
-    Firebase.auth.addAuthStateListener { auth ->
-      _currentUser.value = auth.currentUser
-    }
-  }
+  // Firebase is optional: local SKELETON features remain usable without project config.
+  private fun firebaseAuthOrNull(): FirebaseAuth? = runCatching { Firebase.auth }.getOrNull()
 
   fun attemptAutoSignIn(
     context: Context,
@@ -48,7 +45,14 @@ object AuthManager {
     onSuccess: (FirebaseUser) -> Unit = {},
     onUnauthenticated: () -> Unit = {}
   ) {
-    val user = Firebase.auth.currentUser
+    val auth = firebaseAuthOrNull()
+    if (auth == null) {
+      Log.i(TAG, "Firebase is not configured; continuing in local-only mode.")
+      onUnauthenticated()
+      return
+    }
+    auth.addAuthStateListener { firebaseAuth -> _currentUser.value = firebaseAuth.currentUser }
+    val user = auth.currentUser
     if (user != null) {
       _currentUser.value = user
       onSuccess(user)
@@ -81,7 +85,7 @@ object AuthManager {
         if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
           val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
           val authCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
-          val authResult = Firebase.auth.signInWithCredential(authCredential).await()
+          val authResult = auth.signInWithCredential(authCredential).await()
           authResult.user?.let {
             _currentUser.value = it
             onSuccess(it)
@@ -109,6 +113,12 @@ object AuthManager {
       return
     }
 
+    val auth = firebaseAuthOrNull()
+    if (auth == null) {
+      onError("Cloud sign-in is unavailable because Firebase is not configured. Local learning still works.")
+      return
+    }
+
     val credentialManager = CredentialManager.create(activity)
     val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId).build()
     val request = GetCredentialRequest.Builder()
@@ -122,7 +132,7 @@ object AuthManager {
         if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
           val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
           val authCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
-          val authResult = Firebase.auth.signInWithCredential(authCredential).await()
+          val authResult = auth.signInWithCredential(authCredential).await()
           val signedInUser = authResult.user
           if (signedInUser != null) {
             _currentUser.value = signedInUser
@@ -144,7 +154,7 @@ object AuthManager {
   }
 
   fun signOut(context: Context, scope: CoroutineScope, onComplete: () -> Unit = {}) {
-    Firebase.auth.signOut()
+    firebaseAuthOrNull()?.signOut()
     _currentUser.value = null
     val credentialManager = CredentialManager.create(context)
     scope.launch {
