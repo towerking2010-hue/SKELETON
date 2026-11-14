@@ -29,6 +29,7 @@ import com.example.ui.screens.GroundingScreen
 import com.example.ui.screens.ImageStudioScreen
 import com.example.ui.screens.LanguageTeacherScreen
 import com.example.ui.screens.SavedVaultScreen
+import com.example.ui.screens.ResearchScreen
 import com.example.ui.screens.SpacedRepetitionScreen
 import com.example.ui.screens.VaultMailerScreen
 import com.example.ui.screens.VideoStudioScreen
@@ -83,6 +84,13 @@ fun SkeletonApp(
 
   // 2. If a Subsystem mode was opened from Drawer, display it
   when (activeDrawerMode) {
+    DrawerMode.RESEARCH -> {
+      ResearchScreen(
+        currentLanguage = systemLanguage,
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
     DrawerMode.BIOSCIENCE -> {
       BioscienceScreen(
         currentLanguage = systemLanguage,
