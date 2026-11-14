@@ -118,7 +118,7 @@ fun ArenaScreen(
       verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
       Text("YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
-      Text("Private skill signals from your answers · not an IQ or clinical test", color = SilverDim, fontSize = 8.sp)
+      Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
       Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ArenaEngine.skillsFor(profile).forEach { skill ->
           Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
