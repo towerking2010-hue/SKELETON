@@ -14,6 +14,7 @@ import com.example.data.model.LanguageSetting
 import com.example.data.repository.FirestoreKnowledgeRepository
 import com.example.data.repository.SkeletonRepository
 import com.example.engine.SkeletonCognitiveEngine
+import com.example.engine.arena.ArenaProfile
 import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
@@ -37,6 +38,7 @@ enum class MainTab {
 }
 
 enum class DrawerMode(val title: String, val subtitle: String) {
+  ARENA("THE ARENA", "Optional offline game · trials, campaigns and XP progression"),
   RESEARCH("RESEARCH DESK", "Free source discovery · no AI calls or paid APIs"),
   YGGDRASIL("YGGDRASIL", "Multiversal knowledge tree & concept links"),
   CONCEPT_COLLIDER("CONCEPT COLLIDER", "Synthesize 2 Vault Nodes"),
@@ -68,6 +70,17 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
       .getOrDefault(LanguageSetting.ENGLISH)
   )
   val systemLanguage: StateFlow<LanguageSetting> = _systemLanguage.asStateFlow()
+
+  private val _arenaEnabled = MutableStateFlow(settings.getBoolean("arena_enabled", false))
+  val arenaEnabled: StateFlow<Boolean> = _arenaEnabled.asStateFlow()
+
+  private val _arenaProfile = MutableStateFlow(
+    ArenaProfile(
+      xp = settings.getInt("arena_xp", 0).coerceAtLeast(0),
+      completedChallengeIds = settings.getStringSet("arena_completed", emptySet())?.toSet() ?: emptySet()
+    )
+  )
+  val arenaProfile: StateFlow<ArenaProfile> = _arenaProfile.asStateFlow()
 
   private val _cringeFilterEnabled = MutableStateFlow(settings.getBoolean("cringe_filter", true))
   val cringeFilterEnabled: StateFlow<Boolean> = _cringeFilterEnabled.asStateFlow()
@@ -211,6 +224,28 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch {
       repository.switchCurriculumLanguage(next)
     }
+  }
+
+  fun toggleArenaEnabled() {
+    val next = !_arenaEnabled.value
+    _arenaEnabled.value = next
+    settings.edit().putBoolean("arena_enabled", next).apply()
+    if (!next && _activeDrawerMode.value == DrawerMode.ARENA) _activeDrawerMode.value = null
+  }
+
+  fun completeArenaChallenge(challengeId: String, rewardXp: Int) {
+    if (challengeId.isBlank() || rewardXp <= 0) return
+    val current = _arenaProfile.value
+    if (challengeId in current.completedChallengeIds) return
+    val updated = current.copy(
+      xp = current.xp + rewardXp,
+      completedChallengeIds = current.completedChallengeIds + challengeId
+    )
+    _arenaProfile.value = updated
+    settings.edit()
+      .putInt("arena_xp", updated.xp)
+      .putStringSet("arena_completed", updated.completedChallengeIds)
+      .apply()
   }
 
   fun toggleCringeFilter() {
