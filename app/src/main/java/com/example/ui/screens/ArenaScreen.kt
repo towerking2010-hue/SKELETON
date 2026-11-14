@@ -53,7 +53,6 @@ import com.example.ui.theme.SilverText
 @Composable
 fun ArenaScreen(
   profile: ArenaProfile,
-  currentLanguageIsSinhala: Boolean,
   onCompleteChallenge: (String, Int) -> Unit,
   onBack: () -> Unit
 ) {
@@ -168,7 +167,7 @@ private fun ChallengePanel(
   submitted: Boolean,
   lastWasCorrect: Boolean,
   onSelect: (Int) -> Unit,
-  onSubmit: () -> Unit,
+  onRetry: () -> Unit,\n  onSubmit: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   Column(
