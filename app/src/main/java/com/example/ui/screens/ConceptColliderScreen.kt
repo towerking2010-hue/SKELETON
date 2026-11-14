@@ -179,9 +179,11 @@ fun ConceptColliderScreen(
           // Collide Action Button
           ElevatedButton(
             onClick = {
-              if (cardA != null && cardB != null) {
-                onCollide(cardA!!, cardB!!)
-                collisionResultTitle = "${cardA!!.title} ⊗ ${cardB!!.title}"
+              val first = cardA
+              val second = cardB
+              if (first != null && second != null && first.id != second.id) {
+                onCollide(first, second)
+                collisionResultTitle = "${first.title} ⊗ ${second.title}"
               }
             },
             enabled = cardA != null && cardB != null && cardA?.id != cardB?.id,
