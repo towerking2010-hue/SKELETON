@@ -135,6 +135,7 @@ fun ArenaScreen(
         submitted = submitted,
         lastWasCorrect = lastWasCorrect,
         onSelect = { if (!submitted) selectedAnswer = it },
+        onRetry = { selectedAnswer = -1; submitted = false; lastWasCorrect = false },
         onSubmit = {
           if (selectedAnswer == challenge.correctIndex) {
             lastWasCorrect = true
