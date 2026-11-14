@@ -157,6 +157,18 @@ fun SubsystemDrawer(
           onClick = { onSelectMode(DrawerMode.RESEARCH) }
         )
 
+        if (arenaEnabled) {
+          Spacer(modifier = Modifier.height(10.dp))
+          SubsystemRowItem(
+            title = "MODE [THE ARENA]",
+            description = "Optional offline game: trials, strategy campaigns and XP ranks",
+            icon = Icons.Filled.FlashOn,
+            accentColor = AmberAccent,
+            testTag = "mode_the_arena",
+            onClick = { onSelectMode(DrawerMode.ARENA) }
+          )
+        }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         // Tool: MODE [BIOSCIENCE LAB]
@@ -367,6 +379,26 @@ fun SubsystemDrawer(
           fontFamily = FontFamily.Monospace,
           letterSpacing = 1.sp
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Optional Arena game layer
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Column(Modifier.weight(1f)) {
+            Text("FEATURE [THE ARENA]", color = if (arenaEnabled) AmberAccent else SilverText, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Text("Optional game mode · local XP · no purchases", color = SilverDim, fontSize = 11.sp)
+          }
+          Switch(
+            checked = arenaEnabled,
+            onCheckedChange = { onToggleArenaEnabled() },
+            colors = SwitchDefaults.colors(checkedThumbColor = AmberAccent, checkedTrackColor = ObsidianBg),
+            modifier = Modifier.testTag("switch_arena_enabled")
+          )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
