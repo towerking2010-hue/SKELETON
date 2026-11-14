@@ -81,10 +81,12 @@ fun SubsystemDrawer(
   currentLanguage: LanguageSetting,
   cringeFilterEnabled: Boolean,
   adrenalMode: Boolean,
+  arenaEnabled: Boolean,
   onDismiss: () -> Unit,
   onSelectMode: (DrawerMode) -> Unit,
   onToggleCringeFilter: () -> Unit,
   onToggleAdrenalMode: () -> Unit,
+  onToggleArenaEnabled: () -> Unit,
   onSetLanguage: (LanguageSetting) -> Unit,
   modifier: Modifier = Modifier
 ) {
