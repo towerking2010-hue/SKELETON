@@ -43,6 +43,7 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.util.UUID
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
 fun ArLensScreen(
@@ -73,45 +74,61 @@ fun ArLensScreen(
       val executor = Executors.newSingleThreadExecutor()
       val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
       val providerFuture = ProcessCameraProvider.getInstance(context)
+      val active = AtomicBoolean(true)
       var provider: ProcessCameraProvider? = null
-      providerFuture.addListener({
+      providerFuture.addListener(listener@{
+        if (!active.get()) return@listener
         try {
-          provider = providerFuture.get()
+          val cameraProvider = providerFuture.get()
+          if (!active.get()) return@listener
+          provider = cameraProvider
           val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
           val analysis = ImageAnalysis.Builder()
             .setTargetResolution(Size(1280, 720))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
           analysis.setAnalyzer(executor) { proxy ->
-            val media = proxy.image
-            if (media == null) {
+            if (!active.get()) {
               proxy.close()
             } else {
-              val image = InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees)
-              recognizer.process(image)
-                .addOnSuccessListener { result ->
-                  val text = result.text.trim()
-                  if (text.isNotBlank()) {
-                    detectedText = text
-                    cameraStatus = "Live text detected · Latin script"
-                    isSaved = false
-                  }
+              val media = proxy.image
+              if (media == null) {
+                proxy.close()
+              } else {
+                try {
+                  val image = InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees)
+                  recognizer.process(image)
+                    .addOnSuccessListener { result ->
+                      if (active.get()) {
+                        val text = result.text.trim()
+                        if (text.isNotBlank()) {
+                          detectedText = text
+                          cameraStatus = "Live text detected · Latin script"
+                          isSaved = false
+                        }
+                      }
+                    }
+                    .addOnFailureListener { if (active.get()) cameraStatus = "Live text analysis failed." }
+                    .addOnCompleteListener { proxy.close() }
+                } catch (_: Exception) {
+                  proxy.close()
                 }
-                .addOnFailureListener { cameraStatus = "Live text analysis failed." }
-                .addOnCompleteListener { proxy.close() }
+              }
             }
           }
-          provider?.unbindAll()
-          camera = provider?.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
+          if (!active.get()) return@listener
+          cameraProvider.unbindAll()
+          camera = cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
           cameraStatus = "LIVE OPTICAL FEED · scanning for text"
         } catch (error: Exception) {
-          cameraStatus = "Camera could not start: ${error.localizedMessage ?: "unknown error"}"
+          if (active.get()) cameraStatus = "Camera could not start: ${error.localizedMessage ?: "unknown error"}"
         }
       }, ContextCompat.getMainExecutor(context))
       onDispose {
+        active.set(false)
         try { provider?.unbindAll() } catch (_: Exception) { }
         recognizer.close()
-        executor.shutdown()
+        executor.shutdownNow()
         camera = null
       }
     }
