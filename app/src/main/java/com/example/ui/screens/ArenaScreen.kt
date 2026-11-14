@@ -54,10 +54,11 @@ import com.example.ui.theme.SilverText
 fun ArenaScreen(
   profile: ArenaProfile,
   onCompleteChallenge: (String, Int) -> Unit,
+  onRecordAttempt: (String, Boolean) -> Unit,
   onBack: () -> Unit
 ) {
   var selectedMode by remember { mutableStateOf("ALL") }
-  val available = ArenaEngine.challengesFor(selectedMode, profile.completedChallengeIds)
+  val available = ArenaEngine.challengesFor(selectedMode, profile)
   val challenge = available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
@@ -108,6 +109,23 @@ fun ArenaScreen(
       }
     }
 
+    Column(
+      Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(ObsidianSurface)
+        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(12.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      Text("YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
+      Text("Built only from your Arena answers. Not an IQ test or clinical assessment.", color = SilverDim, fontSize = 9.sp, lineHeight = 13.sp)
+      ArenaEngine.skillsFor(profile).forEach { skill ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+          Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(skill.label, color = SilverText, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+            Text(if (skill.evidence.attempts == 0) "NOT ASSESSED" else skill.evidence.attempts.toString() + " attempts · " + if (skill.evidence.isEstablished) "EARLY SIGNAL" else "BUILDING EVIDENCE", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+          }
+          Text(if (skill.evidence.attempts == 0) "—" else skill.evidence.accuracy.toString() + "%", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        }
+      }
+    }
     Text("CHOOSE YOUR TRIAL", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
       ArenaEngine.modes.forEach { mode ->
@@ -137,7 +155,9 @@ fun ArenaScreen(
         onSelect = { if (!submitted) selectedAnswer = it },
         onRetry = { selectedAnswer = -1; submitted = false; lastWasCorrect = false },
         onSubmit = {
-          if (selectedAnswer == challenge.correctIndex) {
+          val isCorrect = selectedAnswer == challenge.correctIndex
+          onRecordAttempt(challenge.skillId, isCorrect)
+          if (isCorrect) {
             lastWasCorrect = true
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
