@@ -87,6 +87,14 @@ fun SkeletonApp(
 
   // 2. If a Subsystem mode was opened from Drawer, display it
   when (activeDrawerMode) {
+    DrawerMode.ARENA -> {
+      ArenaScreen(
+        profile = arenaProfile,
+        onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
+        onBack = { viewModel.closeDrawerMode() }
+      )
+      return
+    }
     DrawerMode.RESEARCH -> {
       ResearchScreen(
         currentLanguage = systemLanguage,
@@ -326,10 +334,12 @@ fun SkeletonApp(
       currentLanguage = systemLanguage,
       cringeFilterEnabled = cringeFilterEnabled,
       adrenalMode = adrenalMode,
+      arenaEnabled = arenaEnabled,
       onDismiss = { viewModel.closeDrawer() },
       onSelectMode = { mode -> viewModel.selectDrawerMode(mode) },
       onToggleCringeFilter = { viewModel.toggleCringeFilter() },
       onToggleAdrenalMode = { viewModel.toggleAdrenalMode() },
+      onToggleArenaEnabled = { viewModel.toggleArenaEnabled() },
       onSetLanguage = { lang -> viewModel.setSystemLanguage(lang) }
     )
   }
