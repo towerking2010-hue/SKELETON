@@ -167,7 +167,8 @@ private fun ChallengePanel(
   submitted: Boolean,
   lastWasCorrect: Boolean,
   onSelect: (Int) -> Unit,
-  onRetry: () -> Unit,\n  onSubmit: () -> Unit,
+  onRetry: () -> Unit,
+  onSubmit: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   Column(
@@ -218,9 +219,9 @@ private fun ChallengePanel(
     } else if (lastWasCorrect) {
       Text("NEXT TRIAL LOADS AUTOMATICALLY", color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
     } else {
-      Button(onClick = { onSelect(-1); onSubmit() }, enabled = false, modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(containerColor = ObsidianSurfaceElevated)) {
-        Text("REVIEW THE EXPLANATION ABOVE", color = SilverMuted, fontSize = 10.sp)
+      Button(onClick = onRetry, modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = ObsidianSurfaceElevated, contentColor = SilverText)) {
+        Text("TRY AGAIN", fontSize = 10.sp, fontWeight = FontWeight.Bold)
       }
     }
   }
