@@ -39,6 +39,7 @@ enum class MainTab {
 }
 
 enum class DrawerMode(val title: String, val subtitle: String) {
+  ACCOUNT("SKELETON IDENTITY", "Your profile, sign-in and progress preferences"),
   ARENA("THE ARENA", "Personal adaptive skill training · private local profile"),
   RESEARCH("RESEARCH DESK", "Free source discovery · no AI calls or paid APIs"),
   YGGDRASIL("YGGDRASIL", "Multiversal knowledge tree & concept links"),
