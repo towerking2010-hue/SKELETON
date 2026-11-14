@@ -11,14 +11,24 @@ import com.example.engine.ai.AiRole
 import com.example.engine.ai.GeminiCognitiveService
 import com.example.engine.ai.ModelTier
 import com.example.engine.learning.SpacedRepetitionScheduler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 import java.util.UUID
 
 class SkeletonRepository(private val dao: SkeletonDao) {
 
   val feedCards: Flow<List<FeedCard>> = dao.getAllFeedCards()
-  fun dueReviewCards(now: Long): Flow<List<FeedCard>> = dao.getDueReviewCards(now)
+  /** Re-evaluates wall-clock due times every minute while still reacting immediately to Room changes. */
+  @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+  fun dueReviewCards(): Flow<List<FeedCard>> = flow {
+    while (true) {
+      emit(System.currentTimeMillis())
+      delay(60_000L)
+    }
+  }.flatMapLatest { now -> dao.getDueReviewCards(now) }
   val savedCards: Flow<List<FeedCard>> = dao.getSavedCards()
   val coreMessages: Flow<List<CoreChatMessage>> = dao.getAllCoreMessages()
   val ghostChallenges: Flow<List<GhostChallenge>> = dao.getAllGhostChallenges()
