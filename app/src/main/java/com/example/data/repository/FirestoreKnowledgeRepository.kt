@@ -15,25 +15,30 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
-class FirestoreKnowledgeRepository(private val db: FirebaseFirestore) {
+class FirestoreKnowledgeRepository(private val db: FirebaseFirestore?) {
 
   companion object {
     private const val TAG = "FirestoreRepo"
 
     fun create(context: Context): FirestoreKnowledgeRepository {
-      val dbId = context.getString(R.string.firestore_database_id)
-      return FirestoreKnowledgeRepository(FirebaseFirestore.getInstance(dbId))
+      val db = runCatching {
+        val dbId = context.getString(R.string.firestore_database_id)
+        if (com.google.firebase.FirebaseApp.getApps(context).isEmpty()) null
+        else FirebaseFirestore.getInstance(dbId)
+      }.onFailure { Log.w(TAG, "Firebase unavailable; cloud sync disabled.", it) }.getOrNull()
+      return FirestoreKnowledgeRepository(db)
     }
   }
 
   private fun requireUserId(): String {
-    return Firebase.auth.currentUser?.uid
-      ?: throw IllegalStateException("User must be authenticated with Google to access Firestore.")
+    return runCatching { Firebase.auth.currentUser?.uid }.getOrNull()
+      ?: throw IllegalStateException("Cloud sync is unavailable or the user is not authenticated.")
   }
 
   suspend fun saveCardToCloud(card: FeedCard) {
+    val database = db ?: throw IllegalStateException("Firebase is not configured; cloud sync is disabled.")
     val uid = requireUserId()
-    val docRef = db.collection("users").document(uid).collection("cards").document(card.id)
+    val docRef = database.collection("users").document(uid).collection("cards").document(card.id)
     val data = mapOf(
       "id" to card.id,
       "userId" to uid,
@@ -58,8 +63,9 @@ class FirestoreKnowledgeRepository(private val db: FirebaseFirestore) {
   }
 
   fun observeCloudCards(): Flow<List<FeedCard>> = flow {
+    val database = db ?: run { emit(emptyList()); return@flow }
     val uid = requireUserId()
-    db.collection("users").document(uid).collection("cards")
+    database.collection("users").document(uid).collection("cards")
       .snapshots()
       .map { snapshot ->
         snapshot.documents.mapNotNull { doc ->
