@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -61,7 +62,7 @@ fun AccountScreen(
         Text("SKELETON IDENTITY", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, letterSpacing = 1.8.sp)
         Text("Your name. Your progress. Your space.", color = SilverMuted, fontSize = 12.sp)
       }
-      Text("BACK", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp))
+      Text("BACK", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onBack).padding(8.dp))
     }
 
     Column(
