@@ -37,6 +37,7 @@ enum class MainTab {
 }
 
 enum class DrawerMode(val title: String, val subtitle: String) {
+  RESEARCH("RESEARCH DESK", "Free source discovery · no AI calls or paid APIs"),
   YGGDRASIL("YGGDRASIL", "Multiversal knowledge tree & concept links"),
   CONCEPT_COLLIDER("CONCEPT COLLIDER", "Synthesize 2 Vault Nodes"),
   AR_LENS("AR LENS", "Real-World Camera & Vault Cross-Reference"),
