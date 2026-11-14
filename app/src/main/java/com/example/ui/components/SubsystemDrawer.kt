@@ -83,6 +83,8 @@ fun SubsystemDrawer(
   cringeFilterEnabled: Boolean,
   adrenalMode: Boolean,
   arenaEnabled: Boolean,
+  profileName: String = "",
+  accountEmail: String? = null,
   onDismiss: () -> Unit,
   onSelectMode: (DrawerMode) -> Unit,
   onToggleCringeFilter: () -> Unit,
@@ -147,6 +149,31 @@ fun SubsystemDrawer(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+            .background(ObsidianSurfaceElevated).border(1.dp, ObsidianBorder, RoundedCornerShape(18.dp))
+            .padding(14.dp),
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Box(
+            modifier = Modifier.size(42.dp).clip(CircleShape).background(CyanNeon.copy(alpha = 0.16f))
+              .border(1.dp, CyanNeon, CircleShape),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = profileName.trim().firstOrNull()?.uppercase() ?: accountEmail?.firstOrNull()?.uppercase() ?: "S",
+              color = CyanNeon, fontWeight = FontWeight.Black, fontSize = 18.sp
+            )
+          }
+          Spacer(Modifier.width(12.dp))
+          Column(Modifier.weight(1f)) {
+            Text(profileName.ifBlank { "Welcome to SKELETON" }, color = SilverText, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+            Text(accountEmail ?: "Local profile · Sign in to sync", color = SilverMuted, fontSize = 10.sp, maxLines = 1)
+          }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         SubsystemRowItem(
           title = "SKELETON IDENTITY",
