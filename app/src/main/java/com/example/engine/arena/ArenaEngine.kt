@@ -51,7 +51,9 @@ object ArenaEngine {
     ArenaSkill("strategic_judgment", "Strategic judgment", "Choosing actions under constraints and uncertainty.", ArenaSkillEvidence()),
     ArenaSkill("scientific_reasoning", "Scientific reasoning", "Applying scientific models and checking mechanisms.", ArenaSkillEvidence()),
     ArenaSkill("memory_learning", "Memory & learning", "Using retrieval, spacing and durable learning strategies.", ArenaSkillEvidence()),
-    ArenaSkill("probabilistic_thinking", "Probabilistic thinking", "Using base rates and numerical uncertainty.", ArenaSkillEvidence())
+    ArenaSkill("probabilistic_thinking", "Probabilistic thinking", "Using base rates and numerical uncertainty.", ArenaSkillEvidence()),
+    ArenaSkill("attention_control", "Attention control", "Protecting task focus and recovering from interruptions.", ArenaSkillEvidence()),
+    ArenaSkill("systems_thinking", "Systems thinking", "Recognizing feedback loops, delays and second-order effects.", ArenaSkillEvidence())
   )
 
   fun skillsFor(profile: ArenaProfile): List<ArenaSkill> = skillCatalog.map { skill ->
@@ -125,6 +127,26 @@ object ArenaEngine {
       explanation = "Out of 100,000 people, about 100 have the condition and 99 test positive. Of 99,900 without it, about 999 test falsely positive. So roughly 99 of 1,098 positive results are true positives—about 9%.",
       rewardXp = 50,
       skillId = "probabilistic_thinking"
+    ),
+    ArenaChallenge(
+      id = "mind_attention_01", mode = "MIND TRIALS", title = "Signal Through Noise",
+      domain = "Attention & Executive Control", difficulty = "EASY",
+      prompt = "You have a 25-minute task requiring careful reasoning. Notifications keep appearing. Which response best protects focused work?",
+      options = listOf("Check every notification immediately", "Keep switching tasks to stay stimulated", "Silence interruptions, note anything urgent, and return at a planned break", "Leave every app open and monitor them"),
+      correctIndex = 2,
+      explanation = "Reducing interruptions and batching non-urgent checks protects sustained attention. This tests a practical strategy, not a clinical measure of attention capacity.",
+      rewardXp = 20,
+      skillId = "attention_control"
+    ),
+    ArenaChallenge(
+      id = "case_systems_01", mode = "CASE FILES", title = "The Delayed Loop",
+      domain = "Systems Thinking", difficulty = "MEDIUM",
+      prompt = "A predator population grows after prey become abundant. The prey then decline, followed later by a predator decline. What concept best explains the lag?",
+      options = listOf("A delayed feedback loop", "A single isolated event", "A system with no interactions", "A guaranteed linear trend"),
+      correctIndex = 0,
+      explanation = "Predator and prey populations influence each other, often with time delays. Systems thinking looks for relationships, feedback and delayed consequences rather than one-step causes.",
+      rewardXp = 35,
+      skillId = "systems_thinking"
     )
   )
 
