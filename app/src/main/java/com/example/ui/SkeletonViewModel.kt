@@ -77,7 +77,7 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
   private val _arenaProfile = MutableStateFlow(
     ArenaProfile(
       xp = settings.getInt("arena_xp", 0).coerceAtLeast(0),
-      completedChallengeIds = settings.getStringSet("arena_completed", emptySet())?.toSet() ?: emptySet()
+      completedChallengeIds = settings.getStringSet("arena_completed", mutableSetOf<String>())?.toSet() ?: emptySet()
     )
   )
   val arenaProfile: StateFlow<ArenaProfile> = _arenaProfile.asStateFlow()
