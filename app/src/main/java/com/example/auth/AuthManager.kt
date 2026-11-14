@@ -15,6 +15,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Co
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
@@ -149,6 +150,46 @@ object AuthManager {
       } catch (e: Exception) {
         Log.e(TAG, "Google Sign-In failed", e)
         onError(e.localizedMessage ?: "Sign-in error")
+      }
+    }
+  }
+
+
+  fun signInWithEmail(
+    email: String,
+    password: String,
+    displayName: String,
+    createAccount: Boolean,
+    scope: CoroutineScope,
+    onSuccess: (FirebaseUser) -> Unit,
+    onError: (String) -> Unit
+  ) {
+    val auth = firebaseAuthOrNull()
+    if (auth == null) {
+      onError("Email sign-in needs SKELETON's Firebase project configuration. Local profile mode is still available.")
+      return
+    }
+    if (email.isBlank() || password.length < 6) {
+      onError("Enter a valid email and a password with at least 6 characters.")
+      return
+    }
+    scope.launch {
+      try {
+        val result = if (createAccount) {
+          auth.createUserWithEmailAndPassword(email.trim(), password).await()
+        } else {
+          auth.signInWithEmailAndPassword(email.trim(), password).await()
+        }
+        val user = result.user ?: throw IllegalStateException("Authentication returned no user.")
+        if (createAccount && displayName.isNotBlank()) {
+          user.updateProfile(
+            UserProfileChangeRequest.Builder().setDisplayName(displayName.trim()).build()
+          ).await()
+        }
+        _currentUser.value = user
+        onSuccess(user)
+      } catch (error: Exception) {
+        onError(error.localizedMessage ?: "Email sign-in failed. Check your details and try again.")
       }
     }
   }
