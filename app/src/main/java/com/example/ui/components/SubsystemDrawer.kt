@@ -145,6 +145,18 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Research Desk: free public bibliographic metadata, no model inference.
+        SubsystemRowItem(
+          title = "MODE [RESEARCH DESK]",
+          description = "Search open scholarly records and inspect original sources",
+          icon = Icons.Filled.TravelExplore,
+          accentColor = CyanNeon,
+          testTag = "mode_research_desk",
+          onClick = { onSelectMode(DrawerMode.RESEARCH) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         // Tool: MODE [BIOSCIENCE LAB]
         SubsystemRowItem(
           title = "MODE [BIOSCIENCE LAB]",
