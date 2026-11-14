@@ -355,6 +355,8 @@ fun SkeletonApp(
       cringeFilterEnabled = cringeFilterEnabled,
       adrenalMode = adrenalMode,
       arenaEnabled = arenaEnabled,
+      profileName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
+      accountEmail = currentUser?.email,
       onDismiss = { viewModel.closeDrawer() },
       onSelectMode = { mode -> viewModel.selectDrawerMode(mode) },
       onToggleCringeFilter = { viewModel.toggleCringeFilter() },
