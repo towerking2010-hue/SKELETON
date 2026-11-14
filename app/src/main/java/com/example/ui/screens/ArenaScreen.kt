@@ -59,13 +59,14 @@ fun ArenaScreen(
 ) {
   var selectedMode by remember { mutableStateOf("ALL") }
   var activeChallengeId by remember { mutableStateOf<String?>(null) }
+  var challengeCycle by remember { mutableIntStateOf(0) }
   val available = ArenaEngine.challengesFor(selectedMode, profile)
   val challenge = available.firstOrNull { it.id == activeChallengeId } ?: available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
 
-  LaunchedEffect(challenge?.id) {
+  LaunchedEffect(challenge?.id, challengeCycle) {
     activeChallengeId = challenge?.id
     selectedAnswer = -1
     submitted = false
@@ -160,6 +161,7 @@ fun ArenaScreen(
           onRecordAttempt(challenge.skillId, isCorrect)
           if (isCorrect) {
             activeChallengeId = null
+            challengeCycle++
             lastWasCorrect = true
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
