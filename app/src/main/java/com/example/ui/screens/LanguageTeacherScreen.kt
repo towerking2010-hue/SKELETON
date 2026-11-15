@@ -292,7 +292,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             } else {
               Text(if (si) "අර්ථය මතක් කරගෙන පසුව පෙන්වන්න." else "Try to recall the meaning before revealing it.", color = SilverMuted, fontSize = 13.sp)
             }
-            Text(if (si) "දන්නා වචන: ${vocabularyKnown.size}/${vocabulary.size}" else "Mastered: ${vocabularyKnown.size}/undefined", color = AmberAccent, fontSize = 11.sp)
+            Text(if (si) "දන්නා වචන: ${vocabularyKnown.size}/${vocabulary.size}" else "Mastered: ${vocabularyKnown.size}/${vocabulary.size}", color = AmberAccent, fontSize = 11.sp)
           }
         },
         confirmButton = {
