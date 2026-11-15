@@ -29,6 +29,7 @@ import com.example.engine.learning.FluentPathProgressState
 import com.example.engine.learning.FluentPathProgression
 import com.example.engine.learning.FluentPathLocalization
 import com.example.engine.learning.FluentPathAnswerChecker
+import com.example.engine.learning.FluentPathVocabulary
 import com.example.ui.theme.*
 import java.util.Locale
 
@@ -116,6 +117,14 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   var tts by remember { mutableStateOf<TextToSpeech?>(null) }
   var voiceReady by remember { mutableStateOf(false) }
   var voiceStatus by remember { mutableStateOf("") }
+  var vocabularyOpen by remember { mutableStateOf(false) }
+  var vocabularyIndex by remember { mutableIntStateOf(0) }
+  var vocabularyRevealed by remember { mutableStateOf(false) }
+  var vocabularyKnown by remember(courseId) {
+    mutableStateOf(prefs.getStringSet("vocab_known_$courseId", emptySet())?.toSet() ?: emptySet())
+  }
+  val vocabulary = remember(courseId) { FluentPathVocabulary.forCourse(courseId) }
+  val currentWord = vocabulary.getOrNull(vocabularyIndex)
   val course = courses.firstOrNull { it.id == courseId } ?: courses.first()
   val lesson = course.lessons.firstOrNull { it.id == lessonId }
   val q = lesson?.questions?.getOrNull(qIndex) ?: BhQuestion("", "", emptyList(), 0, "", "")
@@ -163,6 +172,12 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             Text("$xp ${if (si) "ලකුණු" else "XP"}", color = AmberAccent, fontWeight = FontWeight.Bold)
           }
           Text(if (si) "ඉගෙන ගන්නා භාෂාව තෝරන්න. සෑම පාඩමකම පැහැදිලි කිරීමක්, උදාහරණයක් සහ ප්‍රශ්න කිහිපයක් ඇත." else "Choose a language. Each lesson combines explanation, examples, active recall and a mastery check.", color = SilverMuted, fontSize = 12.sp, lineHeight = 19.sp)
+          OutlinedButton(
+            onClick = { vocabularyOpen = true; vocabularyIndex = 0; vocabularyRevealed = false },
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text(if (si) "වචන පුහුණුගාරය · ${vocabularyKnown.size}/${vocabulary.size} දන්නවා" else "VOCABULARY LAB · ${vocabularyKnown.size}/${vocabulary.size} mastered")
+          }
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             courses.forEach { c ->
               val active = c.id == course.id
@@ -254,6 +269,61 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           }
         }
       }
+    }
+  }
+
+    if (vocabularyOpen && currentWord != null) {
+      AlertDialog(
+        onDismissRequest = { vocabularyOpen = false },
+        title = {
+          Text(
+            if (si) "වචන පුහුණුව · ${vocabularyIndex + 1}/${vocabulary.size}"
+            else "VOCABULARY · ${vocabularyIndex + 1}/${vocabulary.size}",
+            color = CyanNeon
+          )
+        },
+        text = {
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(currentWord.word, color = SilverText, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+            if (vocabularyRevealed) {
+              Text(if (si) currentWord.meaningSinhala else currentWord.meaningEnglish, color = EmeraldMastery, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+              Text(currentWord.example, color = SilverMuted, fontSize = 16.sp)
+              Text(if (si) currentWord.meaningEnglish else currentWord.meaningSinhala, color = SilverMuted, fontSize = 12.sp)
+            } else {
+              Text(if (si) "අර්ථය මතක් කරගෙන පසුව පෙන්වන්න." else "Try to recall the meaning before revealing it.", color = SilverMuted, fontSize = 13.sp)
+            }
+            Text(if (si) "දන්නා වචන: ${vocabularyKnown.size}/${vocabulary.size}" else "Mastered: ${vocabularyKnown.size}/undefined", color = AmberAccent, fontSize = 11.sp)
+          }
+        },
+        confirmButton = {
+          if (!vocabularyRevealed) {
+            TextButton(onClick = { vocabularyRevealed = true }) {
+              Text(if (si) "අර්ථය පෙන්වන්න" else "REVEAL MEANING")
+            }
+          } else {
+            TextButton(onClick = {
+              val updated = vocabularyKnown + currentWord.id
+              vocabularyKnown = updated
+              prefs.edit().putStringSet("vocab_known_$courseId", updated).apply()
+              vocabularyIndex = (vocabularyIndex + 1) % vocabulary.size
+              vocabularyRevealed = false
+            }) { Text(if (si) "දන්නවා ✓" else "I KNEW IT ✓", color = EmeraldMastery) }
+          }
+        },
+        dismissButton = {
+          if (vocabularyRevealed) {
+            TextButton(onClick = {
+              val updated = vocabularyKnown - currentWord.id
+              vocabularyKnown = updated
+              prefs.edit().putStringSet("vocab_known_$courseId", updated).apply()
+              vocabularyIndex = (vocabularyIndex + 1) % vocabulary.size
+              vocabularyRevealed = false
+            }) { Text(if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN", color = AmberAccent) }
+          } else {
+            TextButton(onClick = { vocabularyOpen = false }) { Text(if (si) "වසා දමන්න" else "CLOSE") }
+          }
+        }
+      )
     }
   }
 }
