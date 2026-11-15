@@ -185,7 +185,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
               Text(if (si) item.si else item.en, color = SilverText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
               Text(item.phrase, color = CyanNeon, fontSize = 19.sp, fontWeight = FontWeight.Bold)
               Text(if (si) item.meaningSi else item.meaningEn, color = SilverMuted, fontSize = 12.sp)
-              OutlinedButton(onClick = { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }, modifier = Modifier.fillMaxWidth()) { Text(if (mastered || needsReview) (if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN") else start) }
+              OutlinedButton(onClick = { lessonId = item.id; qIndex = 0; answer = -1; typedAnswer = ""; checked = false; lessonHadMistake = false }, modifier = Modifier.fillMaxWidth()) { Text(if (mastered || needsReview) (if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN") else start) }
             }
           }
           if (review.isNotEmpty()) Text(if (si) "නැවත පුහුණු විය යුතු පාඩම්: ${review.size}" else "Lessons to review: ${review.size}", color = AmberAccent, fontSize = 12.sp)
