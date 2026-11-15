@@ -65,9 +65,9 @@ fun ConceptColliderScreen(
 ) {
   BackHandler { onBack() }
 
-  val candidateCards = if (vaultCards.size >= 2) vaultCards else vaultCards + vaultCards
-  var cardA by remember { mutableStateOf<FeedCard?>(candidateCards.getOrNull(0)) }
-  var cardB by remember { mutableStateOf<FeedCard?>(candidateCards.getOrNull(1)) }
+  val candidateCards = vaultCards.distinctBy { it.id }
+  var cardA by remember(candidateCards) { mutableStateOf<FeedCard?>(candidateCards.getOrNull(0)) }
+  var cardB by remember(candidateCards) { mutableStateOf<FeedCard?>(candidateCards.getOrNull(1)) }
   var collisionResultTitle by remember { mutableStateOf<String?>(null) }
 
   Column(
@@ -220,9 +220,24 @@ fun ConceptColliderScreen(
         }
       }
 
+      if (candidateCards.size < 2) {
+        item {
+          Text(
+            text = if (currentLanguage == LanguageSetting.SINHALA)
+              "වෙනස් දැනුම් සංකල්ප දෙකක් එකතු කිරීමට අවම වශයෙන් සංකල්ප දෙකක් අවශ්‍යයි. තවත් සංකල්පයක් සුරකින්න."
+            else
+              "Choose two different saved concepts. Save or create another concept to begin a collision.",
+            color = AmberAccent,
+            fontSize = 12.sp,
+            lineHeight = 18.sp,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+          )
+        }
+      }
+
       item {
         Text(
-          text = "TAP TO ASSIGN NODES FROM VAULT",
+          text = if (currentLanguage == LanguageSetting.SINHALA) "දැනුම් ගබඩාවෙන් සංකල්ප තෝරන්න" else "TAP TO ASSIGN NODES FROM VAULT",
           color = SilverDim,
           fontSize = 10.sp,
           fontFamily = FontFamily.Monospace,
@@ -230,7 +245,7 @@ fun ConceptColliderScreen(
         )
       }
 
-      items(vaultCards) { card ->
+      items(candidateCards, key = { it.id }) { card ->
         Row(
           modifier = Modifier
             .fillMaxWidth()
