@@ -70,6 +70,7 @@ fun ArenaScreen(
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
+  var challengeWasCompletedBeforeAnswer by remember { mutableStateOf(false) }
 
   // Reset the answer controls only when the actual challenge changes.
   LaunchedEffect(selectedMode, challenge?.id) {
@@ -77,6 +78,7 @@ fun ArenaScreen(
     selectedAnswer = -1
     submitted = false
     lastWasCorrect = false
+    challengeWasCompletedBeforeAnswer = challenge?.id in profile.completedChallengeIds
   }
 
   Column(
@@ -127,7 +129,7 @@ fun ArenaScreen(
         selectedAnswer = selectedAnswer,
         submitted = submitted,
         lastWasCorrect = lastWasCorrect,
-        alreadyCompleted = challenge.id in profile.completedChallengeIds,
+        alreadyCompleted = challengeWasCompletedBeforeAnswer,
         onSelect = { if (!submitted) selectedAnswer = it },
         onRetry = { selectedAnswer = -1; submitted = false; lastWasCorrect = false },
         onNext = {
@@ -135,6 +137,8 @@ fun ArenaScreen(
           activeChallengeId = null
         },
         onSubmit = {
+          val wasCompletedBeforeAnswer = challenge.id in profile.completedChallengeIds
+          challengeWasCompletedBeforeAnswer = wasCompletedBeforeAnswer
           val isCorrect = selectedAnswer == challenge.correctIndex
           onRecordAttempt(challenge.skillId, isCorrect)
           if (isCorrect) {
