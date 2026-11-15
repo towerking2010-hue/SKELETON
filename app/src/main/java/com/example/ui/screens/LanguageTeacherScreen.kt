@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.LanguageSetting
 import com.example.engine.learning.FluentPathProgressState
 import com.example.engine.learning.FluentPathProgression
+import com.example.engine.learning.FluentPathLocalization
 import com.example.ui.theme.*
 import java.util.Locale
 
@@ -133,7 +134,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
               val active = c.id == course.id
               Column(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (active) CyanNeon.copy(alpha = .14f) else ObsidianSurface).border(1.dp, if (active) CyanNeon else ObsidianBorder, RoundedCornerShape(12.dp)).clickable { courseId = c.id; prefs.edit().putString("course", c.id).apply() }.padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(c.native, color = if (active) CyanNeon else SilverText, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Text(c.name, color = SilverMuted, fontSize = 8.sp)
+                Text(FluentPathLocalization.courseName(c.id, c.name, currentLanguage), color = SilverMuted, fontSize = 8.sp)
               }
             }
           }
@@ -157,13 +158,13 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
         }
       } else {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-          Text("${if (si) "පාඩම" else "LESSON"} · ${course.name}", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          Text("${if (si) "පාඩම" else "LESSON"} · ${FluentPathLocalization.courseName(course.id, course.name, currentLanguage)}", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
           Text(if (si) lesson.si else lesson.en, color = SilverText, fontSize = 22.sp, fontWeight = FontWeight.Black)
           Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
             Text(if (si) "අද ඉගෙන ගන්නේ" else "UNDERSTAND THE IDEA", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             Text(if (si) lesson.ideaSi else lesson.ideaEn, color = SilverText, fontSize = 14.sp, lineHeight = 22.sp)
             Text(if (si) "වාක්‍ය රටාව" else "SENTENCE PATTERN", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text(lesson.pattern, color = SilverText, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(FluentPathLocalization.pattern(lesson.pattern, currentLanguage), color = SilverText, fontSize = 15.sp, fontWeight = FontWeight.Bold)
           }
           Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, ObsidianBorder, RoundedCornerShape(18.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -181,7 +182,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             val correct = checked && index == q.answer
             val wrong = checked && index == answer && index != q.answer
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(if (correct) EmeraldMastery.copy(alpha = .12f) else ObsidianSurface).border(1.dp, if (correct) EmeraldMastery else if (wrong) AmberAccent else ObsidianBorder, RoundedCornerShape(13.dp)).clickable(enabled = !checked) { answer = index }.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-              Text(choice, color = SilverText, fontSize = 15.sp)
+              Text(FluentPathLocalization.choice(choice, currentLanguage), color = SilverText, fontSize = 15.sp)
               if (correct) Icon(Icons.Filled.Check, null, tint = EmeraldMastery)
             }
           }
