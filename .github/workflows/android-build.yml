@@ -29,15 +29,24 @@ jobs:
           gradle-version: '9.3.1'
       # AI Studio's debug signing config expects this file at the repository root.
       # This CI-only key is for test builds, not a production/release signing key.
-      - name: Create CI debug keystore
+      - name: Prepare persistent QA debug keystore
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.SKELETON_DEBUG_KEYSTORE_BASE64 }}
         run: |
-          keytool -genkeypair -v \
-            -keystore debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > debug.keystore
+            keytool -list -keystore debug.keystore -storepass android -alias androiddebugkey >/dev/null
+            echo "Using the persistent QA debug signing identity."
+          else
+            echo "::warning::SKELETON_DEBUG_KEYSTORE_BASE64 is not configured; this run will use a temporary key and later QA APKs will not update it."
+            keytool -genkeypair -v \
+              -keystore debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
       - name: Run unit tests
         run: gradle testDebugUnitTest
       - name: Assemble debug APK
