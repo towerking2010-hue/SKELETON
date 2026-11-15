@@ -19,7 +19,7 @@ object BioscienceModule {
         crossLinkTarget = if (si) "ස්නායු සම්බන්ධතා ශක්තිමත් වීම" else "Synaptic Plasticity",
         isSaved = true,
         recallStage = 2,
-        challengeScenario = if (si) "මෙම ප්‍රෝටීනයට ගැළපෙන නිල් ආලෝකය වෙනුවට වෙනත් වර්ණයක කහ ආලෝකයක් යොමු කළහොත් ස්නායු සෛලය ක්‍රියාත්මක නොවන්නේ ඇයි?",
+        challengeScenario = if (si) "මෙම ප්‍රෝටීනයට ගැළපෙන නිල් ආලෝකය වෙනුවට වෙනත් වර්ණයක කහ ආලෝකයක් යොමු කළහොත් ස්නායු සෛලය ක්‍රියාත්මක නොවන්නේ ඇයි?" else "Why would a different light colour fail to activate the selected neurons?",
         challengeExpectedKey = if (si) "මෙම ප්‍රෝටීනය නිල් ආලෝකයට විශේෂයෙන් ප්‍රතිචාර දක්වයි. වෙනත් වර්ණයක ආලෝකය එයට අවශ්‍ය හැඩ වෙනස්වීම ඇති නොකරන නිසා දොරටුව විවෘත නොවේ." else "ChR2 absorption spectrum peaks at 470nm; 589nm activates halorhodopsin (chloride pump) or causes no isomerizing transition.",
         language = if (si) "si" else "en"
       ),
@@ -33,7 +33,7 @@ object BioscienceModule {
         crossLinkTarget = if (si) "ජාන ක්‍රියාකාරිත්වය පාලනය වීම" else "Epigenetic Methylation",
         isSaved = true,
         recallStage = 1,
-        challengeScenario = if (si) "වෙනස් නොකළ DNA දාමයේ ඉතා කුඩා කැපුමක් කිරීමෙන් අපේක්ෂිත අකුරු වෙනස්වීම වැඩි වශයෙන් සිදුවන්නේ ඇයි?",
+        challengeScenario = if (si) "වෙනස් නොකළ DNA දාමයේ ඉතා කුඩා කැපුමක් කිරීමෙන් අපේක්ෂිත අකුරු වෙනස්වීම වැඩි වශයෙන් සිදුවන්නේ ඇයි?" else "Why can nicking the unedited DNA strand improve the intended base conversion?",
         challengeExpectedKey = if (si) "සෛලයේ අලුත්වැඩියා ක්‍රියාවලියට වෙනස් කළ දාමය නිවැරදි ආදර්ශය ලෙස භාවිත කිරීමට එම කුඩා කැපුම උපකාරී වේ." else "Tricks host mismatch repair (MMR) machinery to degrade and resynthesize the non-edited strand using the edited strand as template.",
         language = "en"
       ),
@@ -47,7 +47,7 @@ object BioscienceModule {
         crossLinkTarget = if (si) "ස්නායු සම්බන්ධතා වෙනස් වීම" else "Dendritic Spine Remodeling",
         isSaved = true,
         recallStage = 3,
-        challengeScenario = if (si) "මෙම දොරටුව ක්‍රියාත්මක වීමට අවශ්‍ය රසායනික ද්‍රව්‍යයක් එයට බැඳීමට නොහැකි කළහොත් දිගුකාලීන මතක සම්බන්ධතාවය ශක්තිමත් වීම නතර වන්නේ ඇයි?",
+        challengeScenario = if (si) "මෙම දොරටුව ක්‍රියාත්මක වීමට අවශ්‍ය රසායනික ද්‍රව්‍යයක් එයට බැඳීමට නොහැකි කළහොත් දිගුකාලීන මතක සම්බන්ධතාවය ශක්තිමත් වීම නතර වන්නේ ඇයි?" else "Why does blocking the required ligand stop synaptic strengthening?",
         challengeExpectedKey = if (si) "අවශ්‍ය රසායනික ද්‍රව්‍යය බැඳීම අත්‍යවශ්‍ය පියවරක් බැවින්, අනෙක් සංඥා දෙක තිබුණත් දොරටුව විවෘත නොවේ. එබැවින් සම්බන්ධතාවය ශක්තිමත් කිරීම ආරම්භ නොවේ." else "LTP induction is blocked because glycine binding is obligatory for NMDA channel opening even with glutamate and membrane depolarization present.",
         language = "en"
       ),
@@ -61,7 +61,7 @@ object BioscienceModule {
         crossLinkTarget = if (si) "ජානවල තනි අකුරු වෙනස් කිරීම" else "CRISPR-Cas9 Base Editing",
         isSaved = false,
         recallStage = 0,
-        challengeScenario = if (si) "වෙනස් නොකළ DNA දාමයේ දෙවැනි කුඩා කැපුමක් කිරීමෙන් නිවැරදි නව අනුපිළිවෙළ පිළිගැනීමට සෛලයට උපකාර වන්නේ කෙසේද?",
+        challengeScenario = if (si) "වෙනස් නොකළ DNA දාමයේ දෙවැනි කුඩා කැපුමක් කිරීමෙන් නිවැරදි නව අනුපිළිවෙළ පිළිගැනීමට සෛලයට උපකාර වන්නේ කෙසේද?" else "How does nicking the opposite strand help retain the newly written DNA sequence?",
         challengeExpectedKey = if (si) "සෛලයේ අලුත්වැඩියා පද්ධතියට අලුතින් ලියූ අනුපිළිවෙළ ආදර්ශය ලෙස ගෙන අනෙක් දාමයද ඒ අනුව සකස් කිරීමට එය මඟ පෙන්වයි." else "Forces host mismatch repair to preferentially replace the non-edited strand using the newly reverse-transcribed prime-edited flap as the repair template.",
         language = "en"
       )
