@@ -112,7 +112,21 @@ fun AudioTranscribeScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
       Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(ObsidianSurfaceElevated).border(1.dp, EmeraldMastery.copy(alpha = .4f), RoundedCornerShape(22.dp)).padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(if (listening) "MICROPHONE ACTIVE" else "MICROPHONE INPUT", color = if (listening) AmberAccent else SilverMuted, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(14.dp))
-        IconButton(onClick = { if (listening) { recognizer?.stopListening(); listening = false; status = "Finishing transcription…" } else permission.launch(android.Manifest.permission.RECORD_AUDIO) }, modifier = Modifier.size(72.dp).clip(CircleShape).background(if (listening) AmberAccent else EmeraldMastery).testTag("transcribe_mic_button")) {
+        IconButton(
+          onClick = {
+            if (listening) {
+              recognizer?.stopListening()
+              listening = false
+              status = "Finishing transcription…"
+            } else {
+              permission.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
+          },
+          enabled = !busy || listening,
+          modifier = Modifier.size(72.dp).clip(CircleShape)
+            .background(if (listening) AmberAccent else EmeraldMastery)
+            .testTag("transcribe_mic_button")
+        ) {
           Icon(if (listening) Icons.Filled.Stop else Icons.Filled.Mic, "Start or stop microphone", tint = ObsidianBg, modifier = Modifier.size(36.dp))
         }
         Spacer(Modifier.height(12.dp))
