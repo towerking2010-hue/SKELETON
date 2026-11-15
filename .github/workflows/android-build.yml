@@ -2,7 +2,7 @@ name: Android build and unit tests
 
 on:
   push:
-    branches: [main, feature/microlearning-foundation]
+    branches: [main, feature/microlearning-foundation, 'work/**']
   workflow_dispatch:
 
 permissions:
