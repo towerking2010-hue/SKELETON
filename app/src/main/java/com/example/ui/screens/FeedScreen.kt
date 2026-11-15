@@ -53,7 +53,6 @@ import com.example.data.model.FeedCard
 import com.example.data.model.GhostChallenge
 import com.example.data.model.LanguageSetting
 import com.example.data.model.LearningSubject
-import com.example.ui.components.AuthStatusBar
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.EmeraldMastery
@@ -71,10 +70,6 @@ fun FeedScreen(
   ghostChallenges: List<GhostChallenge>,
   currentLanguage: LanguageSetting,
   cringeFilterEnabled: Boolean,
-  currentUser: com.google.firebase.auth.FirebaseUser? = null,
-  onSignInSuccess: (com.google.firebase.auth.FirebaseUser) -> Unit = {},
-  onSignOut: () -> Unit = {},
-  onOpenEmailSignIn: () -> Unit = {},
   onAskDeepDive: (String) -> Unit,
   onToggleSave: (FeedCard) -> Unit,
   onTriggerGhostChallenge: () -> Unit,
@@ -87,8 +82,6 @@ fun FeedScreen(
   val visibleCards = cards.filter { selectedSubject.matches(it) }
   val pagerState = rememberPagerState(pageCount = { visibleCards.size })
   LaunchedEffect(selectedSubject) { if (visibleCards.isNotEmpty()) pagerState.scrollToPage(0) }
-  val masteredCount = cards.count { it.recallStage >= 4 }
-  val mastery = if (cards.isEmpty()) 0f else masteredCount.toFloat() / cards.size.toFloat()
 
   Column(
     modifier = modifier.fillMaxSize().background(ObsidianBg).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -106,8 +99,6 @@ fun FeedScreen(
       Text("${visibleCards.size} lessons", color = SilverDim, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     }
 
-    AuthStatusBar(currentUser = currentUser, onSignInSuccess = onSignInSuccess, onSignOut = onSignOut, onOpenEmailSignIn = onOpenEmailSignIn)
-
     LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
       items(LearningSubject.values().toList(), key = { it.name }) { subject ->
         val selected = subject == selectedSubject
@@ -120,22 +111,6 @@ fun FeedScreen(
         ) {
           Text(subject.label, color = if (selected) CyanNeon else SilverMuted, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
         }
-      }
-    }
-
-    // Mastery is based on completed recall stages, not views or swipes.
-    Column(
-      modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
-        .background(ObsidianSurface).border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp))
-        .padding(horizontal = 10.dp, vertical = 6.dp),
-      verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("MASTERY", color = EmeraldMastery, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text("$masteredCount / ${cards.size} mastered  •  ${(mastery * 100).toInt()}%", color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-      }
-      Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(ObsidianBorder)) {
-        Box(Modifier.fillMaxWidth(mastery).height(3.dp).clip(CircleShape).background(EmeraldMastery))
       }
     }
 
