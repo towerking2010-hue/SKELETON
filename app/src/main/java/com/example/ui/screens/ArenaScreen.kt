@@ -63,15 +63,17 @@ fun ArenaScreen(
 ) {
   var selectedMode by remember { mutableStateOf("ALL") }
   var solvedThisSession by remember(selectedMode) { mutableStateOf(emptySet<String>()) }
+  var activeChallengeId by remember { mutableStateOf<String?>(null) }
   val available = ArenaEngine.challengesFor(selectedMode, profile, currentLanguage)
     .filterNot { it.id in solvedThisSession }
-  val challenge = available.firstOrNull()
+  val challenge = available.firstOrNull { it.id == activeChallengeId } ?: available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
 
   // Reset the answer controls only when the actual challenge changes.
-  LaunchedEffect(challenge?.id) {
+  LaunchedEffect(selectedMode, challenge?.id) {
+    activeChallengeId = challenge?.id
     selectedAnswer = -1
     submitted = false
     lastWasCorrect = false
@@ -168,6 +170,7 @@ fun ArenaScreen(
           if (isCorrect) {
             lastWasCorrect = true
             solvedThisSession = solvedThisSession + challenge.id
+            activeChallengeId = null
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
             lastWasCorrect = false
