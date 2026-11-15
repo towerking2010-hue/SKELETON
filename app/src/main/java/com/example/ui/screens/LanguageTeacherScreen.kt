@@ -137,7 +137,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
               }
             }
           }
-          Text("${if (si) "ප්‍රගතිය" else "PROGRESS"} · ${course.lessons.count { it.id in done }} / ${course.lessons.size}", color = SilverText, fontSize = 12.sp)
+          Text("${if (si) "ප්‍රගතිය" else "PROGRESS"} · ${course.lessons.count { it.id in done && it.id !in review }} / ${course.lessons.size}", color = SilverText, fontSize = 12.sp)
           LinearProgressIndicator(progress = { course.lessons.count { it.id in done }.toFloat() / course.lessons.size.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(8.dp)), color = EmeraldMastery, trackColor = ObsidianBorder)
           course.lessons.forEachIndexed { i, item ->
             val needsReview = item.id in review
