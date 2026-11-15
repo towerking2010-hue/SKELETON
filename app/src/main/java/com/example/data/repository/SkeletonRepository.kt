@@ -150,7 +150,7 @@ class SkeletonRepository(private val dao: SkeletonDao) {
         targetLanguage = systemLanguage,
         existingTopics = existingTitles
       )
-      if (systemLanguage == LanguageSetting.SINHALA) "$fallback\n\n[දේශීය ප්‍රතිචාරය] වලාකුළු AI සේවාව දැන් භාවිත කළ නොහැක. මෙය දුරකථනය තුළ ඇති දැනුමෙන් ලබාදුන් පිළිතුරකි." else "$fallback\n\n[LOCAL MODE] Cloud AI is disabled by the zero-billing policy. Mobile data may be available; cloud inference is intentionally not being used."
+      if (systemLanguage == LanguageSetting.SINHALA) "$fallback\n\n[දේශීය පිළිතුර] වියදම් වැළැක්වීම සඳහා වලාකුළු AI සේවාව අක්‍රිය කර ඇත. ජංගම දත්ත තිබුණත් මෙම සංස්කරණය එම සේවාව භාවිත නොකරයි." else "$fallback\n\n[LOCAL MODE] Cloud AI is disabled by the zero-billing policy. Mobile data may be available; cloud inference is intentionally not being used."
     } else {
       generated
     }
