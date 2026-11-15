@@ -96,7 +96,7 @@ object SkeletonCognitiveEngine {
       topic.contains("vector", ignoreCase = true) ->
         "A vector database stores numerical embeddings and retrieves nearby vectors using a chosen distance or similarity metric. It can find semantically related items even when their wording differs."
       else ->
-        "I’m running in zero-cost offline mode, and I don’t have a reliable explanation for this topic stored locally. I won’t invent a mechanism or pretend I researched it. The Research Desk can help you find original scholarly records to inspect."
+        "I’m in local-only response mode because cloud AI is disabled by the zero-billing policy. I don’t have a reliable explanation for this topic stored on the device, so I won’t invent one. The Research Desk can help you inspect scholarly records when internet access is available."
     }
 
     val body = StringBuilder()
@@ -133,7 +133,7 @@ object SkeletonCognitiveEngine {
       topic.contains("vector", ignoreCase = true) ->
         "අර්ථය අනුව සමාන දේවල් සොයාගැනීමට සංඛ්‍යාත්මක නිරූපණ භාවිත කරන දත්ත ගබඩාවක් මෙයයි. උදාහරණයක් ලෙස, 'බල්ලා' යන වචනය නොමැති වාක්‍යයකත් බල්ලෙකු ගැන අදහසක් තිබේ නම් එය අර්ථයෙන් ළඟ දත්ත ලෙස සොයාගත හැක."
       else ->
-        "මම දැන් zero-cost offline mode එකේ. මේ topic එක ගැන විශ්වාසදායක explanation එකක් local knowledge එකේ නැති නිසා හිතලා facts හදන්නේ නැහැ. Research Desk එකෙන් මුල් scholarly sources සොයාගෙන ඒවා පරීක්ෂා කරන්න පුළුවන්."
+        "දැනට වලාකුළු මත ක්‍රියාකරන කෘත්‍රිම බුද්ධි සේවාව භාවිත කිරීම වියදම් නොවන ලෙස අක්‍රිය කර ඇත. මෙම කරුණ ගැන දුරකථනය තුළ විශ්වාසදායක තොරතුරු නොමැති නිසා මම අනුමාන කර කරුණු නිර්මාණය කරන්නේ නැහැ. අන්තර්ජාල සම්බන්ධතාව තිබේ නම් පර්යේෂණ අංශයෙන් මුල් විද්‍යාත්මක ලේඛන සොයා බැලිය හැක."
     }
 
     val body = StringBuilder()
