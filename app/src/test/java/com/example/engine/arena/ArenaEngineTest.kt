@@ -1,5 +1,6 @@
 package com.example.engine.arena
 
+import com.example.data.model.LanguageSetting
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
