@@ -237,6 +237,8 @@ class SkeletonViewModel(application: Application) : AndroidViewModel(application
 
     viewModelScope.launch {
       repository.initializeStarterCardsIfEmpty()
+      // Apply the persisted language to lesson content on every launch, not only to UI labels.
+      repository.switchCurriculumLanguage(_systemLanguage.value)
       // Auto-sign in if credentials exist
       AuthManager.attemptAutoSignIn(application, viewModelScope)
     }
