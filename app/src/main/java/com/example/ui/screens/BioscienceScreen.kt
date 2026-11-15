@@ -56,7 +56,7 @@ fun BioscienceScreen(
 ) {
   BackHandler { onBack() }
 
-  val bioCards = remember { BioscienceModule.getBioscienceCuratedCards() }
+  val bioCards = remember(currentLanguage) { BioscienceModule.getBioscienceCuratedCards(currentLanguage) }
 
   Column(
     modifier = modifier
