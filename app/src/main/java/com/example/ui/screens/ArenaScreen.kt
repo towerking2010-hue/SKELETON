@@ -81,7 +81,7 @@ fun ArenaScreen(
 
   Column(
     modifier = Modifier.fillMaxSize().background(ObsidianBg).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 10.dp),
-    verticalArrangement = Arrangement.spacedBy(14.dp)
+    verticalArrangement = Arrangement.spacedBy(10.dp)
   ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -100,40 +100,6 @@ fun ArenaScreen(
       StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "තත්ත්වය" else "RANK", profile.rank, Modifier.weight(1f))
     }
 
-    Column(
-      Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObsidianSurface)
-        .border(1.dp, ObsidianBorder, RoundedCornerShape(16.dp)).padding(13.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ මට්ටම" else "NEXT LEVEL", color = SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-        Text("${profile.levelProgress} / 100 XP", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-      }
-      Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(ObsidianBorder)) {
-        Box(Modifier.fillMaxWidth(profile.levelProgress / 100f).height(6.dp).clip(CircleShape).background(CyanNeon))
-      }
-      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(if (currentLanguage == LanguageSetting.SINHALA) "විවෘත කළ ප්‍රදේශ" else "TERRITORIES", color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-        Text("${ArenaEngine.unlockedTerritories(profile.xp)} / 5 unlocked", color = AmberAccent, fontSize = 10.sp)
-      }
-    }
-
-    Column(
-      Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(ObsidianSurface)
-        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(11.dp),
-      verticalArrangement = Arrangement.spacedBy(7.dp)
-    ) {
-      Text(if (currentLanguage == LanguageSetting.SINHALA) "ඔබේ චින්තන හැකියාවන්" else "YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
-      Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
-      Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ArenaEngine.skillsFor(profile, currentLanguage).forEach { skill ->
-          Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(skill.label, color = SilverText, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(if (skill.evidence.attempts == 0) if (currentLanguage == LanguageSetting.SINHALA) "තවම පරීක්ෂා කර නැත" else "NOT TESTED" else skill.evidence.accuracy.toString() + "% · " + skill.evidence.attempts.toString() + if (currentLanguage == LanguageSetting.SINHALA) " වාර" else " tries", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-          }
-        }
-      }
-    }
     Text(if (currentLanguage == LanguageSetting.SINHALA) "පුහුණු පරීක්ෂණයක් තෝරන්න" else "CHOOSE YOUR TRIAL", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
       ArenaEngine.modes.forEach { mode ->
@@ -181,6 +147,40 @@ fun ArenaScreen(
         },
         modifier = Modifier.fillMaxWidth()
       )
+    }
+    Column(
+      Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObsidianSurface)
+        .border(1.dp, ObsidianBorder, RoundedCornerShape(16.dp)).padding(13.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ මට්ටම" else "NEXT LEVEL", color = SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text("${profile.levelProgress} / 100 XP", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+      }
+      Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(ObsidianBorder)) {
+        Box(Modifier.fillMaxWidth(profile.levelProgress / 100f).height(6.dp).clip(CircleShape).background(CyanNeon))
+      }
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "විවෘත කළ ප්‍රදේශ" else "TERRITORIES", color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text("${ArenaEngine.unlockedTerritories(profile.xp)} / 5 unlocked", color = AmberAccent, fontSize = 10.sp)
+      }
+    }
+
+    Column(
+      Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(ObsidianSurface)
+        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(11.dp),
+      verticalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+      Text(if (currentLanguage == LanguageSetting.SINHALA) "ඔබේ චින්තන හැකියාවන්" else "YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
+      Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
+      Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ArenaEngine.skillsFor(profile, currentLanguage).forEach { skill ->
+          Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(skill.label, color = SilverText, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(if (skill.evidence.attempts == 0) if (currentLanguage == LanguageSetting.SINHALA) "තවම පරීක්ෂා කර නැත" else "NOT TESTED" else skill.evidence.accuracy.toString() + "% · " + skill.evidence.attempts.toString() + if (currentLanguage == LanguageSetting.SINHALA) " වාර" else " tries", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+          }
+        }
+      }
     }
     Text("LOCAL TRIALS • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp)
   }
