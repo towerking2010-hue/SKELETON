@@ -175,7 +175,7 @@ fun ArenaScreen(
         modifier = Modifier.fillMaxWidth()
       )
     }
-    Text("OFFLINE • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp)
+    Text("LOCAL TRIALS • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp)
   }
 }
 
