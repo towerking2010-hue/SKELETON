@@ -244,17 +244,22 @@ object ArenaEngine {
     // First-time progression must not be blocked by previously completed challenges.
     // Once a category is cleared, keep its challenges available as practice, without XP farming.
     val uncompleted = matching.filterNot { it.id in profile.completedChallengeIds }
-    val candidates = uncompleted.ifEmpty { matching }
-    val unassessed = candidates.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
-    val ordered = if (unassessed.isNotEmpty()) {
-      unassessed
-    } else {
-      candidates.sortedWith(
-        compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }
-          .thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 }
-      )
+    val completedForPractice = matching.filter { it.id in profile.completedChallengeIds }
+    fun adaptiveOrder(candidates: List<ArenaChallenge>): List<ArenaChallenge> {
+      val unassessed = candidates.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
+      return if (unassessed.isNotEmpty()) {
+        unassessed
+      } else {
+        candidates.sortedWith(
+          compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }
+            .thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 }
+        )
+      }
     }
-    return ordered.map { localize(it, language) }
+    // Keep completed items in the queue so the just-solved challenge can show its
+    // explanation until the learner explicitly chooses NEXT. They sit after new trials.
+    return (adaptiveOrder(uncompleted) + adaptiveOrder(completedForPractice))
+      .map { localize(it, language) }
   }
 
   fun unlockedTerritories(xp: Int): Int = when {
