@@ -270,7 +270,6 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
         }
       }
     }
-  }
 
     if (vocabularyOpen && currentWord != null) {
       AlertDialog(
