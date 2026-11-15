@@ -56,7 +56,8 @@ object SkeletonCognitiveEngine {
     // Determine candidate topic
     val extractedTopic = extractTopicCandidate(lower)
     val isKnown = existingTopics.any { it.contains(extractedTopic, ignoreCase = true) || extractedTopic.contains(it, ignoreCase = true) }
-    val suggestSync = extractedTopic.isNotBlank() && !isKnown
+    val supportedOfflineTopic = listOf("raft", "rust ownership", "ownership", "quantum computing", "vector database").any { lower.contains(it) }
+    val suggestSync = supportedOfflineTopic && extractedTopic.isNotBlank() && !isKnown
 
     val responseText = if (lang == LanguageSetting.SINHALA) {
       buildSinhalaCoreReply(userText, extractedTopic, suggestSync)
@@ -74,7 +75,7 @@ object SkeletonCognitiveEngine {
       "kalman filter", "blockchain", "merkle tree", "tcp handshake", "webrtc",
       "vector database", "lora", "diffusion model", "simulated annealing",
       "dynamic programming", "graph neural network", "sharding", "zero knowledge",
-      "epigenetics", "general relativity", "thermodynamics", "neuroplasticity"
+      "epigenetics", "general relativity", "thermodynamics", "neuroplasticity", "optogenetics", "channelrhodopsin", "crispr", "correlation", "human nature", "sunburn"
     )
     for (kw in keywords) {
       if (input.contains(kw)) return kw.replaceFirstChar { it.uppercase() }
@@ -87,26 +88,27 @@ object SkeletonCognitiveEngine {
   private fun buildEnglishCoreReply(userText: String, topic: String, suggestSync: Boolean): String {
     val intuition = when {
       topic.contains("raft", ignoreCase = true) ->
-        "Dasun, think of Raft as a democratic parliament with a strict stopwatch. If the current leader stops heartbeating for 150ms, any node stands up, votes for itself, and rallies a quorum."
+        "Think of Raft as a small team that elects a coordinator. If the leader stops sending heartbeats long enough, a node can start an election; it needs votes from a majority before becoming leader."
       topic.contains("rust", ignoreCase = true) || topic.contains("ownership", ignoreCase = true) ->
-        "Dasun, Rust ownership is like passing a physical torch: only one runner holds it at a time. If you pass it, you lose write privileges; if you borrow it, you must return it before the owner can leave scope."
+        "Rust ownership is like having one clear owner for a resource. You can lend references under compiler-checked rules, but Rust prevents unsafe combinations of mutable and shared access."
       topic.contains("quantum", ignoreCase = true) ->
-        "Dasun, classic bits are a coin lying flat on a table (Heads or Tails). A qubit is that coin spinning in mid-air—superposition holds amplitudes for both until wave-function collapse."
+        "A classical bit is either 0 or 1. A qubit is described by probability amplitudes for measurement outcomes; superposition is not simply a tiny coin spinning, and measurement returns a definite result."
       topic.contains("vector", ignoreCase = true) ->
-        "Dasun, vector databases map semantic ideas into high-dimensional geometric space so related concepts cluster by cosine similarity rather than brittle string matching."
+        "A vector database stores numerical embeddings and retrieves nearby vectors using a chosen distance or similarity metric. It can find semantically related items even when their wording differs."
       else ->
-        "Dasun, here is the raw structural truth: $topic works by cutting away redundant state and enforcing invariant constraints. You strip the fluff and execute in constant space."
+        "I’m in local-only response mode because cloud AI is disabled by the zero-billing policy. I don’t have a reliable explanation for this topic stored on the device, so I won’t invent one. The Research Desk can help you inspect scholarly records when internet access is available."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    body.append("\n\n")
-    body.append("Core Rule: Every complex domain has a 3-variable skeleton underneath. Master the boundary constraints, and the rest is trivial boilerplate.")
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\nThe important part is the actual mechanism—not just the analogy.")
+    }
 
     if (suggestSync) {
       body.append("\n\n[FEED SYNC]: Add this topic to your feed? (Yes/No)")
-    } else {
-      body.append("\n\n[ACTIVE RECALL]: Dasun, what is the single invariant failure condition that breaks this mechanism?")
+    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\n[ACTIVE RECALL]: What is the key rule that makes this mechanism work?")
     }
 
     return body.toString()
@@ -115,24 +117,35 @@ object SkeletonCognitiveEngine {
   private fun buildSinhalaCoreReply(userText: String, topic: String, suggestSync: Boolean): String {
     val intuition = when {
       topic.contains("raft", ignoreCase = true) ->
-        "Dasun, Raft Consensus එක හරියට strict stopwatch එකක් තියෙන පාර්ලිමේන්තුවක් වගේ. Leader node එක 150ms heartbeat එක නැවැත්තුව ගමන්, ඕනෑම node එකකට candidate කෙනෙක් විදියට vote එකක් start කරලා quorum එක ගන්න පුළුවන්."
+        "Raft Consensus එක team එකක් coordinator කෙනෙක් තෝරනවා වගේ. Leader එක heartbeats එවීම නතර කරලා election timeout එක ඉක්මවා ගියොත්, node එකක් election එකක් පටන් ගන්නවා. Leader වෙන්න majority votes අවශ්‍යයි."
       topic.contains("rust", ignoreCase = true) || topic.contains("ownership", ignoreCase = true) ->
-        "Dasun, Rust Ownership කියන්නේ physical පන්දමක් වගේ. එක වෙලාවක තියාගන්න පුළුවන් එක්කෙනෙක්ට විතරයි. තව කෙනෙක්ට pass කළාට පස්සේ original owner ට access නෑ. Memory leaks බිංදුවටම drop වෙන්නේ මේ constraint එකෙන්."
+        "Rust Ownership කියන්නේ resource එකකට පැහැදිලි owner කෙනෙක් ඉන්නවා වගේ. Borrowing rules compiler එකෙන් check කරන නිසා unsafe mutable/shared access combinations බොහොමයක් compile වෙන්න කලින්ම අල්ලගන්නවා."
       topic.contains("quantum", ignoreCase = true) ->
-        "Dasun, normal bits කියන්නේ බිම තියෙන coin එකක් (Heads or Tails). Qubit එකක් කියන්නේ කරකැවෙන coin එකක්—measure කරන මොහොත වෙනකම් states දෙකේම superposition එකක පවතිනවා."
+        "සාමාන්‍ය පරිගණකයක තොරතුරු බිඳුවක් 0 හෝ 1 ලෙස පවතී. ක්වොන්ටම් තොරතුරු බිඳුවකදී මැනීමට පෙර හැකි ප්‍රතිඵල කිහිපයක් එකම ගණිතමය තත්ත්වයකින් විස්තර කළ හැක. මැනූ විට ලැබෙන්නේ එක් නිශ්චිත ප්‍රතිඵලයකි."
+      topic.contains("optogenetics", ignoreCase = true) || topic.contains("channelrhodopsin", ignoreCase = true) ->
+        "ඔප්ටොජෙනටික්ස් (Optogenetics) ක්‍රමයේදී තෝරාගත් ස්නායු සෛලවලට ආලෝකයට ප්‍රතිචාර දක්වන විශේෂ ප්‍රෝටීනයක් නිපදවීමට සලස්වයි. ඉන්පසු නියමිත වර්ණයේ ආලෝකයක් එම සෛල මත යොමු කළ විට ප්‍රෝටීනයේ කුඩා දොරටුවක් විවෘත වේ. ආරෝපිත අංශු සෛලය තුළට ගලා එන නිසා එම සෛලය විද්‍යුත් සංඥාවක් නිකුත් කළ හැක. මෙයින් අවට සෛල සියල්ලම එකවර උත්තේජනය නොකර තෝරාගත් සෛල පරීක්ෂා කළ හැක."
+      topic.contains("crispr", ignoreCase = true) ->
+        "CRISPR මූලික සංස්කරණය (Base Editing) කියන්නේ ජානමය උපදෙස් පොතක තනි අකුරක් නිවැරදිව වෙනස් කරන ක්‍රමයකි. මඟ පෙන්වන අණුවක් අවශ්‍ය ස්ථානය සොයා දෙයි. එහි බැඳෙන එන්සයිමය DNA දාමය දෙකට කපා නොදමා එක් අකුරක් වෙනත් අකුරක් බවට පත් කරයි. ඒ නිසා සාමාන්‍ය කපා-අලවන ක්‍රමයට වඩා අනවශ්‍ය වෙනස්කම් අඩු කළ හැක."
+      topic.contains("correlation", ignoreCase = true) || topic.contains("sunburn", ignoreCase = true) ->
+        "අයිස්ක්‍රීම් අලෙවියත් අව්වට පිළිස්සීම්ත් එකම කාලයේ වැඩි වුණා කියලා අයිස්ක්‍රීම් නිසා පිළිස්සීම් ඇති වෙනවා කියන්න බැහැ. දෙකටම බලපාන තුන්වැනි හේතුවක් තිබිය හැකියි. මෙහිදී උණුසුම්, අව්ව සහිත කාලගුණය නිසා මිනිසුන් අයිස්ක්‍රීම් වැඩියෙන් මිලදී ගන්නවා; ඒ සමඟ වැඩි වේලාවක් අව්වේ සිටීම නිසා පිළිස්සීම්ද වැඩි වෙනවා. එකට වෙනස් වීම හේතු-ඵල සම්බන්ධයක් බවට සාක්ෂියක් නොවේ."
+      topic.contains("human nature", ignoreCase = true) ->
+        "මිනිස් හැසිරීම එකවර සරලත් සංකීර්ණත් වන්නේ අපට මූලික අවශ්‍යතා කිහිපයක් තිබුණත් ඒවා ඉටුකරන ආකාරය අත්දැකීම්, බිය, ආදරය, සමාජ පීඩනය සහ පරිසරය අනුව වෙනස් වන නිසාය. බඩගින්න, ආරක්ෂාව සහ පිළිගැනීම වැනි අවශ්‍යතා තේරුම් ගැනීම පහසුයි. නමුත් ඒවා එකිනෙක ගැටෙන විට එකම පුද්ගලයා විවිධ අවස්ථාවල වෙනස් තීරණ ගත හැක."
+      topic.contains("vector", ignoreCase = true) ->
+        "අර්ථය අනුව සමාන දේවල් සොයාගැනීමට සංඛ්‍යාත්මක නිරූපණ භාවිත කරන දත්ත ගබඩාවක් මෙයයි. උදාහරණයක් ලෙස, 'බල්ලා' යන වචනය නොමැති වාක්‍යයකත් බල්ලෙකු ගැන අදහසක් තිබේ නම් එය අර්ථයෙන් ළඟ දත්ත ලෙස සොයාගත හැක."
       else ->
-        "Dasun, සරල intuition එක: $topic කියන්නේ redundant state ඉවත් කරලා direct constraints run කරන system එකක්. Rule එක simple: high-impact analogy එක අල්ලගත්තම theory එක direct grasp වෙනවා."
+        "දැනට වලාකුළු මත ක්‍රියාකරන කෘත්‍රිම බුද්ධි සේවාව භාවිත කිරීම වියදම් නොවන ලෙස අක්‍රිය කර ඇත. මෙම කරුණ ගැන දුරකථනය තුළ විශ්වාසදායක තොරතුරු නොමැති නිසා මම අනුමාන කර කරුණු නිර්මාණය කරන්නේ නැහැ. අන්තර්ජාල සම්බන්ධතාව තිබේ නම් පර්යේෂණ අංශයෙන් මුල් විද්‍යාත්මක ලේඛන සොයා බැලිය හැක."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    body.append("\n\n")
-    body.append("ප්‍රධාන Technical Core එක: ඕනෑම complex system එකක ඇතුළත තියෙන්නේ variables 2-3ක structural skeleton එකක් විතරයි.")
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "optogenetics", "channelrhodopsin", "crispr", "correlation", "sunburn", "human nature")) {
+      body.append("\n\nමෙහි වැදගත්ම දේ සිදුවන්නේ ඇයි සහ කෙසේද යන්න තේරුම් ගැනීමයි.")
+    }
 
     if (suggestSync) {
       body.append("\n\n[FEED SYNC]: මේ topic එක feed එකට එකතු කරන්නද? (Yes/No)")
-    } else {
-      body.append("\n\n[ACTIVE RECALL]: Dasun, මෙම පද්ධතියේ ප්‍රධාන invariant එක බිඳවැටෙන නිශ්චිත කොන්දේසිය කුමක්ද?")
+    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+      body.append("\n\n[ACTIVE RECALL]: මේ mechanism එක ක්‍රියාකරන්නේ කුමන ප්‍රධාන rule එක නිසාද?")
     }
 
     return body.toString()

@@ -104,7 +104,7 @@ fun GroundingScreen(
       Spacer(modifier = Modifier.width(8.dp))
       Column {
         Text(
-          text = "GROUNDING ENGINE [GEMINI-3.8-FLASH]",
+          text = "SEARCH & MAPS // ZERO-BILLING MODE",
           color = CyanNeon,
           fontSize = 13.sp,
           fontWeight = FontWeight.Bold,
@@ -112,7 +112,7 @@ fun GroundingScreen(
           letterSpacing = 1.sp
         )
         Text(
-          text = "Search & Maps Grounding Integration",
+          text = "External grounding disabled · no search/map calls",
           color = SilverMuted,
           fontSize = 10.sp,
           fontFamily = FontFamily.Monospace
@@ -209,6 +209,13 @@ fun GroundingScreen(
             cursorBrush = SolidColor(if (selectedTab == 0) CyanNeon else AmberAccent)
           )
 
+          Spacer(modifier = Modifier.height(8.dp))
+          Text(
+            text = "Search and Maps grounding are disabled to prevent external service charges. This screen will not send a request.",
+            color = AmberAccent,
+            fontSize = 10.sp,
+            lineHeight = 15.sp
+          )
           Spacer(modifier = Modifier.height(14.dp))
 
           ElevatedButton(
@@ -224,7 +231,7 @@ fun GroundingScreen(
                 isGrounding = false
               }
             },
-            enabled = !isGrounding,
+            enabled = false,
             colors = ButtonDefaults.elevatedButtonColors(
               containerColor = if (selectedTab == 0) CyanNeon else AmberAccent,
               contentColor = ObsidianBg
@@ -249,7 +256,7 @@ fun GroundingScreen(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (selectedTab == 0) "EXECUTE SEARCH GROUNDING" else "LOCATE WITH MAPS GROUNDING",
+                text = "DISABLED · ZERO BILLING",
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace

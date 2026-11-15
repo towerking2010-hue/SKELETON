@@ -22,6 +22,9 @@ interface SkeletonDao {
   @Query("SELECT * FROM feed_cards WHERE isSaved = 1 ORDER BY timestamp DESC")
   fun getSavedCards(): Flow<List<FeedCard>>
 
+  @Query("SELECT * FROM feed_cards WHERE lastReviewedTimestamp = 0 OR lastReviewedTimestamp + CASE WHEN recallStage <= 0 THEN 600000 WHEN recallStage = 1 THEN 259200000 WHEN recallStage = 2 THEN 604800000 WHEN recallStage = 3 THEN 1209600000 ELSE 2592000000 END <= :now ORDER BY lastReviewedTimestamp ASC, timestamp DESC")
+  fun getDueReviewCards(now: Long): Flow<List<FeedCard>>
+
   @Query("SELECT * FROM feed_cards WHERE id = :id LIMIT 1")
   fun getFeedCardById(id: String): Flow<FeedCard?>
 

@@ -97,19 +97,19 @@ fun CoreScreen(
 
   val quickPrompts = if (currentLanguage == LanguageSetting.SINHALA) {
     listOf(
-      "Hermeticism නීති 7 සරලව පහදන්න",
-      "Trivium සහ Logic ක්‍රියාත්මක වන්නේ කෙසේද?",
-      "පූජනීය ජ්‍යාමිතිය (Sacred Geometry) සහ ϕ",
-      "Dark Psychology සහ ආරක්ෂණ උපක්‍රම",
-      "Raft Consensus සරලව පහදන්න"
+      "අපි බය වුණාම කාලය හෙමින් යනවා වගේ දැනෙන්නේ ඇයි?",
+      "Golden Ratio එක සරල උදාහරණයකින් කියන්න පුළුවන්ද?",
+      "අපි දෙයක් ඇත්තටම මතක තබාගන්නේ කොහොමද?",
+      "Psychology ගැන පුදුම හිතෙන දෙයක් කියන්න",
+      "මිනිත්තු දෙකකින් අලුත් දෙයක් උගන්වන්න"
     )
   } else {
     listOf(
-      "Hermetic Principles in Daily Life",
-      "The Trivium: Grammar vs Logic vs Rhetoric",
-      "Sacred Geometry & The Golden Ratio ϕ",
-      "Dark Psychology & Covert Defense Mechanics",
-      "Explain Raft Consensus like I'm 10"
+      "Why does time feel slower when we're scared?",
+      "Can you explain the golden ratio without a lecture?",
+      "How do people actually learn something deeply?",
+      "What's one strange idea in psychology worth exploring?",
+      "Teach me something surprising in two minutes."
     )
   }
 
@@ -146,9 +146,9 @@ fun CoreScreen(
         ) {
           Text(
             text = when (tier) {
-              com.example.engine.ai.ModelTier.FAST -> "3.5 Flash-Lite"
-              com.example.engine.ai.ModelTier.GENERAL -> "3.8 Flash"
-              com.example.engine.ai.ModelTier.REASONING -> "4 Argon"
+              com.example.engine.ai.ModelTier.FAST -> "FAST"
+              com.example.engine.ai.ModelTier.GENERAL -> "STANDARD"
+              com.example.engine.ai.ModelTier.REASONING -> "DEEP REASONING"
             },
             color = if (isSelected) CyanNeon else SilverMuted,
             fontSize = 10.sp,
@@ -256,7 +256,7 @@ fun CoreScreen(
               text = if (currentLanguage == LanguageSetting.SINHALA)
                 "CORE ගෙන් ඕනෑම concept එකක් අහන්න..."
               else
-                "Ask CORE any concept (Meta AI style)...",
+                "What are you curious about? Let’s talk…",
               color = SilverDim,
               fontSize = 13.sp
             )

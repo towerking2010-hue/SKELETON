@@ -69,6 +69,48 @@ fun YggdrasilGraphScreen(
 
   var selectedNodeId by remember { mutableStateOf<String?>(cards.firstOrNull()?.id) }
   val selectedCard = cards.find { it.id == selectedNodeId }
+  val domainNames = remember(cards) { cards.map { it.branchDomain }.distinct() }
+  fun domainCenter(domainIndex: Int, width: Float, height: Float): Offset {
+    val angle = (2 * Math.PI * domainIndex / domainNames.size.coerceAtLeast(1)) - Math.PI / 2
+    val radius = width.coerceAtMost(height) * 0.27f
+    return Offset(
+      x = width / 2f + (radius * cos(angle)).toFloat(),
+      y = height / 2f + (radius * sin(angle)).toFloat()
+    )
+  }
+  fun graphNodePositions(width: Float, height: Float): List<Offset> {
+    return cards.mapIndexed { index, card ->
+      val domainIndex = domainNames.indexOf(card.branchDomain).coerceAtLeast(0)
+      val groupIndices = cards.indices.filter { cards[it].branchDomain == card.branchDomain }
+      val positionInGroup = groupIndices.indexOf(index)
+      val spread = (positionInGroup - (groupIndices.size - 1) / 2f) * 0.48
+      val angle = (2 * Math.PI * domainIndex / domainNames.size.coerceAtLeast(1)) - Math.PI / 2 + spread
+      val localRadius = if (groupIndices.size == 1) 0f else width.coerceAtMost(height) * 0.105f
+      domainCenter(domainIndex, width, height) + Offset(
+        x = (localRadius * cos(angle)).toFloat(),
+        y = (localRadius * sin(angle)).toFloat()
+      )
+    }
+  }
+  val semanticEdges = remember(cards) {
+    buildList {
+      for (i in cards.indices) {
+        for (j in i + 1 until cards.size) {
+          val a = cards[i]
+          val b = cards[j]
+          val aLink = a.crossLinkTarget.orEmpty()
+          val bLink = b.crossLinkTarget.orEmpty()
+          val explicitLink =
+            (aLink.isNotBlank() && (b.title.contains(aLink, ignoreCase = true) || b.branchDomain.contains(aLink, ignoreCase = true))) ||
+            (bLink.isNotBlank() && (a.title.contains(bLink, ignoreCase = true) || a.branchDomain.contains(bLink, ignoreCase = true)))
+          if (explicitLink) add(i to j)
+        }
+      }
+      cards.indices.groupBy { cards[it].branchDomain }.values.forEach { domainIndices ->
+        domainIndices.zipWithNext().forEach { (from, to) -> add(from to to) }
+      }
+    }.distinct()
+  }
 
   Column(
     modifier = modifier
@@ -96,7 +138,7 @@ fun YggdrasilGraphScreen(
       Spacer(modifier = Modifier.width(8.dp))
       Column {
         Text(
-          text = "MODE [YGGDRASIL / ATTRACTOR GRAPH]",
+          text = "YGGDRASIL · MULTIVERSAL KNOWLEDGE TREE",
           color = SilverText,
           fontSize = 13.sp,
           fontWeight = FontWeight.Bold,
@@ -127,71 +169,56 @@ fun YggdrasilGraphScreen(
           .fillMaxSize()
           .pointerInput(cards) {
             detectTapGestures { tapOffset ->
-              val centerX = size.width / 2f
-              val centerY = size.height / 2f
-              val radius = size.width.coerceAtMost(size.height) * 0.38f
-              cards.forEachIndexed { index, card ->
-                val angle = (2 * Math.PI * index / cards.size) - Math.PI / 2
-                val nodeX = centerX + (radius * cos(angle)).toFloat()
-                val nodeY = centerY + (radius * sin(angle)).toFloat()
-                val dist = (tapOffset.x - nodeX) * (tapOffset.x - nodeX) +
-                  (tapOffset.y - nodeY) * (tapOffset.y - nodeY)
-                if (dist < 40f * 40f) {
-                  selectedNodeId = card.id
+              val positions = graphNodePositions(size.width.toFloat(), size.height.toFloat())
+              positions.forEachIndexed { index, position ->
+                val dx = tapOffset.x - position.x
+                val dy = tapOffset.y - position.y
+                if (dx * dx + dy * dy < 44f * 44f) {
+                  selectedNodeId = cards[index].id
                 }
               }
             }
           }
       ) {
-        val centerX = size.width / 2f
-        val centerY = size.height / 2f
-        val radius = size.width.coerceAtMost(size.height) * 0.38f
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val domainCenters = domainNames.indices.map { domainCenter(it, size.width, size.height) }
+        val nodePositions = graphNodePositions(size.width, size.height)
 
-        // Draw central attractor core
-        drawCircle(
-          color = CyanNeon.copy(alpha = 0.08f),
-          radius = radius * 1.1f,
-          center = Offset(centerX, centerY)
-        )
-        drawCircle(
-          color = CyanNeon.copy(alpha = 0.2f),
-          radius = 16f,
-          center = Offset(centerX, centerY)
-        )
-
-        // Draw nodes and cross links
-        val nodePositions = cards.mapIndexed { index, _ ->
-          val angle = (2 * Math.PI * index / cards.size) - Math.PI / 2
-          Offset(
-            x = centerX + (radius * cos(angle)).toFloat(),
-            y = centerY + (radius * sin(angle)).toFloat()
+        // Central knowledge core and domain branches.
+        drawCircle(color = CyanNeon.copy(alpha = 0.07f), radius = size.width.coerceAtMost(size.height) * 0.18f, center = center)
+        drawCircle(color = CyanNeon.copy(alpha = 0.22f), radius = 17f, center = center)
+        domainCenters.forEachIndexed { domainIndex, branchCenter ->
+          drawLine(
+            color = CyanNeon.copy(alpha = 0.18f),
+            start = center,
+            end = branchCenter,
+            strokeWidth = 1.3f
           )
+          drawCircle(color = AmberAccent.copy(alpha = 0.14f), radius = 25f, center = branchCenter)
+          drawCircle(color = AmberAccent.copy(alpha = 0.42f), radius = 7f, center = branchCenter)
+          cards.forEachIndexed { cardIndex, card ->
+            if (card.branchDomain == domainNames[domainIndex]) {
+              drawLine(
+                color = EmeraldMastery.copy(alpha = 0.24f),
+                start = branchCenter,
+                end = nodePositions[cardIndex],
+                strokeWidth = 1f
+              )
+            }
+          }
         }
 
-        // Draw inter-connecting attractor lines
-        for (i in nodePositions.indices) {
-          val next = (i + 1) % nodePositions.size
-          val skip = (i + 2) % nodePositions.size
-          drawLine(
-            color = ObsidianBorder,
-            start = nodePositions[i],
-            end = nodePositions[next],
-            strokeWidth = 1.2f
-          )
-          drawLine(
-            color = CyanNeon.copy(alpha = 0.15f),
-            start = nodePositions[i],
-            end = nodePositions[skip],
-            strokeWidth = 0.8f
-          )
-          // Line to core
-          drawLine(
-            color = AmberAccent.copy(alpha = 0.2f),
-            start = nodePositions[i],
-            end = Offset(centerX, centerY),
-            strokeWidth = 0.8f
-          )
-        }
+        // Explicit cross-references connect concepts across branches.
+        semanticEdges.filter { (from, to) -> cards[from].branchDomain != cards[to].branchDomain }
+          .forEach { (from, to) ->
+            val selectedConnection = cards[from].id == selectedNodeId || cards[to].id == selectedNodeId
+            drawLine(
+              color = if (selectedConnection) CyanNeon.copy(alpha = 0.78f) else EmeraldMastery.copy(alpha = 0.30f),
+              start = nodePositions[from],
+              end = nodePositions[to],
+              strokeWidth = if (selectedConnection) 2.3f else 1.1f
+            )
+          }
 
         // Draw each node circle
         nodePositions.forEachIndexed { index, pos ->
@@ -219,7 +246,7 @@ fun YggdrasilGraphScreen(
           .align(Alignment.TopStart)
       ) {
         Text(
-          text = "Tap node to inspect placement",
+          text = "ROOT → DOMAINS → CONCEPTS → CROSS-UNIVERSE LINKS",
           color = SilverDim,
           fontSize = 11.sp,
           fontFamily = FontFamily.Monospace

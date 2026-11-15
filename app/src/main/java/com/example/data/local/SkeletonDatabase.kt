@@ -32,7 +32,7 @@ abstract class SkeletonDatabase : RoomDatabase() {
           context.applicationContext,
           SkeletonDatabase::class.java,
           "skeleton_cognitive.db"
-        ).fallbackToDestructiveMigration().build()
+        ).build()
         INSTANCE = instance
         instance
       }

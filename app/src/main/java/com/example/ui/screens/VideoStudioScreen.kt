@@ -114,7 +114,7 @@ fun VideoStudioScreen(
   var timelineProgress by remember { mutableFloatStateOf(0.45f) }
 
   // Sample photo selection for photo animation
-  var uploadedPhotoLabel by remember { mutableStateOf("Sunflower Fibonacci Lattice.png") }
+  var uploadedPhotoLabel by remember { mutableStateOf("No source photo selected — photo animation is unavailable") }
 
   val promptPresets = remember {
     listOf(
@@ -173,7 +173,7 @@ fun VideoStudioScreen(
         Spacer(modifier = Modifier.width(8.dp))
         Column {
           Text(
-            text = "VIDEO STUDIO // GEMINI-OMNI-1.1-FLASH",
+            text = "VIDEO STUDIO // PREVIEW ONLY",
             color = PurpleAether,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -181,7 +181,7 @@ fun VideoStudioScreen(
             letterSpacing = 1.sp
           )
           Text(
-            text = "Text-to-Video & Photo Animation via Interactions API",
+            text = "No video rendering service enabled · zero-billing mode",
             color = SilverMuted,
             fontSize = 9.sp,
             fontFamily = FontFamily.Monospace
@@ -354,7 +354,7 @@ fun VideoStudioScreen(
                 .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
               Text(
-                text = "MODEL: gemini-omni-1.1-flash",
+                text = "PREVIEW MOCKUP · NOT A RENDER",
                 color = PurpleAether,
                 fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
@@ -558,43 +558,15 @@ fun VideoStudioScreen(
 
       // Generation Button
       ElevatedButton(
-        onClick = {
-          scope.launch {
-            isRendering = true
-            renderingResult = if (currentTab == VideoStudioTab.TEXT_TO_VIDEO) {
-              GeminiCognitiveService.generateVideo(promptText, aspectRatio)
-            } else {
-              val sampleBitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
-              GeminiCognitiveService.animateImageToVideo(sampleBitmap, promptText, aspectRatio)
-            }
-            isRendering = false
-          }
-        },
-        enabled = !isRendering && promptText.isNotBlank(),
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(48.dp)
-          .testTag("render_video_button"),
-        colors = ButtonDefaults.elevatedButtonColors(
-          containerColor = PurpleAether,
-          contentColor = ObsidianBg
-        ),
+        onClick = { renderingResult = "Video rendering is disabled in zero-billing mode. This preview is a UI mockup; no video file was generated and no API request was sent." },
+        enabled = false,
+        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("render_video_button"),
+        colors = ButtonDefaults.elevatedButtonColors(containerColor = ObsidianBorder, contentColor = SilverMuted),
         shape = RoundedCornerShape(16.dp)
       ) {
-        if (isRendering) {
-          CircularProgressIndicator(color = ObsidianBg, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-          Spacer(modifier = Modifier.width(8.dp))
-          Text("GENERATING VIDEO MANIFEST...", fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-        } else {
-          Icon(imageVector = Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = if (currentTab == VideoStudioTab.TEXT_TO_VIDEO) "GENERATE ${aspectRatio.ratioString} VIDEO" else "ANIMATE PHOTO TO ${aspectRatio.ratioString} VIDEO",
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace
-          )
-        }
+        Icon(imageVector = Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(6.dp))
+        Text("VIDEO RENDERING DISABLED · ZERO BILLING", fontWeight = FontWeight.Bold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
       }
 
       // Result Feedback Box
@@ -610,7 +582,7 @@ fun VideoStudioScreen(
         ) {
           Column {
             Text(
-              text = "GEMINI-OMNI-1.1-FLASH OUTPUT [${aspectRatio.ratioString}]",
+              text = "RENDER STATUS [${aspectRatio.ratioString}]",
               color = PurpleAether,
               fontSize = 10.sp,
               fontFamily = FontFamily.Monospace,

@@ -110,7 +110,7 @@ fun ImageStudioScreen(
       Spacer(modifier = Modifier.width(8.dp))
       Column {
         Text(
-          text = "IMAGE STUDIO [NANO BANANA 2.1]",
+          text = "IMAGE STUDIO // PROMPT LAB",
           color = AmberAccent,
           fontSize = 13.sp,
           fontWeight = FontWeight.Bold,
@@ -118,7 +118,7 @@ fun ImageStudioScreen(
           letterSpacing = 1.sp
         )
         Text(
-          text = "Model: gemini-nano-banana-2.1 (Create & Edit)",
+          text = "Image rendering disabled · zero-billing mode",
           color = SilverMuted,
           fontSize = 10.sp,
           fontFamily = FontFamily.Monospace
@@ -161,7 +161,7 @@ fun ImageStudioScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-              text = "Visual Generation Buffer Ready",
+              text = "Prompt lab ready · no image has been generated",
               color = SilverDim,
               fontSize = 12.sp,
               fontFamily = FontFamily.Monospace
@@ -180,7 +180,7 @@ fun ImageStudioScreen(
               CircularProgressIndicator(color = AmberAccent, strokeWidth = 3.dp)
               Spacer(modifier = Modifier.height(10.dp))
               Text(
-                text = "gemini-nano-banana-2.1 rendering...",
+                text = "No paid image request will be sent",
                 color = AmberAccent,
                 fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace
@@ -254,18 +254,8 @@ fun ImageStudioScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         ElevatedButton(
-          onClick = {
-            if (promptInput.isNotBlank()) {
-              isGenerating = true
-              scope.launch {
-                val output = GeminiCognitiveService.generateOrEditImage(promptInput)
-                resultOutput = output
-                isGenerating = false
-                hasGeneratedVisual = true
-              }
-            }
-          },
-          enabled = !isGenerating,
+          onClick = { resultOutput = "Image generation is disabled to prevent paid model usage. Your prompt remains local; no API request was made." },
+          enabled = false,
           colors = ButtonDefaults.elevatedButtonColors(
             containerColor = AmberAccent,
             contentColor = ObsidianBg
@@ -279,7 +269,7 @@ fun ImageStudioScreen(
           Icon(imageVector = Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = "RENDER WITH GEMINI-NANO-BANANA-2.1",
+            text = "IMAGE GENERATION DISABLED · ZERO BILLING",
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace
