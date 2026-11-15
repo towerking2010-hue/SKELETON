@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -21,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.example.ui.components.AuthStatusBar
 import com.google.firebase.auth.FirebaseUser
 import com.example.ui.theme.CyanNeon
@@ -56,9 +60,11 @@ fun AccountScreen(
   var createAccount by remember { mutableStateOf(false) }
   var status by remember { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
+  val scrollState = rememberScrollState()
+  val scope = rememberCoroutineScope()
 
   Column(
-    Modifier.fillMaxSize().background(ObsidianBg).padding(20.dp),
+    Modifier.fillMaxSize().background(ObsidianBg).verticalScroll(scrollState).padding(20.dp),
     verticalArrangement = Arrangement.spacedBy(13.dp)
   ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -72,7 +78,8 @@ fun AccountScreen(
     AuthStatusBar(
       currentUser = currentUser,
       onSignInSuccess = onGoogleSignInSuccess,
-      onSignOut = onSignOut
+      onSignOut = onSignOut,
+      onOpenEmailSignIn = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } }
     )
 
     Column(
