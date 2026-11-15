@@ -78,7 +78,7 @@ fun ArenaScreen(
     selectedAnswer = -1
     submitted = false
     lastWasCorrect = false
-    challengeWasCompletedBeforeAnswer = challenge?.id in profile.completedChallengeIds
+    challengeWasCompletedBeforeAnswer = challenge?.id?.let { it in profile.completedChallengeIds } ?: false
   }
 
   Column(
