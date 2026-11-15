@@ -75,7 +75,7 @@ object SkeletonCognitiveEngine {
       "kalman filter", "blockchain", "merkle tree", "tcp handshake", "webrtc",
       "vector database", "lora", "diffusion model", "simulated annealing",
       "dynamic programming", "graph neural network", "sharding", "zero knowledge",
-      "epigenetics", "general relativity", "thermodynamics", "neuroplasticity"
+      "epigenetics", "general relativity", "thermodynamics", "neuroplasticity", "optogenetics", "channelrhodopsin", "crispr", "correlation", "human nature", "sunburn"
     )
     for (kw in keywords) {
       if (input.contains(kw)) return kw.replaceFirstChar { it.uppercase() }
@@ -121,15 +121,25 @@ object SkeletonCognitiveEngine {
       topic.contains("rust", ignoreCase = true) || topic.contains("ownership", ignoreCase = true) ->
         "Rust Ownership කියන්නේ resource එකකට පැහැදිලි owner කෙනෙක් ඉන්නවා වගේ. Borrowing rules compiler එකෙන් check කරන නිසා unsafe mutable/shared access combinations බොහොමයක් compile වෙන්න කලින්ම අල්ලගන්නවා."
       topic.contains("quantum", ignoreCase = true) ->
-        "Classical bit එකක් 0 හෝ 1. Qubit එකක් measurement outcomes සඳහා probability amplitudes වලින් විස්තර කරනවා. Superposition කියන්නේ පොඩි coin එකක් කරකැවෙනවා කියන එකම නෙවෙයි."
+        "සාමාන්‍ය පරිගණකයක තොරතුරු බිඳුවක් 0 හෝ 1 ලෙස පවතී. ක්වොන්ටම් තොරතුරු බිඳුවකදී මැනීමට පෙර හැකි ප්‍රතිඵල කිහිපයක් එකම ගණිතමය තත්ත්වයකින් විස්තර කළ හැක. මැනූ විට ලැබෙන්නේ එක් නිශ්චිත ප්‍රතිඵලයකි."
+      topic.contains("optogenetics", ignoreCase = true) || topic.contains("channelrhodopsin", ignoreCase = true) ->
+        "ඔප්ටොජෙනටික්ස් (Optogenetics) ක්‍රමයේදී තෝරාගත් ස්නායු සෛලවලට ආලෝකයට ප්‍රතිචාර දක්වන විශේෂ ප්‍රෝටීනයක් නිපදවීමට සලස්වයි. ඉන්පසු නියමිත වර්ණයේ ආලෝකයක් එම සෛල මත යොමු කළ විට ප්‍රෝටීනයේ කුඩා දොරටුවක් විවෘත වේ. ආරෝපිත අංශු සෛලය තුළට ගලා එන නිසා එම සෛලය විද්‍යුත් සංඥාවක් නිකුත් කළ හැක. මෙයින් අවට සෛල සියල්ලම එකවර උත්තේජනය නොකර තෝරාගත් සෛල පරීක්ෂා කළ හැක."
+      topic.contains("crispr", ignoreCase = true) ->
+        "CRISPR මූලික සංස්කරණය (Base Editing) කියන්නේ ජානමය උපදෙස් පොතක තනි අකුරක් නිවැරදිව වෙනස් කරන ක්‍රමයකි. මඟ පෙන්වන අණුවක් අවශ්‍ය ස්ථානය සොයා දෙයි. එහි බැඳෙන එන්සයිමය DNA දාමය දෙකට කපා නොදමා එක් අකුරක් වෙනත් අකුරක් බවට පත් කරයි. ඒ නිසා සාමාන්‍ය කපා-අලවන ක්‍රමයට වඩා අනවශ්‍ය වෙනස්කම් අඩු කළ හැක."
+      topic.contains("correlation", ignoreCase = true) || topic.contains("sunburn", ignoreCase = true) ->
+        "අයිස්ක්‍රීම් අලෙවියත් අව්වට පිළිස්සීම්ත් එකම කාලයේ වැඩි වුණා කියලා අයිස්ක්‍රීම් නිසා පිළිස්සීම් ඇති වෙනවා කියන්න බැහැ. දෙකටම බලපාන තුන්වැනි හේතුවක් තිබිය හැකියි. මෙහිදී උණුසුම්, අව්ව සහිත කාලගුණය නිසා මිනිසුන් අයිස්ක්‍රීම් වැඩියෙන් මිලදී ගන්නවා; ඒ සමඟ වැඩි වේලාවක් අව්වේ සිටීම නිසා පිළිස්සීම්ද වැඩි වෙනවා. එකට වෙනස් වීම හේතු-ඵල සම්බන්ධයක් බවට සාක්ෂියක් නොවේ."
+      topic.contains("human nature", ignoreCase = true) ->
+        "මිනිස් හැසිරීම එකවර සරලත් සංකීර්ණත් වන්නේ අපට මූලික අවශ්‍යතා කිහිපයක් තිබුණත් ඒවා ඉටුකරන ආකාරය අත්දැකීම්, බිය, ආදරය, සමාජ පීඩනය සහ පරිසරය අනුව වෙනස් වන නිසාය. බඩගින්න, ආරක්ෂාව සහ පිළිගැනීම වැනි අවශ්‍යතා තේරුම් ගැනීම පහසුයි. නමුත් ඒවා එකිනෙක ගැටෙන විට එකම පුද්ගලයා විවිධ අවස්ථාවල වෙනස් තීරණ ගත හැක."
+      topic.contains("vector", ignoreCase = true) ->
+        "අර්ථය අනුව සමාන දේවල් සොයාගැනීමට සංඛ්‍යාත්මක නිරූපණ භාවිත කරන දත්ත ගබඩාවක් මෙයයි. උදාහරණයක් ලෙස, 'බල්ලා' යන වචනය නොමැති වාක්‍යයකත් බල්ලෙකු ගැන අදහසක් තිබේ නම් එය අර්ථයෙන් ළඟ දත්ත ලෙස සොයාගත හැක."
       else ->
         "මම දැන් zero-cost offline mode එකේ. මේ topic එක ගැන විශ්වාසදායක explanation එකක් local knowledge එකේ නැති නිසා හිතලා facts හදන්නේ නැහැ. Research Desk එකෙන් මුල් scholarly sources සොයාගෙන ඒවා පරීක්ෂා කරන්න පුළුවන්."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
-      body.append("\n\nAnalogy එකට වඩා වැදගත් වෙන්නේ ඇත්ත mechanism එකයි.")
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "optogenetics", "channelrhodopsin", "crispr", "correlation", "sunburn", "human nature")) {
+      body.append("\n\nමෙහි වැදගත්ම දේ සිදුවන්නේ ඇයි සහ කෙසේද යන්න තේරුම් ගැනීමයි.")
     }
 
     if (suggestSync) {
