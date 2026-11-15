@@ -172,7 +172,7 @@ fun VoiceConversationScreen(currentLanguage: LanguageSetting, onBack: () -> Unit
           IconButton(onClick = {
             if (listening) { recognizer?.stopListening(); listening = false; processing = true; status = "Finishing speech…" }
             else permission.launch(android.Manifest.permission.RECORD_AUDIO)
-          }, modifier = Modifier.fillMaxSize().testTag("live_mic_toggle_button")) {
+          }, enabled = !processing || listening, modifier = Modifier.fillMaxSize().testTag("live_mic_toggle_button")) {
             Icon(if (listening) Icons.Filled.Mic else Icons.Filled.MicOff, "Start or stop voice input", tint = if (listening) ObsidianBg else CyanNeon, modifier = Modifier.size(48.dp))
           }
         }
