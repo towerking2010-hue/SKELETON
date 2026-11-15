@@ -106,7 +106,15 @@ class SkeletonRepository(private val dao: SkeletonDao) {
         "${if (message.isUser) "USER" else "CORE"}: ${message.text}"
       }
     val languageRule = if (systemLanguage == LanguageSetting.SINHALA) {
-      "Default educational language: natural, fluent Sinhala script. Keep established technical terms in English where useful."
+      """
+      භාෂා නීතිය — අනිවාර්යයි:
+      පිළිතුර සම්පූර්ණයෙන්ම ස්වභාවික, පැහැදිලි සිංහලෙන් ලියන්න. ඉංග්‍රීසි නොදන්නා සිංහල මව්භාෂකයෙකුට තනිවම තේරුම් ගත හැකි විය යුතුය.
+      ඉංග්‍රීසි වාක්‍ය හෝ සිංහල-ඉංග්‍රීසි මිශ්‍ර වාක්‍ය භාවිතා නොකරන්න.
+      තාක්ෂණික පදයකට පළමුව සරල සිංහල අර්ථයක් දෙන්න. අවශ්‍ය නම් සම්මත ඉංග්‍රීසි නාමය වරහන් තුළ එක් වරක් පමණක් දක්වන්න.
+      වචනයෙන් වචනයට පරිවර්තනය නොකරන්න. අදහස සහ ක්‍රියාකරන ආකාරය සිංහල පාඨකයාට තේරෙන ලෙස නැවත පැහැදිලි කරන්න.
+      සරල කෙටි වාක්‍ය, පියවරෙන් පියවර විස්තර සහ ශ්‍රී ලංකාවේ දෛනික ජීවිතයට සමීප උදාහරණ භාවිතා කරන්න.
+      නොදන්නා කරුණක් ගැන සිංහලෙන් අවංකව කියන්න; ඉංග්‍රීසි fallback එකක් නොදෙන්න.
+      """.trimIndent()
     } else {
       "Default educational language: clear, natural English."
     }
@@ -141,7 +149,7 @@ class SkeletonRepository(private val dao: SkeletonDao) {
         targetLanguage = systemLanguage,
         existingTopics = existingTitles
       )
-      "$fallback\n\n[OFFLINE MODE] Cloud AI is unavailable; this is the local fallback response."
+      if (systemLanguage == LanguageSetting.SINHALA) "$fallback\n\n[දේශීය ප්‍රතිචාරය] වලාකුළු AI සේවාව දැන් භාවිත කළ නොහැක. මෙය දුරකථනය තුළ ඇති දැනුමෙන් ලබාදුන් පිළිතුරකි." else "$fallback\n\n[OFFLINE MODE] Cloud AI is unavailable; this is the local fallback response."
     } else {
       generated
     }
