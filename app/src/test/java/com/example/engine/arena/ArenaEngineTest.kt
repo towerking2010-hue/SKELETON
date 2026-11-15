@@ -16,11 +16,28 @@ class ArenaEngineTest {
   }
 
   @Test
-  fun completedChallengesRemainAvailableForPractice() {
+  fun unfinishedChallengesArePrioritizedBeforeCompletedPractice() {
     val first = ArenaEngine.challenges.first()
-    val remaining = ArenaEngine.challengesFor("ALL", ArenaProfile(completedChallengeIds = setOf(first.id)))
-    assertTrue(remaining.any { it.id == first.id })
-    assertTrue(remaining.isNotEmpty())
+    val queue = ArenaEngine.challengesFor("ALL", ArenaProfile(completedChallengeIds = setOf(first.id)))
+    assertTrue(queue.isNotEmpty())
+    assertTrue(queue.first().id != first.id)
+    assertTrue(queue.any { it.id == first.id })
+  }
+
+  @Test
+  fun fullyCompletedCategoryFallsBackToPracticeWithoutChangingCompletionHistory() {
+    val completed = ArenaEngine.challenges.map { it.id }.toSet()
+    val profile = ArenaProfile(completedChallengeIds = completed)
+    val practice = ArenaEngine.challengesFor("ALL", profile)
+    assertEquals(ArenaEngine.challenges.size, practice.size)
+    assertTrue(practice.all { it.id in profile.completedChallengeIds })
+  }
+
+  @Test
+  fun modeQueueContainsOnlyChallengesFromSelectedMode() {
+    val queue = ArenaEngine.challengesFor("CASE FILES", ArenaProfile())
+    assertTrue(queue.isNotEmpty())
+    assertTrue(queue.all { it.mode == "CASE FILES" })
   }
 
   @Test
