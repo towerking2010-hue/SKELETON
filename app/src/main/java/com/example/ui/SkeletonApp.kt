@@ -95,6 +95,8 @@ fun SkeletonApp(
       AccountScreen(
         profileName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
         signedInEmail = currentUser?.email,
+        currentUser = currentUser,
+        onGoogleSignInSuccess = { user -> user.displayName?.takeIf { it.isNotBlank() }?.let { viewModel.saveProfileName(it) } },
         onSaveName = { viewModel.saveProfileName(it) },
         onAuthenticate = { email, password, name, create, success, error ->
           viewModel.authenticateEmail(email, password, name, create, success, error)
@@ -307,10 +309,6 @@ fun SkeletonApp(
             ghostChallenges = ghostChallenges,
             currentLanguage = systemLanguage,
             cringeFilterEnabled = cringeFilterEnabled,
-            currentUser = currentUser,
-            onSignInSuccess = { user -> user.displayName?.takeIf { it.isNotBlank() }?.let { viewModel.saveProfileName(it) } },
-            onSignOut = {},
-            onOpenEmailSignIn = { viewModel.selectDrawerMode(DrawerMode.ACCOUNT) },
             onAskDeepDive = { cardId -> viewModel.openDeepDive(cardId) },
             onToggleSave = { card -> viewModel.toggleSaveCard(card) },
             onTriggerGhostChallenge = { viewModel.triggerMicroChallenge() },
