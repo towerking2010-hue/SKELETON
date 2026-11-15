@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
       MyApplicationTheme(adrenalMode = adrenalMode) {
         Surface(
-          modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
+          modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
           color = ObsidianBg
         ) {
           SkeletonApp(viewModel = viewModel)
