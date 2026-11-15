@@ -1,25 +1,27 @@
 package com.example.engine.bio
 
 import com.example.data.model.FeedCard
+import com.example.data.model.LanguageSetting
 import java.util.UUID
 
 object BioscienceModule {
 
-  fun getBioscienceCuratedCards(): List<FeedCard> {
+  fun getBioscienceCuratedCards(targetLanguage: LanguageSetting = LanguageSetting.ENGLISH): List<FeedCard> {
+    val si = targetLanguage == LanguageSetting.SINHALA
     return listOf(
       FeedCard(
         id = "bio_optogenetics",
-        title = "Optogenetics (Channelrhodopsin-2)",
-        itch = "How do you activate a single, specific neural circuit in an awake, behaving animal with millisecond temporal precision without perturbing surrounding neurons?",
-        skeleton = "ChR2 (algal light-gated cation channel) expressed via Cre-lox driver -> 470nm blue light photon absorbs into all-trans retinal -> 13-cis isomerization opens 6Å pore -> passive inward Na+/Ca2+ current -> rapid depolarization past -55mV threshold triggering action potential.",
-        intuition = "Installing a light switch directly inside the wall of a single neuron; flicking a blue flashlight turns on that specific cell while leaving the rest of the brain dark.",
-        branchDomain = "Bioscience: Neurobiology",
-        crossLinkTarget = "Synaptic Plasticity",
+        title = if (si) "ආලෝකයෙන් ස්නායු සෛල පාලනය කිරීම" else "Optogenetics (Channelrhodopsin-2)",
+        itch = if (si) "සතෙකු අවදිව සිටින විට, අවට ඇති අනෙකුත් ස්නායු සෛලවලට බලපෑමක් නොකර, තෝරාගත් එක් ස්නායු සෛල කණ්ඩායමක් ඉතා කෙටි කාලයකට පමණක් ක්‍රියාත්මක කරන්නේ කෙසේද?" else "How do you activate a single, specific neural circuit in an awake, behaving animal with millisecond temporal precision without perturbing surrounding neurons?",
+        skeleton = if (si) "පළමුව තෝරාගත් ස්නායු සෛල තුළ ආලෝකයට ප්‍රතිචාර දක්වන ප්‍රෝටීනයක් නිපදවයි. නිල් ආලෝකය වැටුණු විට එම ප්‍රෝටීනයේ අයන ගමන් කරන දොරටුව විවෘත වේ. සෝඩියම් සහ කැල්සියම් අයන සෛලය තුළට ඇතුළු වීමෙන් සෛලයේ විද්‍යුත් තත්ත්වය වෙනස් වී ස්නායු සංඥාවක් ඇති වේ. මෙය තෝරාගත් සෛලවල පමණක් සිදුවන නිසා ඒවායේ කාර්යය වෙන්කර අධ්‍යයනය කළ හැක." else "ChR2 (algal light-gated cation channel) expressed via Cre-lox driver -> 470nm blue light photon absorbs into all-trans retinal -> 13-cis isomerization opens 6Å pore -> passive inward Na+/Ca2+ current -> rapid depolarization past -55mV threshold triggering action potential.",
+        intuition = if (si) "එක් කාමරයක විදුලි පහනකට පමණක් වෙනම ස්විචයක් සවි කළා වගේ. නිල් ආලෝකය යොමු කළ විට තෝරාගත් ස්නායු සෛලය ක්‍රියාත්මක වන අතර අසල ඇති සෛල එලෙසම පවතී." else "Installing a light switch directly inside the wall of a single neuron; flicking a blue flashlight turns on that specific cell while leaving the rest of the brain dark.",
+        branchDomain = if (si) "ජීව විද්‍යාව: ස්නායු පද්ධතිය" else "Bioscience: Neurobiology",
+        crossLinkTarget = if (si) "ස්නායු සම්බන්ධතා ශක්තිමත් වීම" else "Synaptic Plasticity",
         isSaved = true,
         recallStage = 2,
-        challengeScenario = "If you switch the photostimulation laser from 470nm to 589nm on a ChR2-expressing neuron, why does the cell fail to fire?",
-        challengeExpectedKey = "ChR2 absorption spectrum peaks at 470nm; 589nm activates halorhodopsin (chloride pump) or causes no isomerizing transition.",
-        language = "en"
+        challengeScenario = if (si) "මෙම ප්‍රෝටීනයට ගැළපෙන නිල් ආලෝකය වෙනුවට වෙනත් වර්ණයක කහ ආලෝකයක් යොමු කළහොත් ස්නායු සෛලය ක්‍රියාත්මක නොවන්නේ ඇයි?",
+        challengeExpectedKey = if (si) "මෙම ප්‍රෝටීනය නිල් ආලෝකයට විශේෂයෙන් ප්‍රතිචාර දක්වයි. වෙනත් වර්ණයක ආලෝකය එයට අවශ්‍ය හැඩ වෙනස්වීම ඇති නොකරන නිසා දොරටුව විවෘත නොවේ." else "ChR2 absorption spectrum peaks at 470nm; 589nm activates halorhodopsin (chloride pump) or causes no isomerizing transition.",
+        language = if (si) "si" else "en"
       ),
       FeedCard(
         id = "bio_crispr_base_editing",
