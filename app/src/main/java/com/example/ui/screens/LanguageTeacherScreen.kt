@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LanguageSetting
+import com.example.engine.learning.FluentPathProgressState
+import com.example.engine.learning.FluentPathProgression
 import com.example.ui.theme.*
 import java.util.Locale
 
@@ -138,16 +140,17 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           Text("${if (si) "ප්‍රගතිය" else "PROGRESS"} · ${course.lessons.count { it.id in done }} / ${course.lessons.size}", color = SilverText, fontSize = 12.sp)
           LinearProgressIndicator(progress = { course.lessons.count { it.id in done }.toFloat() / course.lessons.size.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(8.dp)), color = EmeraldMastery, trackColor = ObsidianBorder)
           course.lessons.forEachIndexed { i, item ->
-            val mastered = item.id in done
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            val needsReview = item.id in review
+            val mastered = item.id in done && !needsReview
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else if (needsReview) AmberAccent else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
               Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${if (si) "පාඩම" else "LESSON"} ${i + 1}", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Text(if (mastered) (if (si) "✓ සම්පූර්ණයි" else "✓ MASTERED") else if (item.id in review) (if (si) "නැවත පුහුණුව" else "REVIEW") else "＋", color = if (mastered) EmeraldMastery else AmberAccent, fontSize = 10.sp)
+                Text(if (needsReview) (if (si) "නැවත පුහුණුව" else "REVIEW") else if (mastered) (if (si) "✓ සම්පූර්ණයි" else "✓ MASTERED") else "＋", color = if (mastered) EmeraldMastery else AmberAccent, fontSize = 10.sp)
               }
               Text(if (si) item.si else item.en, color = SilverText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
               Text(item.phrase, color = CyanNeon, fontSize = 19.sp, fontWeight = FontWeight.Bold)
               Text(if (si) item.meaningSi else item.meaningEn, color = SilverMuted, fontSize = 12.sp)
-              OutlinedButton(onClick = { lessonId = item.id; qIndex = 0; answer = -1; checked = false }, modifier = Modifier.fillMaxWidth()) { Text(if (mastered) (if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN") else start) }
+              OutlinedButton(onClick = { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }, modifier = Modifier.fillMaxWidth()) { Text(if (mastered || needsReview) (if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN") else start) }
             }
           }
           if (review.isNotEmpty()) Text(if (si) "නැවත පුහුණු විය යුතු පාඩම්: ${review.size}" else "Lessons to review: ${review.size}", color = AmberAccent, fontSize = 12.sp)
@@ -187,8 +190,14 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             Button(onClick = {
               if (qIndex < lesson.questions.lastIndex) { qIndex++; answer = -1; checked = false }
               else {
-                if (answer == q.answer && !lessonHadMistake) { done = done + lesson.id; review = review - lesson.id; xp += 20 }
-                else review = review + lesson.id
+                val completion = FluentPathProgression.completeLesson(
+                  current = FluentPathProgressState(xp = xp, masteredLessonIds = done, reviewLessonIds = review),
+                  lessonId = lesson.id,
+                  allAnswersCorrect = answer == q.answer && !lessonHadMistake
+                )
+                xp = completion.state.xp
+                done = completion.state.masteredLessonIds
+                review = completion.state.reviewLessonIds
                 prefs.edit().putStringSet("done", done).putStringSet("review", review).putInt("xp", xp).apply()
                 lessonId = null; qIndex = 0; answer = -1; checked = false
               }
