@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +50,8 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,6 +109,7 @@ fun SubsystemDrawer(
     modifier = modifier.testTag("subsystem_modal_sheet")
   ) {
       val scrollState = rememberScrollState()
+      val drawerScope = rememberCoroutineScope()
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -136,15 +140,23 @@ fun SubsystemDrawer(
             )
           }
 
-          IconButton(
-            onClick = onDismiss,
-            modifier = Modifier.size(36.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Close,
-              contentDescription = "Close Subsystems",
-              tint = SilverDim
-            )
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+              onClick = { drawerScope.launch { scrollState.animateScrollTo(scrollState.maxValue) } },
+              modifier = Modifier.size(36.dp).testTag("open_general_settings")
+            ) {
+              Icon(Icons.Filled.Settings, contentDescription = "General settings", tint = CyanNeon)
+            }
+            IconButton(
+              onClick = onDismiss,
+              modifier = Modifier.size(36.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Close Subsystems",
+                tint = SilverDim
+              )
+            }
           }
         }
 
@@ -175,6 +187,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        DrawerSectionHeader("ACCOUNT")
         SubsystemRowItem(
           title = "SKELETON IDENTITY",
           description = "Your name, email account and personal progress",
@@ -186,6 +199,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        DrawerSectionHeader("LEARN & RESEARCH")
         // Research Desk: free public bibliographic metadata, no model inference.
         SubsystemRowItem(
           title = "MODE [RESEARCH DESK]",
@@ -222,6 +236,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        DrawerSectionHeader("CAPTURE & MEDIA")
         // Tool: MODE [VOICE CONVERSATION]
         SubsystemRowItem(
           title = "MODE [VOICE CONVERSATION]",
@@ -282,6 +297,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        DrawerSectionHeader("KNOWLEDGE TOOLS")
         // Tool 1: MODE [YGGDRASIL / ATTRACTOR_GRAPH]
         SubsystemRowItem(
           title = "MODE [YGGDRASIL / GRAPH]",
@@ -318,6 +334,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        DrawerSectionHeader("PRACTICE & MEMORY")
         // Tool 4: MODE [SPACED_REPETITION_ENGINE]
         SubsystemRowItem(
           title = "MODE [SPACED_REPETITION]",
@@ -354,6 +371,7 @@ fun SubsystemDrawer(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        DrawerSectionHeader("AUDIO & LANGUAGE")
         // Tool 7: MODE [AUDIOBOOK_CAPTION_ENGINE]
         SubsystemRowItem(
           title = "MODE [AUDIOBOOK_CAPTION]",
@@ -402,6 +420,7 @@ fun SubsystemDrawer(
 
       Spacer(modifier = Modifier.height(18.dp))
 
+      DrawerSectionHeader("GENERAL SETTINGS")
       // System Controls Divider Box
       Column(
         modifier = Modifier
@@ -412,7 +431,7 @@ fun SubsystemDrawer(
           .padding(16.dp)
       ) {
         Text(
-          text = "DYNAMIC ADAPTIVE CONTROLS",
+          text = "PERSONALIZE SKELETON",
           color = SilverMuted,
           fontSize = 10.sp,
           fontFamily = FontFamily.Monospace,
@@ -541,6 +560,19 @@ fun SubsystemDrawer(
       }
     }
   }
+}
+
+@Composable
+private fun DrawerSectionHeader(title: String) {
+  Text(
+    text = title,
+    color = CyanNeon,
+    fontSize = 10.sp,
+    fontWeight = FontWeight.Bold,
+    fontFamily = FontFamily.Monospace,
+    letterSpacing = 1.5.sp,
+    modifier = Modifier.padding(top = 14.dp, bottom = 2.dp)
+  )
 }
 
 @Composable
