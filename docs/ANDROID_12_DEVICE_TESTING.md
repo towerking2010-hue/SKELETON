@@ -6,7 +6,7 @@ This checklist is for validating SKELETON on the owner's Samsung Galaxy A31 runn
 
 1. Keep the currently installed app until you know whether it contains data you need.
 2. Export or otherwise back up any important Vault content and progress first.
-3. The GitHub Actions debug workflow currently creates a fresh debug keystore for each run. APKs from different runs may therefore have different signing identities and may not install as in-place updates.
+3. The debug build uses the separate application ID `com.aistudio.skeleton.vzkrpx.qa`, so it installs alongside the production-ID app and does not overwrite its local data. The GitHub Actions workflow also creates a fresh debug keystore for each run, so different QA APKs may not install as updates to one another.
 4. Do not uninstall an existing installation until its data is backed up and the owner has explicitly chosen to proceed.
 
 ## Downloading the test APK
@@ -39,7 +39,7 @@ Capture the crash immediately:
 
 ```bash
 adb logcat -c
-adb shell monkey -p com.aistudio.skeleton.vzkrpx 1
+adb shell monkey -p com.aistudio.skeleton.vzkrpx.qa 1
 adb logcat -d -v threadtime > skeleton-crash-log.txt
 ```
 
