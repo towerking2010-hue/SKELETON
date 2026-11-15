@@ -67,7 +67,7 @@ private fun bhCourses() = listOf(
 fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, modifier: Modifier = Modifier) {
   val context = LocalContext.current
   val si = currentLanguage == LanguageSetting.SINHALA
-  val prefs = remember { context.getSharedPreferences("bhashayana_progress", android.content.Context.MODE_PRIVATE) }
+  val prefs = remember { context.getSharedPreferences("fluentpath_progress", android.content.Context.MODE_PRIVATE) }
   val courses = remember { bhCourses() }
   var courseId by remember { mutableStateOf(prefs.getString("course", "ja") ?: "ja") }
   var lessonId by remember { mutableStateOf<String?>(null) }
@@ -113,7 +113,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
       Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { if (lesson != null) lessonId = null else onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = SilverText) }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-          Text(if (si) "භාෂායන" else "BHĀṢĀYANA", color = CyanNeon, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+          Text(if (si) "FluentPath" else "FLUENTPATH", color = CyanNeon, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
           Text(if (si) "භාෂා ප්‍රගුණතා මධ්‍යස්ථානය" else "THE LANGUAGE MASTERY LAB", color = SilverMuted, fontSize = 9.sp, letterSpacing = 1.sp)
         }
         Icon(Icons.Filled.School, null, tint = EmeraldMastery, modifier = Modifier.size(23.dp))
@@ -164,7 +164,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, ObsidianBorder, RoundedCornerShape(18.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
               Text(if (si) "උදාහරණය" else "EXAMPLE", color = EmeraldMastery, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-              IconButton(onClick = { if (voiceReady) tts?.speak(lesson.phrase, TextToSpeech.QUEUE_FLUSH, Bundle(), "bhashayana") else voiceStatus = if (si) "මෙම භාෂාව සඳහා හඬක් ස්ථාපනය කර නැහැ." else "No supported voice is installed." }) { Icon(Icons.Filled.VolumeUp, "Listen", tint = CyanNeon) }
+              IconButton(onClick = { if (voiceReady) tts?.speak(lesson.phrase, TextToSpeech.QUEUE_FLUSH, Bundle(), "fluentpath") else voiceStatus = if (si) "මෙම භාෂාව සඳහා හඬක් ස්ථාපනය කර නැහැ." else "No supported voice is installed." }) { Icon(Icons.Filled.VolumeUp, "Listen", tint = CyanNeon) }
             }
             Text(lesson.phrase, color = SilverText, fontSize = 21.sp, fontWeight = FontWeight.Bold)
             Text(if (si) lesson.meaningSi else lesson.meaningEn, color = SilverMuted, fontSize = 13.sp)
