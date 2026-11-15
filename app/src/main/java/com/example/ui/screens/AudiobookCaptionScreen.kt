@@ -39,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -96,7 +97,7 @@ private fun splitIntoSentences(text: String): List<String> =
     .map { it.trim() }
     .filter { it.isNotBlank() }
 
-private fun readImportedBook(context: android.content.Context, uri: Uri): AudiobookDocument {
+private fun readImportedBook(context: android.content.Context, uri: Uri, currentLanguage: LanguageSetting): AudiobookDocument {
   val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
     ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
     ?: "Imported book"
@@ -130,7 +131,13 @@ private fun readImportedBook(context: android.content.Context, uri: Uri): Audiob
     }
   }.orEmpty().replace(Regex("[ \\t]+"), " ").trim()
 
-  require(raw.isNotBlank()) { "No selectable text was found. Scanned PDFs need OCR before they can be read." }
+  require(raw.isNotBlank()) {
+    if (currentLanguage == LanguageSetting.SINHALA) {
+      "මෙම ගොනුවෙන් කියවිය හැකි අකුරු හමු නොවීය. මෙය ස්කෑන් කළ PDF ගොනුවක් විය හැක. සිංහල අකුරු හඳුනාගැනීම සඳහා වෙනම OCR සහාය අවශ්‍ය වේ."
+    } else {
+      "No selectable text was found. This may be a scanned PDF; image-based OCR is required before it can be read."
+    }
+  }
   return AudiobookDocument(name.substringBeforeLast('.', name), "Imported from device", "Imported text", raw)
 }
 
@@ -178,7 +185,7 @@ fun AudiobookCaptionScreen(
             context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           } catch (_: Exception) { }
           // PDF/EPUB extraction can be expensive; keep file I/O and parsing off the UI thread.
-          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri) }
+          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri, currentLanguage) }
           document = imported
           sentences = splitIntoSentences(imported.text)
           currentSentence = 0
@@ -380,6 +387,17 @@ fun AudiobookCaptionScreen(
         }
         Text(voiceStatus, color = if (voiceStatus.contains("unavailable") || voiceStatus.contains("failed")) AmberAccent else SilverMuted,
           fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp))
+        if (currentLanguage == LanguageSetting.SINHALA && !selectedVoiceAvailable) {
+          TextButton(onClick = {
+            runCatching {
+              context.startActivity(Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA))
+            }.onFailure {
+              voiceStatus = "Android TTS settings could not be opened."
+            }
+          }) {
+            Text("සිංහල හඬ දත්ත ස්ථාපනය කරන්න", color = CyanNeon, fontSize = 11.sp)
+          }
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
           IconButton(onClick = { val target = (currentSentence - 1).coerceAtLeast(0); currentSentence = target; if (isPlaying) playFrom(target) }) {
             Icon(Icons.Filled.FastRewind, "Previous sentence", tint = SilverMuted)
