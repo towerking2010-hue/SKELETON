@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.AuthStatusBar
+import com.google.firebase.auth.FirebaseUser
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.ObsidianBg
 import com.example.ui.theme.ObsidianBorder
@@ -41,6 +43,8 @@ import com.example.ui.theme.SilverText
 fun AccountScreen(
   profileName: String,
   signedInEmail: String?,
+  currentUser: FirebaseUser?,
+  onGoogleSignInSuccess: (FirebaseUser) -> Unit,
   onSaveName: (String) -> Unit,
   onAuthenticate: (String, String, String, Boolean, () -> Unit, (String) -> Unit) -> Unit,
   onSignOut: () -> Unit,
@@ -64,6 +68,12 @@ fun AccountScreen(
       }
       Text("BACK", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onBack).padding(8.dp))
     }
+
+    AuthStatusBar(
+      currentUser = currentUser,
+      onSignInSuccess = onGoogleSignInSuccess,
+      onSignOut = onSignOut
+    )
 
     Column(
       Modifier.fillMaxWidth().background(ObsidianSurface, RoundedCornerShape(18.dp))
