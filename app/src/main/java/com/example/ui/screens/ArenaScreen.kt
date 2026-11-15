@@ -71,6 +71,13 @@ fun ArenaScreen(
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
   var challengeWasCompletedBeforeAnswer by remember { mutableStateOf(false) }
+  val rankLabel = if (currentLanguage == LanguageSetting.SINHALA) when (profile.rank) {
+    "INITIATE" -> "ආරම්භක"
+    "APPRENTICE" -> "පුහුණුකරු"
+    "SPECIALIST" -> "විශේෂඥ"
+    "STRATEGIST" -> "උපායමාර්ගික"
+    else -> "නිර්මාණකරු"
+  } else profile.rank
 
   // Reset the answer controls only when the actual challenge changes.
   LaunchedEffect(selectedMode, challenge?.id) {
@@ -99,7 +106,7 @@ fun ArenaScreen(
     Row(horizontalArrangement = Arrangement.spacedBy(9.dp), modifier = Modifier.fillMaxWidth()) {
       StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "මට්ටම" else "LEVEL", profile.level.toString(), Modifier.weight(1f))
       StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "මුළු ලකුණු" else "TOTAL XP", profile.xp.toString(), Modifier.weight(1f))
-      StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "තත්ත්වය" else "RANK", profile.rank, Modifier.weight(1f))
+      StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "තත්ත්වය" else "RANK", rankLabel, Modifier.weight(1f))
     }
 
     Text(if (currentLanguage == LanguageSetting.SINHALA) "පුහුණු පරීක්ෂණයක් තෝරන්න" else "CHOOSE YOUR TRIAL", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
@@ -166,7 +173,11 @@ fun ArenaScreen(
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(if (currentLanguage == LanguageSetting.SINHALA) "විවෘත කළ ප්‍රදේශ" else "TERRITORIES", color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-        Text("${ArenaEngine.unlockedTerritories(profile.xp)} / 5 unlocked", color = AmberAccent, fontSize = 10.sp)
+        Text(
+          if (currentLanguage == LanguageSetting.SINHALA) "${ArenaEngine.unlockedTerritories(profile.xp)} / 5 විවෘත කර ඇත"
+          else "${ArenaEngine.unlockedTerritories(profile.xp)} / 5 unlocked",
+          color = AmberAccent, fontSize = 10.sp
+        )
       }
     }
 
@@ -176,7 +187,12 @@ fun ArenaScreen(
       verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
       Text(if (currentLanguage == LanguageSetting.SINHALA) "ඔබේ චින්තන හැකියාවන්" else "YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
-      Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
+      Text(
+        if (currentLanguage == LanguageSetting.SINHALA)
+          "මුලින් මූලික හැකියාව පරීක්ෂා කරයි. ඉන්පසු වැඩි පුහුණුවක් අවශ්‍ය කුසලතාවට ප්‍රමුඛත්වය දෙයි. මෙය IQ පරීක්ෂණයක් නොවේ."
+        else "Baseline first · then weakest skill gets priority · device-only · not an IQ test",
+        color = SilverDim, fontSize = 8.sp, lineHeight = 13.sp
+      )
       Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ArenaEngine.skillsFor(profile, currentLanguage).forEach { skill ->
           Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -186,7 +202,12 @@ fun ArenaScreen(
         }
       }
     }
-    Text("LOCAL TRIALS • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES", color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp)
+    Text(
+      if (currentLanguage == LanguageSetting.SINHALA)
+        "දේශීය පුහුණුව • දැන්වීම් නැත • මිලදී ගැනීම් නැත • පළමු නිවැරදි පිළිතුරට පමණක් XP"
+      else "LOCAL TRIALS • NO ADS • NO PURCHASES • XP ONLY FOR CORRECT FIRST-TIME SOLVES",
+      color = SilverDim, fontSize = 8.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.3.sp
+    )
   }
 }
 
