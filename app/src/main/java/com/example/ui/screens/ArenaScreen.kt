@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.engine.arena.ArenaChallenge
 import com.example.engine.arena.ArenaEngine
+import com.example.data.model.LanguageSetting
 import com.example.engine.arena.ArenaProfile
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
@@ -56,6 +57,7 @@ import com.example.ui.theme.SilverText
 fun ArenaScreen(
   profile: ArenaProfile,
   displayName: String,
+  currentLanguage: LanguageSetting,
   onCompleteChallenge: (String, Int) -> Unit,
   onRecordAttempt: (String, Boolean) -> Unit,
   onBack: () -> Unit
@@ -63,7 +65,7 @@ fun ArenaScreen(
   var selectedMode by remember { mutableStateOf("ALL") }
   var activeChallengeId by remember { mutableStateOf<String?>(null) }
   var challengeCycle by remember { mutableIntStateOf(0) }
-  val available = ArenaEngine.challengesFor(selectedMode, profile)
+  val available = ArenaEngine.challengesFor(selectedMode, profile, currentLanguage)
   val challenge = available.firstOrNull { it.id == activeChallengeId } ?: available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
@@ -123,10 +125,10 @@ fun ArenaScreen(
       Text("YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
       Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
       Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ArenaEngine.skillsFor(profile).forEach { skill ->
+        ArenaEngine.skillsFor(profile, currentLanguage).forEach { skill ->
           Column(Modifier.width(112.dp).clip(RoundedCornerShape(9.dp)).background(ObsidianSurfaceElevated).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(skill.label, color = SilverText, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(if (skill.evidence.attempts == 0) "NOT TESTED" else skill.evidence.accuracy.toString() + "% · " + skill.evidence.attempts.toString() + " tries", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+            Text(if (skill.evidence.attempts == 0) if (currentLanguage == LanguageSetting.SINHALA) "තවම පරීක්ෂා කර නැත" else "NOT TESTED" else skill.evidence.accuracy.toString() + "% · " + skill.evidence.attempts.toString() + if (currentLanguage == LanguageSetting.SINHALA) " වාර" else " tries", color = if (skill.evidence.isEstablished) EmeraldMastery else AmberAccent, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
           }
         }
       }
@@ -139,21 +141,22 @@ fun ArenaScreen(
           Modifier.clip(RoundedCornerShape(18.dp)).background(if (selected) CyanNeon.copy(alpha = 0.14f) else ObsidianSurface)
             .border(1.dp, if (selected) CyanNeon else ObsidianBorder, RoundedCornerShape(18.dp))
             .clickable { selectedMode = mode }.padding(horizontal = 12.dp, vertical = 9.dp)
-        ) { Text(mode, color = if (selected) CyanNeon else SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) }
+         ) { Text(ArenaEngine.modeLabel(mode, currentLanguage), color = if (selected) CyanNeon else SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) }
       }
     }
 
     if (challenge == null) {
       Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(9.dp)) {
-          Text("TRIALS CLEARED", color = EmeraldMastery, fontSize = 17.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
-          Text("You've completed every available challenge in this category.", color = SilverMuted, fontSize = 12.sp)
-          Text("Choose another trial to keep exploring.", color = SilverDim, fontSize = 11.sp)
+          Text(if (currentLanguage == LanguageSetting.SINHALA) "සියලු පරීක්ෂණ අවසන්" else "TRIALS CLEARED", color = EmeraldMastery, fontSize = 17.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+          Text(if (currentLanguage == LanguageSetting.SINHALA) "මෙම කාණ්ඩයේ ඇති සියලුම පරීක්ෂණ ඔබ අවසන් කර ඇත." else "You've completed every available challenge in this category.", color = SilverMuted, fontSize = 12.sp)
+          Text(if (currentLanguage == LanguageSetting.SINHALA) "තවත් කාණ්ඩයක් තෝරාගෙන ඉදිරියට යන්න." else "Choose another trial to keep exploring.", color = SilverDim, fontSize = 11.sp)
         }
       }
     } else {
       ChallengePanel(
         challenge = challenge,
+        currentLanguage = currentLanguage,
         selectedAnswer = selectedAnswer,
         submitted = submitted,
         lastWasCorrect = lastWasCorrect,
@@ -191,6 +194,7 @@ private fun StatPanel(label: String, value: String, modifier: Modifier = Modifie
 @Composable
 private fun ChallengePanel(
   challenge: ArenaChallenge,
+  currentLanguage: LanguageSetting,
   selectedAnswer: Int,
   submitted: Boolean,
   lastWasCorrect: Boolean,
@@ -205,8 +209,8 @@ private fun ChallengePanel(
     verticalArrangement = Arrangement.spacedBy(12.dp)
   ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-      Text(challenge.mode, color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-      Text(challenge.difficulty, color = if (challenge.difficulty == "HARD") AmberAccent else SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+      Text(ArenaEngine.modeLabel(challenge.mode, currentLanguage), color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+      Text(if (currentLanguage == LanguageSetting.SINHALA) when (challenge.difficulty) { "EASY" -> "පහසු"; "MEDIUM" -> "මධ්‍යම"; else -> "අභියෝගාත්මක" } else challenge.difficulty, color = if (challenge.difficulty == "HARD") AmberAccent else SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
     }
     Text(challenge.title, color = SilverText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     Text(challenge.domain.uppercase(), color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
@@ -234,22 +238,22 @@ private fun ChallengePanel(
       Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
         .background(if (lastWasCorrect) EmeraldMastery.copy(alpha = 0.10f) else AmberAccent.copy(alpha = 0.08f))
         .padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(if (lastWasCorrect) "TRIAL CLEARED  +${challenge.rewardXp} XP" else "NOT QUITE — STUDY THE MECHANISM", color = if (lastWasCorrect) EmeraldMastery else AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) { if (lastWasCorrect) "පරීක්ෂණය සමත්  +${challenge.rewardXp} XP" else "තවම නිවැරදි නැහැ — පැහැදිලි කිරීම බලන්න" } else if (lastWasCorrect) "TRIAL CLEARED  +${challenge.rewardXp} XP" else "NOT QUITE — STUDY THE MECHANISM", color = if (lastWasCorrect) EmeraldMastery else AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
         Text(challenge.explanation, color = SilverMuted, fontSize = 11.sp, lineHeight = 16.sp)
-        if (!lastWasCorrect) Text("Try again after reviewing the explanation.", color = SilverDim, fontSize = 10.sp)
+        if (!lastWasCorrect) Text(if (currentLanguage == LanguageSetting.SINHALA) "පැහැදිලි කිරීම කියවා නැවත උත්සාහ කරන්න." else "Try again after reviewing the explanation.", color = SilverDim, fontSize = 10.sp)
       }
     }
     if (!submitted) {
       Button(onClick = onSubmit, enabled = selectedAnswer >= 0, modifier = Modifier.fillMaxWidth().testTag("arena_submit"),
         colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) {
-        Text("SUBMIT ANSWER", fontWeight = FontWeight.Black, fontSize = 11.sp, letterSpacing = 1.sp)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "පිළිතුර යවන්න" else "SUBMIT ANSWER", fontWeight = FontWeight.Black, fontSize = 11.sp, letterSpacing = 1.sp)
       }
     } else if (lastWasCorrect) {
-      Text("NEXT TRIAL LOADS AUTOMATICALLY", color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+      Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ පරීක්ෂණය ස්වයංක්‍රීයව විවෘත වේ" else "NEXT TRIAL LOADS AUTOMATICALLY", color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
     } else {
       Button(onClick = onRetry, modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(containerColor = ObsidianSurfaceElevated, contentColor = SilverText)) {
-        Text("TRY AGAIN", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "නැවත උත්සාහ කරන්න" else "TRY AGAIN", fontSize = 10.sp, fontWeight = FontWeight.Bold)
       }
     }
   }
