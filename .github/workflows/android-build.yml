@@ -60,6 +60,7 @@ jobs:
           disable-animations: true
           script: gradle connectedDebugAndroidTest
       - name: Upload debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: skeleton-debug-apk
