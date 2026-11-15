@@ -1,5 +1,7 @@
 package com.example.engine.arena
 
+import com.example.data.model.LanguageSetting
+
 data class ArenaChallenge(
   val id: String,
   val mode: String,
@@ -56,8 +58,93 @@ object ArenaEngine {
     ArenaSkill("systems_thinking", "Systems thinking", "Recognizing feedback loops, delays and second-order effects.", ArenaSkillEvidence())
   )
 
-  fun skillsFor(profile: ArenaProfile): List<ArenaSkill> = skillCatalog.map { skill ->
-    skill.copy(evidence = profile.skillEvidence[skill.id] ?: ArenaSkillEvidence())
+  fun skillsFor(profile: ArenaProfile, language: LanguageSetting = LanguageSetting.ENGLISH): List<ArenaSkill> = skillCatalog.map { skill ->
+    val label = if (language == LanguageSetting.SINHALA) when (skill.id) {
+      "critical_reasoning" -> "විවේචනාත්මක තර්කය"
+      "bias_detection" -> "පක්ෂපාතීත්වය හඳුනාගැනීම"
+      "strategic_judgment" -> "උපායමාර්ගික තීරණ"
+      "scientific_reasoning" -> "විද්‍යාත්මක තර්කය"
+      "memory_learning" -> "මතකය සහ ඉගෙනීම"
+      "probabilistic_thinking" -> "සම්භාවිතා සිතීම"
+      "attention_control" -> "අවධානය පාලනය"
+      else -> "පද්ධතිමය සිතීම"
+    } else skill.label
+    skill.copy(label = label, evidence = profile.skillEvidence[skill.id] ?: ArenaSkillEvidence())
+  }
+
+  fun modeLabel(mode: String, language: LanguageSetting): String =
+    if (language == LanguageSetting.ENGLISH) mode else when (mode) {
+      "ALL" -> "සියල්ල"
+      "MIND TRIALS" -> "චින්තන පරීක්ෂණ"
+      "CASE FILES" -> "සිද්ධි විමර්ශන"
+      "STRATEGY" -> "උපායමාර්ග"
+      "CONQUEST" -> "ජයග්‍රහණ"
+      "MEMORY LAB" -> "මතක පුහුණුව"
+      else -> mode
+    }
+
+  private fun localize(challenge: ArenaChallenge, language: LanguageSetting): ArenaChallenge {
+    if (language == LanguageSetting.ENGLISH) return challenge
+    val localized = when (challenge.id) {
+      "mind_correlation_01" -> challenge.copy(
+        title = "එකට වෙනස් වීම හේතුවක්ද?",
+        domain = "සංඛ්‍යාලේඛන සහ මනෝවිද්‍යාව",
+        prompt = "නගරයක අයිස්ක්‍රීම් අලෙවියත් අව්වට සම පිළිස්සීම්ත් එකම කාලයේ වැඩි වේ. මේ නිරීක්ෂණයෙන් පමණක් නිගමනය කළ හැක්කේ කුමක්ද?",
+        options = listOf("අයිස්ක්‍රීම් නිසා සම පිළිස්සෙයි", "සම පිළිස්සීම නිසා අයිස්ක්‍රීම් අලෙවිය වැඩිවේ", "එකට වැඩිවීමෙන් හේතු-ඵල සම්බන්ධයක් ඔප්පු නොවේ", "ඒ දෙක අතර කිසිම සම්බන්ධයක් නැත"),
+        explanation = "උණුසුම්, අව්ව සහිත කාලගුණය දෙකටම පොදු හේතුව විය හැකියි. එකට වෙනස් වීමෙන් එකක් අනෙක ඇති කළ බව ඔප්පු නොවේ."
+      )
+      "case_confirmation_01" -> challenge.copy(
+        title = "සාක්ෂිකරුගේ වැරැද්ද",
+        domain = "සංජානන විද්‍යාව",
+        prompt = "විමර්ශකයෙකු සැකකරුවෙකු වැරදිකරු යැයි කලින්ම සිතයි. තම අදහසට ගැළපෙන සාක්ෂි පමණක් මතක තබාගෙන විරුද්ධ සාක්ෂි නොසලකා හරියි. මෙය කුමන මානසික නැඹුරුවද?",
+        options = listOf("තම අදහස තහවුරු කරන දේ පමණක් තෝරාගැනීම", "මුලින් ඇසූ තොරතුරට අධික බර දීම", "මතකයට පහසුවෙන් එන දේ වැඩියෙන් විශ්වාස කිරීම", "දැනට වැය කළ දේ නිසාම දිගටම යාම"),
+        explanation = "තමන් දැනට විශ්වාස කරන දෙයට ගැළපෙන තොරතුරු පමණක් සොයාගැනීම හෝ පිළිගැනීම මෙහි ලක්ෂණයයි. හොඳ විමර්ශනයක් තම අදහස වැරදි බව පෙන්විය හැකි සාක්ෂිද සොයයි."
+      )
+      "strategy_negotiation_01" -> challenge.copy(
+        title = "සාකච්ඡාවේ බලය",
+        domain = "තීරණ ගැනීම",
+        prompt = "ඔබ ගිවිසුමක් ගැන සාකච්ඡා කරයි. මිල ගැන කතා කිරීමට පෙර, ලැබෙන යෝජනාව පිළිගත යුතුදැයි තීරණය කිරීමට වඩාත් උපකාරී වන්නේ කුමක්ද?",
+        options = listOf("ඉක්මනින්ම පළමු මිල ඉදිරිපත් කිරීම", "ගිවිසුමක් නොලැබුණොත් ඇති හොඳම විකල්පය හඳුනාගැනීම", "ඔබ පිළිගන්නා අවම මිල හෙළි කිරීම", "අනෙක් පාර්ශ්වයටත් ඔබේ අවශ්‍යතාම ඇතැයි සිතීම"),
+        explanation = "ගිවිසුමක් නොලැබුණොත් ඔබට කළ හැකි හොඳම විකල්පය, ලැබෙන යෝජනාව ඇගයීමට මිනුමක් සපයයි. එය පිළිගන්නවාද නැද්ද යන්න තීරණය කිරීමට උපකාරී වේ."
+      )
+      "conquest_energy_01" -> challenge.copy(
+        title = "ශක්තියේ නියමය",
+        domain = "භෞතික විද්‍යාව",
+        prompt = "වෙන්වූ පද්ධතියක් තුළ ක්‍රියාවලියක් සිදුවේ. තාපගති විද්‍යාවේ පළමු නියමය නිවැරදිව පෙන්වන්නේ කුමන ප්‍රකාශයද?",
+        options = listOf("කාර්යයක් කරන විට ශක්තිය අලුතින් නිර්මාණය වේ", "වෙන්වූ පද්ධතියක මුළු ශක්තිය සංරක්ෂිත වේ", "තාපය සැමවිටම සීතලෙන් උණුසුමට ගලා යයි", "අවුල්සහගතභාවය සැමවිටම අඩු විය යුතුය"),
+        explanation = "ශක්තිය නිර්මාණය හෝ විනාශ නොවේ. පද්ධතියක ශක්ති වෙනස තාපය සහ කාර්යය හරහා ඇතුළු වන හෝ පිටවන ශක්තියෙන් පැහැදිලි කළ හැක."
+      )
+      "memory_spacing_01" -> challenge.copy(
+        title = "මතකයේ වාසිය",
+        domain = "ඉගෙනීමේ විද්‍යාව",
+        prompt = "මාසයකට පසුත් අදහසක් මතක තබාගැනීමට අවශ්‍යයි. එකම දවසේ නැවත නැවත කියවීමට වඩා සාමාන්‍යයෙන් හොඳ ක්‍රමය කුමක්ද?",
+        options = listOf("එක දිගටම දිගු වේලාවක් කියවීම", "දින කිහිපයක් පුරා කාල පරතර තබා මතකයෙන් පිළිතුරු දීම", "සෑම වාක්‍යයක්ම පාට කිරීම", "අවධානය වෙනත් දේවලට යොමු කරගෙන කියවීම"),
+        explanation = "කාල පරතර තබා මතකයෙන් තොරතුරු නැවත ලබාගැනීම දිගුකාලීන මතකය ශක්තිමත් කරයි. වැරදි පිළිතුරු නිවැරදි කරගැනීමද වැදගත්ය."
+      )
+      "mind_probability_02" -> challenge.copy(
+        title = "මූලික අනුපාතය",
+        domain = "සම්භාවිතාව",
+        prompt = "දුර්ලභ රෝගයක් පුද්ගලයන් දහසකින් එක් අයෙකුට ඇත. පරීක්ෂණය රෝගීන්ගෙන් 99%ක් හඳුනාගනී; නිරෝගී අයගෙන් 1%කට වැරදි ධනාත්මක ප්‍රතිඵලයක් දෙයි. ප්‍රතිඵලය ධනාත්මක නම් රෝගය ඇති සම්භාවිතාව 99%ද?",
+        options = listOf("ඔව්, පරීක්ෂණයේ නිරවද්‍යතාව 99%යි", "නැහැ. රෝගය දුර්ලභ බව සලකා බැලූ විට එය ආසන්න වශයෙන් 9%යි", "ඔව්, ධනාත්මක සියල්ලන්ටම රෝගය ඇත", "එය හරියටම 50%යි"),
+        explanation = "රෝගය ඉතා දුර්ලභ නිසා වැරදි ධනාත්මක ප්‍රතිඵල ගණන සැබෑ රෝගීන්ට වඩා වැඩි විය හැක. එබැවින් පරීක්ෂණයේ සංවේදීතාව පමණක් නොව රෝගය පැතිරී ඇති මූලික අනුපාතයද සලකා බැලිය යුතුය."
+      )
+      "mind_attention_01" -> challenge.copy(
+        title = "අවධානය රැකගැනීම",
+        domain = "අවධානය සහ සිත පාලනය",
+        prompt = "ඔබට විනාඩි 25ක් පුරා අවධානයෙන් සිතීමට අවශ්‍ය කාර්යයක් ඇත. නිතර දැනුම්දීම් පෙන්වයි. අවධානය රැකගැනීමට හොඳම ක්‍රියාව කුමක්ද?",
+        options = listOf("සෑම දැනුම්දීමක්ම වහාම බැලීම", "උනන්දුව තබාගැනීමට නිතර කාර්ය මාරු කිරීම", "බාධා නිහඬ කර හදිසි දේ සටහන් කර නියමිත විවේකයේදී බැලීම", "සියලු යෙදුම් විවෘතව තබා ඒවා නිරීක්ෂණය කිරීම"),
+        explanation = "බාධා අඩු කිරීම සහ හදිසි නොවන දේ එකවර පසුව බැලීම දිගටම අවධානය යොමු කිරීමට උපකාරී වේ."
+      )
+      "case_systems_01" -> challenge.copy(
+        title = "ප්‍රමාද වන ප්‍රතිචාරය",
+        domain = "පද්ධතිමය සිතීම",
+        prompt = "ගොදුරු සතුන් වැඩි වූ විට ඔවුන් අනුභව කරන විලෝපික සතුන්ද වැඩිවේ. පසුව ගොදුරු සතුන් අඩුවන අතර තවත් කලකට පසු විලෝපිකයන්ද අඩුවේ. මේ ප්‍රමාදය පැහැදිලි කරන්නේ කුමක්ද?",
+        options = listOf("කාල ප්‍රමාදයක් සහිත ප්‍රතිචාර වටයක්", "එකිනෙකට සම්බන්ධ නොවූ සිදුවීමක්", "අන්තර්ක්‍රියා නැති පද්ධතියක්", "කිසිදා වෙනස් නොවන සරල ප්‍රවණතාවක්"),
+        explanation = "ගොදුරු සහ විලෝපික ජනගහණ එකිනෙකට බලපාන අතර ඒ බලපෑම් ප්‍රමාද වී පෙනිය හැක. පද්ධතියක් තේරුම් ගැනීමට සම්බන්ධතා, ප්‍රතිචාර වට සහ ප්‍රමාදයන් සලකා බැලිය යුතුය."
+      )
+      else -> challenge
+    }
+    return localized
   }
 
   fun weakestSkillId(profile: ArenaProfile): String? = skillsFor(profile)
@@ -150,11 +237,11 @@ object ArenaEngine {
     )
   )
 
-  fun challengesFor(mode: String, profile: ArenaProfile): List<ArenaChallenge> {
+  fun challengesFor(mode: String, profile: ArenaProfile, language: LanguageSetting = LanguageSetting.ENGLISH): List<ArenaChallenge> {
     val remaining = challenges.filter { mode == "ALL" || it.mode == mode }
     val unassessed = remaining.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
-    if (unassessed.isNotEmpty()) return unassessed
-    return remaining.sortedWith(compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }.thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 })
+    val ordered = if (unassessed.isNotEmpty()) unassessed else remaining.sortedWith(compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }.thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 })
+    return ordered.map { localize(it, language) }
   }
 
   fun unlockedTerritories(xp: Int): Int = when {
