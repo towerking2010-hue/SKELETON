@@ -74,6 +74,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   var qIndex by remember { mutableIntStateOf(0) }
   var answer by remember { mutableIntStateOf(-1) }
   var checked by remember { mutableStateOf(false) }
+  var lessonHadMistake by remember { mutableStateOf(false) }
   var xp by remember { mutableIntStateOf(prefs.getInt("xp", 0)) }
   var done by remember { mutableStateOf(prefs.getStringSet("done", emptySet())?.toSet() ?: emptySet()) }
   var review by remember { mutableStateOf(prefs.getStringSet("review", emptySet())?.toSet() ?: emptySet()) }
@@ -138,7 +139,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           LinearProgressIndicator(progress = { course.lessons.count { it.id in done }.toFloat() / course.lessons.size.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(8.dp)), color = EmeraldMastery, trackColor = ObsidianBorder)
           course.lessons.forEachIndexed { i, item ->
             val mastered = item.id in done
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; checked = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
               Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${if (si) "පාඩම" else "LESSON"} ${i + 1}", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 Text(if (mastered) (if (si) "✓ සම්පූර්ණයි" else "✓ MASTERED") else if (item.id in review) (if (si) "නැවත පුහුණුව" else "REVIEW") else "＋", color = if (mastered) EmeraldMastery else AmberAccent, fontSize = 10.sp)
@@ -186,14 +187,14 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             Button(onClick = {
               if (qIndex < lesson.questions.lastIndex) { qIndex++; answer = -1; checked = false }
               else {
-                if (answer == q.answer) { done = done + lesson.id; review = review - lesson.id; xp += 20 }
+                if (answer == q.answer && !lessonHadMistake) { done = done + lesson.id; review = review - lesson.id; xp += 20 }
                 else review = review + lesson.id
                 prefs.edit().putStringSet("done", done).putStringSet("review", review).putInt("xp", xp).apply()
                 lessonId = null; qIndex = 0; answer = -1; checked = false
               }
             }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(if (qIndex < lesson.questions.lastIndex) next else finish, fontWeight = FontWeight.Bold) }
           } else {
-            Button(onClick = { checked = true }, enabled = answer >= 0, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(check, fontWeight = FontWeight.Bold) }
+            Button(onClick = { checked = true; if (answer != q.answer) lessonHadMistake = true }, enabled = answer >= 0, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(check, fontWeight = FontWeight.Bold) }
           }
         }
       }
