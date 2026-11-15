@@ -28,10 +28,11 @@ import com.example.data.model.LanguageSetting
 import com.example.engine.learning.FluentPathProgressState
 import com.example.engine.learning.FluentPathProgression
 import com.example.engine.learning.FluentPathLocalization
+import com.example.engine.learning.FluentPathAnswerChecker
 import com.example.ui.theme.*
 import java.util.Locale
 
-private data class BhQuestion(val en: String, val si: String, val choices: List<String>, val answer: Int, val whyEn: String, val whySi: String)
+private data class BhQuestion(val en: String, val si: String, val choices: List<String>, val answer: Int, val whyEn: String, val whySi: String, val typedAnswer: String? = null, val acceptedAlternatives: List<String> = emptyList())
 private data class BhLesson(val id: String, val en: String, val si: String, val phrase: String, val meaningEn: String, val meaningSi: String, val ideaEn: String, val ideaSi: String, val pattern: String, val questions: List<BhQuestion>)
 private data class BhCourse(val id: String, val name: String, val native: String, val locale: Locale, val lessons: List<BhLesson>)
 
@@ -42,9 +43,9 @@ private fun bhCourses() = listOf(
       BhQuestion("Where does the verb usually appear?","ජපන් වාක්‍යයක ක්‍රියාව සාමාන්‍යයෙන් යෙදෙන්නේ කොතැනද?",listOf("Beginning","Middle","End","Omitted"),2,"The verb normally comes last.","ක්‍රියාව සාමාන්‍යයෙන් වාක්‍යයේ අගට එනවා."))),
     BhLesson("ja2","Introduce your topic","කතා කරන මාතෘකාව හඳුන්වමු","私は学生です。","I am a student.","මම ශිෂ්‍යයෙක් / ශිෂ්‍යාවක්.","は marks the topic. It is written は but pronounced 'wa' when used as the topic particle.","は යන්නෙන් වාක්‍යයේ මාතෘකාව හඳුන්වනවා. මේ භාවිතයේදී ලියන්නේ は වුණත් උච්චාරණය 'වා' ලෙසයි.","Topic + は + information",listOf(
       BhQuestion("How is は pronounced as the topic particle?","මාතෘකා නිපාතය ලෙස යෙදෙන は උච්චාරණය කරන්නේ කෙසේද?",listOf("ha","wa","o","ne"),1,"In this use, は is pronounced wa.","මෙම භාවිතයේදී は උච්චාරණය කරන්නේ 'වා' ලෙසයි."),
-      BhQuestion("What does は introduce?","は මඟින් හඳුන්වා දෙන්නේ කුමක්ද?",listOf("Topic","Past tense","Question","Location"),0,"It marks the topic of the sentence.","එය වාක්‍යයේ මාතෘකාව හඳුන්වනවා.")))
+      BhQuestion("What does は introduce?","は මඟින් හඳුන්වා දෙන්නේ කුමක්ද?",listOf("Topic","Past tense","Question","Location"),0,"It marks the topic of the sentence.","එය වාක්‍යයේ මාතෘකාව හඳුන්වනවා."))),
     BhLesson("ja3","Ask a yes-or-no question","ඔව් හෝ නැහැ යනුවෙන් පිළිතුරු දිය හැකි ප්‍රශ්නයක් අසමු","これは本ですか。","Is this a book?","මේක පොතක්ද?","か is placed at the end of a polite statement to turn it into a yes-or-no question. The sentence structure stays familiar; the ending signals the question.","です යන ආචාරශීලී ප්‍රකාශයක අගට か යෙදීමෙන් ඔව් හෝ නැහැ යනුවෙන් පිළිතුරු දිය හැකි ප්‍රශ්නයක් සෑදේ. වාක්‍යයේ රටාව බොහෝ දුරට එලෙසම පවතින අතර අග කොටස ප්‍රශ්නයක් බව පෙන්වයි.","Statement + か",listOf(
-      BhQuestion("Which particle turns this polite statement into a yes-or-no question?","මෙම ආචාරශීලී ප්‍රකාශය ඔව්/නැහැ ප්‍රශ්නයක් කරන්නේ කුමන නිපාතයෙන්ද?",listOf("か","は","を","に"),0,"か marks a yes-or-no question at the end of the sentence.","වාක්‍යයේ අගට යෙදෙන か ඔව් හෝ නැහැ ප්‍රශ්නයක් බව පෙන්වයි."),
+      BhQuestion("Type the Japanese particle that turns this statement into a yes-or-no question.","මෙම ප්‍රකාශය ඔව්/නැහැ ප්‍රශ්නයක් කරන ජපන් නිපාතය ටයිප් කරන්න.",emptyList(),0,"か marks a yes-or-no question at the end of the sentence.","වාක්‍යයේ අගට යෙදෙන か ඔව් හෝ නැහැ ප්‍රශ්නයක් බව පෙන්වයි.",typedAnswer = "か"),
       BhQuestion("Where is か usually placed in this pattern?","මෙම රටාවේ か සාමාන්‍යයෙන් යෙදෙන්නේ කොතැනද?",listOf("At the beginning","After the noun only","At the end","Before the verb"),2,"In this polite pattern, か comes at the end.","මෙම ආචාරශීලී රටාවේ か වාක්‍යයේ අගට යෙදේ."))),
     BhLesson("ja4","Talk about yesterday","ඊයේ සිදු වූ දෙයක් කියමු","昨日、映画を見ました。","I watched a film yesterday.","මම ඊයේ චිත්‍රපටයක් බැලුවා.","The polite past form 見ました expresses a completed action. 昨日 gives the time, を marks the object, and the verb comes last.","見ました යන ආචාරශීලී අතීත රූපයෙන් අවසන් වූ ක්‍රියාවක් පෙන්වයි. 昨日 කාලය දක්වයි, を කර්මය පෙන්වයි, ක්‍රියාව වාක්‍යයේ අගට යෙදේ.","Time + object + verb (past)",listOf(
       BhQuestion("Which part means yesterday?","ඊයේ යන අර්ථය දෙන්නේ කුමන කොටසද?",listOf("昨日","映画","を","見ました"),0,"昨日 means yesterday.","昨日 යන්නෙහි අර්ථය ඊයේ යන්නයි."),
@@ -58,7 +59,7 @@ private fun bhCourses() = listOf(
       BhQuestion("Which form marks the masculine direct object here?","මෙහි පුරුෂ ලිංග සෘජු කර්මය පෙන්වන්නේ කුමන රූපයෙන්ද?",listOf("der","den","die","das"),1,"den is the masculine accusative form in this sentence.","මෙම වාක්‍යයේ den යනු පුරුෂ ලිංග කර්මකාරක රූපයයි."),
       BhQuestion("What is the role of den Hund?","den Hund යන කොටසෙහි ව්‍යාකරණ භූමිකාව කුමක්ද?",listOf("Subject","Direct object","Verb","Time phrase"),1,"den Hund is the direct object of sehe.","den Hund යනු sehe ක්‍රියාවට ලක්වන සෘජු කර්මයයි."))),
     BhLesson("de3","Say that you do not have something","යමක් නොමැති බව කියමු","Ich habe kein Buch.","I do not have a book.","මට පොතක් නැහැ.","kein is used before a noun to negate an indefinite noun phrase. Its ending changes to agree with the noun's grammatical gender, number and case.","kein යන්න නාම පදයකට පෙර යෙදී එම නාම පදය නොමැති බව පෙන්වයි. නාම පදයේ ලිංගය, වචන සංඛ්‍යාව සහ විභක්තිය අනුව එහි අවසානය වෙනස් වේ.","Subject + verb + kein(e) + noun",listOf(
-      BhQuestion("Which word negates Buch in this sentence?","මෙම වාක්‍යයේ Buch යන්න නැතැයි පෙන්වන්නේ කුමන වචනයද?",listOf("kein","nicht","den","der"),0,"kein negates the noun Buch in this example.","මෙම උදාහරණයේ kein යන්න Buch නාම පදය නැතැයි පෙන්වයි."),
+      BhQuestion("Type the German word that negates the noun in this sentence.","මෙම වාක්‍යයේ නාම පදය නැතැයි පෙන්වන ජර්මන් වචනය ටයිප් කරන්න.",emptyList(),0,"kein negates the noun Buch in this example.","මෙම උදාහරණයේ kein යන්න Buch නාම පදය නැතැයි පෙන්වයි.",typedAnswer = "kein"),
       BhQuestion("What does kein change to match?","kein යන්න වෙනස් වන්නේ කුමකට ගැළපීමටද?",listOf("Only the verb tense","The noun's gender, number and case","Only the sentence length","The speaker's age"),1,"The form of kein agrees with the noun it accompanies.","kein හි රූපය එය සමඟ යෙදෙන නාම පදයේ ව්‍යාකරණ ලක්ෂණවලට ගැළපේ.")))
   )),
   BhCourse("el","Ancient Greek","Ἑλληνική",Locale("el","GR"),listOf(
@@ -69,7 +70,7 @@ private fun bhCourses() = listOf(
       BhQuestion("Which case commonly expresses possession?","අයිතියක් පෙන්වීමට සාමාන්‍යයෙන් යෙදෙන්නේ කුමන විභක්තියද?",listOf("Genitive","Accusative","Nominative","Vocative"),0,"The genitive commonly marks possession or relationship.","සම්බන්ධක විභක්තියෙන් සාමාන්‍යයෙන් අයිතිය හෝ සම්බන්ධතාවය පෙන්වයි."),
       BhQuestion("What helps identify the case in an inflected language?","විභක්ති සහිත භාෂාවක විභක්තිය හඳුනාගැනීමට උපකාරී වන්නේ කුමක්ද?",listOf("The ending of the word","The word's colour","The number of letters only","The font size"),0,"Word endings and their agreement patterns carry grammatical information.","වචන අවසාන කොටස් සහ ඒවායේ ගැළපීම් ව්‍යාකරණ තොරතුරු දරයි."))),
     BhLesson("el3","Read a present-tense verb","වර්තමාන ක්‍රියාපදයක් කියවමු","λύει","he / she / it loosens","ඔහු / ඇය / එය ලිහිල් කරයි","λύει is a present active indicative third-person singular form. The verb ending helps identify who performs the action.","λύει යනු වර්තමාන කාලයේ සක්‍රිය ප්‍රකාශක තුන්වන පුද්ගල ඒකවචන රූපයකි. ක්‍රියාපදයේ අවසානයෙන් ක්‍රියාව කරන්නේ කවුද යන්න හඳුනාගැනීමට උපකාරී වේ.","Stem + personal ending",listOf(
-      BhQuestion("What person does λύει represent in this basic paradigm?","මෙම මූලික ක්‍රියා රටාවේ λύει නිරූපණය කරන්නේ කුමන පුද්ගලයාද?",listOf("First person","Second person","Third person","Plural"),2,"λύει is third-person singular in the present active indicative.","λύει යනු වර්තමාන සක්‍රිය ප්‍රකාශක රූපයේ තුන්වන පුද්ගල ඒකවචනයයි."),
+      BhQuestion("Type the Greek verb form shown in the example.","උදාහරණයේ පෙන්වා ඇති ග්‍රීක ක්‍රියාපද රූපය ටයිප් කරන්න.",emptyList(),0,"λύει is a third-person singular present active form.","λύει යනු වර්තමාන සක්‍රිය තුන්වන පුද්ගල ඒකවචන ක්‍රියාපද රූපයකි.",typedAnswer = "λύει"),
       BhQuestion("What can a verb ending help identify?","ක්‍රියාපද අවසානයෙන් හඳුනාගත හැක්කේ කුමක්ද?",listOf("Person and number","Word colour","Page number","Only noun gender"),0,"Verb endings can encode person and number, among other grammatical features.","ක්‍රියාපද අවසානයෙන් පුද්ගලයා සහ වචන සංඛ්‍යාව වැනි ව්‍යාකරණ ලක්ෂණ පෙන්විය හැක.")))
   )),
   BhCourse("la","Latin","Latina",Locale("la","VA"),listOf(
@@ -77,7 +78,7 @@ private fun bhCourses() = listOf(
       BhQuestion("Which word is the subject?","මෙම වාක්‍යයේ කර්තෘ වන්නේ කුමන වචනයද?",listOf("Puella","Aquam","Portat","None"),0,"Puella is nominative and is the subject.","Puella නාමකාරක නිසා එය කර්තෘයි."),
       BhQuestion("Which case commonly marks the direct object?","සෘජු කර්මය හඳුන්වන්නේ කුමන විභක්තියෙන්ද?",listOf("Nominative","Accusative","Vocative","Genitive"),1,"The accusative commonly marks the direct object.","කර්මකාරක විභක්තියෙන් සාමාන්‍යයෙන් සෘජු කර්මය හඳුන්වනවා.")))
     BhLesson("la2","Read the verb ending","ක්‍රියාපද අවසානය කියවමු","Puella cantat.","The girl sings.","ගැහැණු ළමයා ගී ගයනවා.","The ending -t marks a third-person singular verb in this common present-tense pattern. The verb form gives information about its subject.","මෙම සාමාන්‍ය වර්තමාන රටාවේ -t අවසානයෙන් තුන්වන පුද්ගල ඒකවචන ක්‍රියාපදයක් පෙන්වයි. ක්‍රියාපදයේ රූපයෙන් එහි කර්තෘ පිළිබඳ තොරතුරු ලැබේ.","Subject + verb (3rd person singular)",listOf(
-      BhQuestion("Which part means 'sings'?","ගී ගයයි යන අර්ථය දෙන්නේ කුමන කොටසද?",listOf("Puella","cantat","aqua","bonus"),1,"cantat is the verb meaning sings.","cantat යනු ගී ගයයි යන අර්ථය ඇති ක්‍රියාපදයයි."),
+      BhQuestion("Type the Latin verb meaning 'sings'.","ගී ගයයි යන අර්ථය ඇති ලතින් ක්‍රියාපදය ටයිප් කරන්න.",emptyList(),0,"cantat is the verb meaning sings.","cantat යනු ගී ගයයි යන අර්ථය ඇති ක්‍රියාපදයයි.",typedAnswer = "cantat"),
       BhQuestion("What does -t commonly mark in this present pattern?","මෙම වර්තමාන රටාවේ -t අවසානයෙන් සාමාන්‍යයෙන් පෙන්වන්නේ කුමක්ද?",listOf("First-person singular","Second-person singular","Third-person singular","Plural"),2,"-t marks the third-person singular form in this example.","මෙම උදාහරණයේ -t අවසානයෙන් තුන්වන පුද්ගල ඒකවචනය පෙන්වයි."))),
     BhLesson("la3","Make adjectives agree","විශේෂණය ගැළපෙන ලෙස යොදමු","bona puella","a good girl","හොඳ ගැහැණු ළමයෙක්","In Latin, an adjective agrees with the noun it describes in gender, number and case. The forms must fit together grammatically.","ලතින් භාෂාවේ විශේෂණ පදය එය විස්තර කරන නාම පදයේ ලිංගය, වචන සංඛ්‍යාව සහ විභක්තියට ගැළපේ. වචන දෙකේ රූප ව්‍යාකරණානුකූලව එකිනෙකට ගැළපිය යුතුය.","Adjective agrees with noun",listOf(
       BhQuestion("What does a Latin adjective agree with?","ලතින් විශේෂණ පදය ගැළපෙන්නේ කුමක් සමඟද?",listOf("The noun it describes","Only the verb","The sentence length","The punctuation"),0,"The adjective agrees with its noun in gender, number and case.","විශේෂණය එය විස්තර කරන නාම පදයේ ලිංගය, වචන සංඛ්‍යාව සහ විභක්තියට ගැළපේ."),
@@ -91,7 +92,7 @@ private fun bhCourses() = listOf(
       BhQuestion("Which word places the event in the past?","සිදුවීම අතීතයේ බව පෙන්වන්නේ කුමන වචනයද?",listOf("මම","ඊයේ","පොත","කියෙව්වා"),1,"ඊයේ means yesterday.","ඊයේ යන්නෙන් yesterday යන අර්ථය ලැබේ."),
       BhQuestion("Which word expresses the completed action?","අවසන් වූ ක්‍රියාව පෙන්වන්නේ කුමන වචනයද?",listOf("මම","ඊයේ","පොත","කියෙව්වා"),3,"කියෙව්වා is the past-tense verb in this sentence.","කියෙව්වා යනු මෙම වාක්‍යයේ අතීත කාල ක්‍රියාපදයයි."))),
     BhLesson("si3","Ask where someone is going","කෙනෙකු යන්නේ කොහේදැයි අසමු","ඔයා කොහෙද යන්නේ?","Where are you going?","ඔයා කොහෙද යන්නේ?","කොහෙද asks about a place. The question word appears before the verb phrase in this natural spoken Sinhala question.","කොහෙද යන්නෙන් ස්ථානයක් ගැන විමසයි. ස්වභාවික කථන සිංහලයේ මෙම ප්‍රශ්න පදය ක්‍රියා කොටසට පෙර යෙදේ.","කර්තෘ + ස්ථානය ගැන ප්‍රශ්නය + ක්‍රියාව",listOf(
-      BhQuestion("Which word asks about a place?","ස්ථානයක් ගැන විමසන්නේ කුමන වචනයෙන්ද?",listOf("ඔයා","කොහෙද","යන්නේ","ද"),1,"කොහෙද asks where.","කොහෙද යන්නෙන් කොතැනදැයි අසයි."),
+      BhQuestion("Type the Sinhala word that asks 'where'.","කොතැනදැයි අසන සිංහල ප්‍රශ්න පදය ටයිප් කරන්න.",emptyList(),0,"කොහෙද asks where.","කොහෙද යන්නෙන් කොතැනදැයි අසයි.",typedAnswer = "කොහෙද"),
       BhQuestion("Which punctuation mark ends this written question?","මෙම ලිඛිත ප්‍රශ්නයේ අගට යෙදෙන්නේ කුමන විරාම ලකුණද?",listOf("ප්‍රශ්නාර්ථ ලකුණ","කොමාව","තිත","අර්ධ විරාමය"),0,"A question mark marks the written question.","ලිඛිත ප්‍රශ්නයක අගට ප්‍රශ්නාර්ථ ලකුණ යෙදේ.")))
   ))
 )
@@ -106,6 +107,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   var lessonId by remember { mutableStateOf<String?>(null) }
   var qIndex by remember { mutableIntStateOf(0) }
   var answer by remember { mutableIntStateOf(-1) }
+  var typedAnswer by remember { mutableStateOf("") }
   var checked by remember { mutableStateOf(false) }
   var lessonHadMistake by remember { mutableStateOf(false) }
   var xp by remember { mutableIntStateOf(prefs.getInt("xp", 0)) }
@@ -117,6 +119,8 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   val course = courses.firstOrNull { it.id == courseId } ?: courses.first()
   val lesson = course.lessons.firstOrNull { it.id == lessonId }
   val q = lesson?.questions?.getOrNull(qIndex) ?: BhQuestion("", "", emptyList(), 0, "", "")
+  val answerIsCorrect = if (q.typedAnswer != null) FluentPathAnswerChecker.matches(typedAnswer, q.typedAnswer, q.acceptedAlternatives) else answer == q.answer
+  val canSubmit = if (q.typedAnswer != null) typedAnswer.isNotBlank() else answer >= 0
 
   DisposableEffect(course.id) {
     var engine: TextToSpeech? = null
@@ -173,7 +177,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           course.lessons.forEachIndexed { i, item ->
             val needsReview = item.id in review
             val mastered = item.id in done && !needsReview
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else if (needsReview) AmberAccent else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; checked = false; lessonHadMistake = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, if (mastered) EmeraldMastery else if (needsReview) AmberAccent else ObsidianBorder, RoundedCornerShape(18.dp)).clickable { lessonId = item.id; qIndex = 0; answer = -1; typedAnswer = ""; checked = false; lessonHadMistake = false }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
               Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${if (si) "පාඩම" else "LESSON"} ${i + 1}", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 Text(if (needsReview) (if (si) "නැවත පුහුණුව" else "REVIEW") else if (mastered) (if (si) "✓ සම්පූර්ණයි" else "✓ MASTERED") else "＋", color = if (mastered) EmeraldMastery else AmberAccent, fontSize = 10.sp)
@@ -208,33 +212,45 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           Text(if (si) "දැන් ඔබේ දැනුම පරීක්ෂා කරමු" else "ACTIVE RECALL · PROVE WHAT YOU LEARNED", color = EmeraldMastery, fontSize = 11.sp, fontWeight = FontWeight.Bold)
           Text("${if (si) "ප්‍රශ්නය" else "QUESTION"} ${qIndex + 1} / ${lesson.questions.size}", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
           Text(if (si) q!!.si else q!!.en, color = SilverText, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 23.sp)
-          q.choices.forEachIndexed { index, choice ->
-            val correct = checked && index == q.answer
-            val wrong = checked && index == answer && index != q.answer
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(if (correct) EmeraldMastery.copy(alpha = .12f) else ObsidianSurface).border(1.dp, if (correct) EmeraldMastery else if (wrong) AmberAccent else ObsidianBorder, RoundedCornerShape(13.dp)).clickable(enabled = !checked) { answer = index }.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-              Text(FluentPathLocalization.choice(choice, currentLanguage), color = SilverText, fontSize = 15.sp)
-              if (correct) Icon(Icons.Filled.Check, null, tint = EmeraldMastery)
+          if (q.typedAnswer != null) {
+            Text(if (si) "පිළිතුර ටයිප් කරන්න" else "TYPE YOUR ANSWER", color = CyanNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            OutlinedTextField(
+              value = typedAnswer,
+              onValueChange = { typedAnswer = it },
+              enabled = !checked,
+              modifier = Modifier.fillMaxWidth(),
+              singleLine = true,
+              label = { Text(if (si) "ඔබේ පිළිතුර" else "Your answer") }
+            )
+          } else {
+            q.choices.forEachIndexed { index, choice ->
+              val correct = checked && index == q.answer
+              val wrong = checked && index == answer && index != q.answer
+              Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(if (correct) EmeraldMastery.copy(alpha = .12f) else ObsidianSurface).border(1.dp, if (correct) EmeraldMastery else if (wrong) AmberAccent else ObsidianBorder, RoundedCornerShape(13.dp)).clickable(enabled = !checked) { answer = index }.padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(FluentPathLocalization.choice(choice, currentLanguage), color = SilverText, fontSize = 15.sp)
+                if (correct) Icon(Icons.Filled.Check, null, tint = EmeraldMastery)
+              }
             }
           }
           if (checked) {
-            Text((if (answer == q.answer) (if (si) "නිවැරදියි. " else "Correct. ") else (if (si) "තවම නිවැරදි නැහැ. " else "Not quite. ")) + (if (si) q.whySi else q.whyEn), color = if (answer == q.answer) EmeraldMastery else AmberAccent, fontSize = 12.sp, lineHeight = 19.sp)
+            Text((if (answerIsCorrect) (if (si) "නිවැරදියි. " else "Correct. ") else (if (si) "තවම නිවැරදි නැහැ. " else "Not quite. ")) + (if (si) q.whySi else q.whyEn), color = if (answerIsCorrect) EmeraldMastery else AmberAccent, fontSize = 12.sp, lineHeight = 19.sp)
             Button(onClick = {
-              if (qIndex < lesson.questions.lastIndex) { qIndex++; answer = -1; checked = false }
+              if (qIndex < lesson.questions.lastIndex) { qIndex++; answer = -1; typedAnswer = ""; checked = false }
               else {
                 val completion = FluentPathProgression.completeLesson(
                   current = FluentPathProgressState(xp = xp, masteredLessonIds = done, reviewLessonIds = review),
                   lessonId = lesson.id,
-                  allAnswersCorrect = answer == q.answer && !lessonHadMistake
+                  allAnswersCorrect = answerIsCorrect && !lessonHadMistake
                 )
                 xp = completion.state.xp
                 done = completion.state.masteredLessonIds
                 review = completion.state.reviewLessonIds
                 prefs.edit().putStringSet("done", done).putStringSet("review", review).putInt("xp", xp).apply()
-                lessonId = null; qIndex = 0; answer = -1; checked = false
+                lessonId = null; qIndex = 0; answer = -1; typedAnswer = ""; checked = false
               }
             }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(if (qIndex < lesson.questions.lastIndex) next else finish, fontWeight = FontWeight.Bold) }
           } else {
-            Button(onClick = { checked = true; if (answer != q.answer) lessonHadMistake = true }, enabled = answer >= 0, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(check, fontWeight = FontWeight.Bold) }
+            Button(onClick = { checked = true; if (!answerIsCorrect) lessonHadMistake = true }, enabled = canSubmit, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)) { Text(check, fontWeight = FontWeight.Bold) }
           }
         }
       }
