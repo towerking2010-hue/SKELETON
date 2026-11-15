@@ -6,8 +6,16 @@ This checklist is for validating SKELETON on the owner's Samsung Galaxy A31 runn
 
 1. Keep the currently installed app until you know whether it contains data you need.
 2. Export or otherwise back up any important Vault content and progress first.
-3. The debug build uses the separate application ID `com.aistudio.skeleton.vzkrpx.qa`, so it installs alongside the production-ID app and does not overwrite its local data. The GitHub Actions workflow also creates a fresh debug keystore for each run, so different QA APKs may not install as updates to one another.
+3. The debug build uses the separate application ID `com.aistudio.skeleton.vzkrpx.qa`, so it installs alongside the production-ID app and does not overwrite its local data. For repeatable updates between QA builds, add the repository Actions secret `SKELETON_DEBUG_KEYSTORE_BASE64` using the provided base64 keystore file. If the secret is absent, CI falls back to a temporary debug key and later QA APKs may not update the previous QA installation.
 4. Do not uninstall an existing installation until its data is backed up and the owner has explicitly chosen to proceed.
+
+## Stable QA signing (recommended before the first install)
+
+1. Open repository Settings → Secrets and variables → Actions.
+2. Create a repository secret named `SKELETON_DEBUG_KEYSTORE_BASE64`.
+3. Set its value to the complete contents of the provided `SKELETON_QA_debug_keystore.base64.txt` file.
+4. Do not commit the keystore or base64 text into the repository. This is a QA/debug key only, not a production release key.
+5. Trigger a fresh workflow run after saving the secret.
 
 ## Downloading the test APK
 
