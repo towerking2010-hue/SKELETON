@@ -142,6 +142,76 @@ object ArenaEngine {
         options = listOf("කාල ප්‍රමාදයක් සහිත ප්‍රතිචාර වටයක්", "එකිනෙකට සම්බන්ධ නොවූ සිදුවීමක්", "අන්තර්ක්‍රියා නැති පද්ධතියක්", "කිසිදා වෙනස් නොවන සරල ප්‍රවණතාවක්"),
         explanation = "ගොදුරු සහ විලෝපික ජනගහණ එකිනෙකට බලපාන අතර ඒ බලපෑම් ප්‍රමාද වී පෙනිය හැක. පද්ධතියක් තේරුම් ගැනීමට සම්බන්ධතා, ප්‍රතිචාර වට සහ ප්‍රමාදයන් සලකා බැලිය යුතුය."
       )
+      "mind_framing_01" -> challenge.copy(
+        title = "රාමුව වෙනස් කළ විට",
+        domain = "මනෝවිද්‍යාව සහ තීරණ",
+        prompt = "එකම ප්‍රතිකාරයක් ගැන වෛද්‍යවරයෙක් මෙසේ කියයි: රෝගීන් 100 දෙනාගෙන් 90 දෙනෙක් ජීවත් වේ. තවත් වෛද්‍යවරයෙක් කියයි: රෝගීන් 100 දෙනාගෙන් 10 දෙනෙක් මිය යයි. සංඛ්‍යාත්මකව දෙකම සමාන නම්, මෙහි වෙනස කුමක්ද?",
+        options = listOf("පළමු ප්‍රකාශය ධනාත්මක රාමුවකින් ඉදිරිපත් කරයි", "දෙවන ප්‍රකාශය අනිවාර්යයෙන්ම නිවැරදියි", "පළමු ප්‍රකාශයෙන් අවදානමක් නැති බව ඔප්පු වේ", "දෙකෙන් එකක් ගණිතමය වශයෙන් වැරදියි"),
+        explanation = "තොරතුරු ඉදිරිපත් කරන ආකාරය තීරණයට බලපෑ හැක. මෙය framing effect ලෙස හැඳින්වේ. තීරණයට පෙර දෙකම එකම මූලික සංඛ්‍යා ලෙස සසඳන්න."
+      )
+      "mind_falsification_01" -> challenge.copy(
+        title = "පරීක්ෂා කළ හැකි අදහස",
+        domain = "විද්‍යාත්මක ක්‍රමය",
+        prompt = "මෙම ශාකය සෑම තත්ත්වයකදීම වර්ධනය වේ යන ප්‍රකාශය විද්‍යාත්මකව වඩාත් හොඳින් පරීක්ෂා කරන්නේ කුමන ක්‍රියාවද?",
+        options = listOf("එයට ගැළපෙන උදාහරණ පමණක් සෙවීම", "කිසිදු පරීක්ෂණයකින් වැරදි බව පෙන්විය නොහැකි ලෙස අර්ථ දැක්වීම", "වර්ධනය නොවන තත්ත්වයක් තිබේදැයි පාලිත පරීක්ෂණයකින් සෙවීම", "ශාකය ගැන ඇති ජනප්‍රිය අදහස් ගණන් කිරීම"),
+        explanation = "හොඳ විද්‍යාත්මක ප්‍රකාශයක් පරීක්ෂා කළ හැකි විය යුතුය. එය වැරදි බව පෙන්විය හැකි තත්ත්වයක් සොයා බැලීමෙන් අදහසට සැබෑ පරීක්ෂාවක් ලැබේ."
+      )
+      "case_source_01" -> challenge.copy(
+        title = "සාක්ෂියේ මූලාශ්‍රය",
+        domain = "සාක්ෂි ඇගයීම",
+        prompt = "අන්තර්ජාලයේ පළ වූ එක් නිර්නාමික සටහනක් වැදගත් ඖෂධයක් අනතුරුදායක බව කියයි. ඔබ කළ යුතු හොඳම ඊළඟ පියවර කුමක්ද?",
+        options = listOf("එය වහාම සත්‍යයක් ලෙස බෙදාහැරීම", "මුල් මූලාශ්‍රය, අධ්‍යයන ක්‍රමය සහ ස්වාධීන සාක්ෂි පරීක්ෂා කිරීම", "කැමති ගණන වැඩිදැයි පමණක් බැලීම", "එයට විරුද්ධ සියලු තොරතුරු නොසලකා හැරීම"),
+        explanation = "ප්‍රකාශයක ජනප්‍රියත්වය එහි සත්‍යතාව නොපෙන්වයි. මුල් මූලාශ්‍රය, ක්‍රමවේදය, දත්ත සහ ස්වාධීනව නැවත තහවුරු කළ හැකිද යන්න පරීක්ෂා කරන්න."
+      )
+      "case_alternative_01" -> challenge.copy(
+        title = "විකල්ප පැහැදිලි කිරීම",
+        domain = "විමර්ශන තර්කය",
+        prompt = "කාර්යාලයක පරිගණක කිහිපයක් එකවර මන්දගාමී වේ. පළමු අදහස වන්නේ නව යෙදුමක් හේතුව බවයි. තීරණයකට පෙර වඩාත් හොඳ පියවර කුමක්ද?",
+        options = listOf("නව යෙදුම වහාම වැරදිකරු කිරීම", "ජාලය, සේවාදායකය සහ පද්ධති සම්පත් වැනි විකල්ප හේතු පරීක්ෂා කිරීම", "එක් පරිගණකයක් පමණක් නැවත ආරම්භ කර නිගමනය කිරීම", "ගැටලුව නොසලකා හැරීම"),
+        explanation = "එකම ලක්ෂණයට හේතු කිහිපයක් තිබිය හැක. තරඟකාරී උපකල්පන පරීක්ෂා කිරීමෙන් ඉක්මන් වැරදි නිගමනයක් වළක්වයි."
+      )
+      "strategy_optionality_01" -> challenge.copy(
+        title = "කුඩා පරීක්ෂණයේ වටිනාකම",
+        domain = "උපායමාර්ගික තීරණ",
+        prompt = "නව ව්‍යාපෘතියක් සාර්ථක වේදැයි ඔබට විශ්වාස නැත. අඩු වියදමකින් සතියක පරීක්ෂණයක් කළ හැකි අතර, විශාල ආයෝජනය ආපසු හැරවීමට අපහසුය. වඩා හොඳ පියවර කුමක්ද?",
+        options = listOf("සියලු මුදල් වහාම ආයෝජනය කිරීම", "කිසිදු තොරතුරක් නොගෙන ව්‍යාපෘතිය අත්හැරීම", "කුඩා පරීක්ෂණයෙන් තොරතුරු ලබාගෙන පසුව තීරණය කිරීම", "මුල් අදහසට බැඳී සිටීම"),
+        explanation = "කුඩා, ආපසු හැරවිය හැකි පරීක්ෂණයක් අවදානම සීමා කරමින් තොරතුරු ලබා දෙයි. අවිනිශ්චිතතාව අඩු වූ පසු විශාල තීරණය ගත හැක."
+      )
+      "strategy_opportunity_01" -> challenge.copy(
+        title = "අහිමි වන අවස්ථාව",
+        domain = "ආර්ථික තීරණ",
+        prompt = "ඔබට සවස පැය දෙකක් තිබේ. ඒ කාලය පාඩම් කිරීමට යොදාගත හැකි නමුත්, ඒ වෙනුවට පැය දෙකක වැටුප් සහිත වැඩක්ද කළ හැක. පාඩම් කිරීමට තීරණය කළ විට අත්හැරෙන හොඳම විකල්පයේ වටිනාකම හඳුන්වන්නේ කුමක්ද?",
+        options = listOf("අවස්ථා පිරිවැය", "සංරක්ෂණ නියමය", "තහවුරු කිරීමේ නැඹුරුව", "අහඹු දෝෂය"),
+        explanation = "අවස්ථා පිරිවැය යනු තෝරාගත් විකල්පය නිසා අත්හැරෙන හොඳම විකල්පයේ වටිනාකමයි. මුදල් පමණක් නොව කාලය සහ වෙනත් සම්පත්ද මෙයට අයත් වේ."
+      )
+      "conquest_equilibrium_01" -> challenge.copy(
+        title = "ගතික සමතුලිතතාව",
+        domain = "රසායන විද්‍යාව",
+        prompt = "සංවෘත පද්ධතියක ප්‍රතිවර්තන රසායනික ප්‍රතික්‍රියාවක් සමතුලිතතාවයට පැමිණ ඇත. එවිට නිවැරදි ප්‍රකාශය කුමක්ද?",
+        options = listOf("ප්‍රතික්‍රියාව සම්පූර්ණයෙන් නතර වේ", "ඉදිරි සහ ආපසු ප්‍රතික්‍රියා අනුපාත සමාන වේ", "සියලු ද්‍රව්‍යවල සාන්ද්‍රණ සමාන වේ", "සියලු ප්‍රතික්‍රියාකාරක අවසන් වේ"),
+        explanation = "ගතික සමතුලිතතාවයේදී ඉදිරි සහ ආපසු ප්‍රතික්‍රියා දිගටම සිදුවන නමුත් ඒවායේ අනුපාත සමාන බැවින් සමස්ත සාන්ද්‍රණ ස්ථාවරව පවතී."
+      )
+      "conquest_expected_01" -> challenge.copy(
+        title = "අපේක්ෂිත වටිනාකම",
+        domain = "සම්භාවිතාව සහ තීරණ",
+        prompt = "එක් ක්‍රීඩාවකදී 50% අවස්ථාවක ලකුණු 10ක් ලැබේ; අනෙක් 50% අවස්ථාවක ලකුණු 0ක් ලැබේ. දිගුකාලීන සාමාන්‍ය අපේක්ෂිත ලකුණු කීයද?",
+        options = listOf("0", "2.5", "5", "10"),
+        explanation = "අපේක්ෂිත වටිනාකම යනු එක් එක් ප්‍රතිඵලය එහි සම්භාවිතාවෙන් ගුණ කර එකතු කිරීමයි: 0.5 × 10 + 0.5 × 0 = 5."
+      )
+      "memory_interleave_01" -> challenge.copy(
+        title = "මිශ්‍ර පුහුණුව",
+        domain = "ඉගෙනීමේ විද්‍යාව",
+        prompt = "ගණිත ගැටලු වර්ග තුනක් ඉගෙන ගන්නා විට, ඒවා හඳුනාගැනීමට පුහුණු වීම සඳහා කුමන ක්‍රමය බොහෝවිට ප්‍රයෝජනවත්ද?",
+        options = listOf("එකම වර්ගයේ ගැටලු සියල්ල එකවර පමණක් කිරීම", "වර්ග තුනේ ගැටලු මිශ්‍ර කර විසඳීම", "පිළිතුරු පමණක් කියවීම", "උදාහරණ නොබලා අනුමාන කිරීම"),
+        explanation = "මිශ්‍ර පුහුණුවෙන් කුමන ක්‍රමය යෙදිය යුතුදැයි තෝරාගැනීමට සිදුවේ. එය සමාන පෙනෙන ගැටලු අතර වෙනස හඳුනාගැනීමට උපකාරී විය හැක."
+      )
+      "memory_elaboration_01" -> challenge.copy(
+        title = "අර්ථවත් සම්බන්ධතාව",
+        domain = "මතකය සහ අවබෝධය",
+        prompt = "නව සංකල්පයක් දිගුකාලීනව මතක තබාගැනීමට, එය ඔබ දැනට දන්නා දෙයකට සම්බන්ධ කර උදාහරණයක් ඔබේම වචනවලින් පැහැදිලි කිරීමෙන් ලැබෙන ප්‍රධාන වාසිය කුමක්ද?",
+        options = listOf("තොරතුරු තේරුම් නොගෙන මතක තබාගැනීම", "අර්ථවත් සම්බන්ධතා සහ නැවත ලබාගැනීමේ මාර්ග ගොඩනැගීම", "අධ්‍යයනයට කිසිදු උත්සාහයක් අවශ්‍ය නොවීම", "සෑම විටම එකම පිළිතුර ලැබීම"),
+        explanation = "තමන්ගේ වචනවලින් පැහැදිලි කිරීම නව අදහස පැරණි දැනුමට සම්බන්ධ කරයි. එම අර්ථවත් සම්බන්ධතා පසුව මතකයෙන් ලබාගැනීමට උදව් වේ."
+      )
       else -> challenge
     }
     return localized
@@ -234,6 +304,106 @@ object ArenaEngine {
       explanation = "Predator and prey populations influence each other, often with time delays. Systems thinking looks for relationships, feedback and delayed consequences rather than one-step causes.",
       rewardXp = 35,
       skillId = "systems_thinking"
+    ),
+    ArenaChallenge(
+      id = "mind_framing_01", mode = "MIND TRIALS", title = "The Framing Effect",
+      domain = "Psychology & Decision-Making", difficulty = "MEDIUM",
+      prompt = "A doctor says a treatment has a 90% survival rate. Another says it has a 10% mortality rate. If the numbers describe the same outcome, what is the key difference?",
+      options = listOf("The first statement uses a positive frame", "The second statement must be more accurate", "The first proves there is no risk", "One statement is mathematically false"),
+      correctIndex = 0,
+      explanation = "The way equivalent information is framed can influence judgment. This is called the framing effect. Translate both statements into the same underlying numbers before deciding.",
+      rewardXp = 35,
+      skillId = "bias_detection"
+    ),
+    ArenaChallenge(
+      id = "mind_falsification_01", mode = "MIND TRIALS", title = "Test the Claim",
+      domain = "Scientific Method", difficulty = "MEDIUM",
+      prompt = "Which approach best tests the claim, 'This plant grows under every condition'?",
+      options = listOf("Search only for examples where it grows", "Define it so no observation could disprove it", "Run a controlled test for a condition where it fails to grow", "Count how many people repeat the claim"),
+      correctIndex = 2,
+      explanation = "A useful scientific claim must be testable. Looking for a plausible condition that could disprove it exposes the claim to a genuine test.",
+      rewardXp = 35,
+      skillId = "scientific_reasoning"
+    ),
+    ArenaChallenge(
+      id = "case_source_01", mode = "CASE FILES", title = "The Source Check",
+      domain = "Evidence Evaluation", difficulty = "MEDIUM",
+      prompt = "An anonymous post claims that an important medicine is dangerous. What is the best next step?",
+      options = listOf("Share it immediately as fact", "Check the original source, methods and independent evidence", "Judge it only by the number of likes", "Ignore every source that disagrees"),
+      correctIndex = 1,
+      explanation = "Popularity does not establish truth. Check the original source, methods, data and whether independent evidence can corroborate the claim.",
+      rewardXp = 35,
+      skillId = "critical_reasoning"
+    ),
+    ArenaChallenge(
+      id = "case_alternative_01", mode = "CASE FILES", title = "The Alternative Cause",
+      domain = "Investigative Reasoning", difficulty = "HARD",
+      prompt = "Several office computers become slow at the same time. A new app is blamed first. What should an investigator do before concluding?",
+      options = listOf("Declare the new app guilty immediately", "Check alternatives such as the network, server and shared system resources", "Restart one computer and generalize", "Ignore the problem"),
+      correctIndex = 1,
+      explanation = "One symptom can have several causes. Testing competing explanations helps prevent premature conclusions.",
+      rewardXp = 50,
+      skillId = "critical_reasoning"
+    ),
+    ArenaChallenge(
+      id = "strategy_optionality_01", mode = "STRATEGY", title = "The Small Experiment",
+      domain = "Strategic Judgment", difficulty = "MEDIUM",
+      prompt = "You are unsure whether a new project will work. A low-cost one-week pilot is possible, while a large investment would be difficult to reverse. What is the strongest move?",
+      options = listOf("Invest everything immediately", "Abandon the project without gathering information", "Run the small pilot and use its evidence before committing", "Commit because the original idea feels exciting"),
+      correctIndex = 2,
+      explanation = "A small reversible experiment limits downside while producing information. Make the larger commitment when uncertainty has been reduced.",
+      rewardXp = 35,
+      skillId = "strategic_judgment"
+    ),
+    ArenaChallenge(
+      id = "strategy_opportunity_01", mode = "STRATEGY", title = "The Hidden Cost",
+      domain = "Economics & Decisions", difficulty = "MEDIUM",
+      prompt = "You have two free hours. You can study or take a paid shift. If you choose to study, which idea captures the value of the best alternative you give up?",
+      options = listOf("Opportunity cost", "Conservation law", "Confirmation bias", "Random error"),
+      correctIndex = 0,
+      explanation = "Opportunity cost is the value of the best forgone alternative. It can include time and other resources, not only money.",
+      rewardXp = 35,
+      skillId = "strategic_judgment"
+    ),
+    ArenaChallenge(
+      id = "conquest_equilibrium_01", mode = "CONQUEST", title = "Dynamic Equilibrium",
+      domain = "Chemistry", difficulty = "HARD",
+      prompt = "A reversible chemical reaction in a closed system reaches equilibrium. Which statement is correct?",
+      options = listOf("The reaction completely stops", "Forward and reverse reaction rates are equal", "Every substance has the same concentration", "All reactants have been used up"),
+      correctIndex = 1,
+      explanation = "At dynamic equilibrium, forward and reverse reactions continue at equal rates, so overall concentrations remain constant.",
+      rewardXp = 50,
+      skillId = "scientific_reasoning"
+    ),
+    ArenaChallenge(
+      id = "conquest_expected_01", mode = "CONQUEST", title = "Expected Value",
+      domain = "Probability & Decisions", difficulty = "MEDIUM",
+      prompt = "A game gives 10 points with a 50% chance and 0 points with a 50% chance. What is the expected score over many plays?",
+      options = listOf("0", "2.5", "5", "10"),
+      correctIndex = 2,
+      explanation = "Expected value is the sum of each outcome multiplied by its probability: 0.5 × 10 + 0.5 × 0 = 5.",
+      rewardXp = 35,
+      skillId = "probabilistic_thinking"
+    ),
+    ArenaChallenge(
+      id = "memory_interleave_01", mode = "MEMORY LAB", title = "Mixed Practice",
+      domain = "Learning Science", difficulty = "MEDIUM",
+      prompt = "You are learning three types of maths problems. Which practice is often useful for learning to recognize which method applies?",
+      options = listOf("Do every problem of one type in a single block only", "Mix the three problem types during practice", "Read only the answer key", "Guess without studying examples"),
+      correctIndex = 1,
+      explanation = "Interleaving makes you choose which method fits each problem. It can improve discrimination between problem types that look similar.",
+      rewardXp = 35,
+      skillId = "memory_learning"
+    ),
+    ArenaChallenge(
+      id = "memory_elaboration_01", mode = "MEMORY LAB", title = "Make It Meaningful",
+      domain = "Memory & Understanding", difficulty = "EASY",
+      prompt = "Why can explaining a new concept in your own words and connecting it to something you already know help long-term learning?",
+      options = listOf("It stores facts without understanding", "It builds meaningful links and retrieval paths", "It removes the need for any practice", "It guarantees the same answer every time"),
+      correctIndex = 1,
+      explanation = "Self-explanation connects new ideas to prior knowledge. Those meaningful links can provide more routes for retrieving the idea later.",
+      rewardXp = 20,
+      skillId = "memory_learning"
     )
   )
 
