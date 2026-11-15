@@ -84,19 +84,19 @@ fun ArenaScreen(
   ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text("THE ARENA", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp)
-        Text(if (displayName.isBlank()) "Welcome to your Arena. Train your thinking." else "Welcome, $displayName. Your Arena is ready.", color = SilverMuted, fontSize = 12.sp)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "චින්තන පුහුණු පිටිය" else "THE ARENA", color = CyanNeon, fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) { if (displayName.isBlank()) "ඔබේ පුහුණු පිටියට සාදරයෙන් පිළිගනිමු. ඔබේ සිතීමේ හැකියාව දියුණු කරගන්න." else "ආයුබෝවන්, $displayName. ඔබේ පුහුණු පිටිය සූදානම්." } else if (displayName.isBlank()) "Welcome to your Arena. Train your thinking." else "Welcome, $displayName. Your Arena is ready.", color = SilverMuted, fontSize = 12.sp)
       }
       Box(
         Modifier.clip(RoundedCornerShape(12.dp)).background(ObsidianSurfaceElevated)
           .border(1.dp, ObsidianBorder, RoundedCornerShape(12.dp)).clickable(onClick = onBack).padding(horizontal = 13.dp, vertical = 9.dp)
-      ) { Text("EXIT", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+      ) { Text(if (currentLanguage == LanguageSetting.SINHALA) "පිටවන්න" else "EXIT", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(9.dp), modifier = Modifier.fillMaxWidth()) {
-      StatPanel("LEVEL", profile.level.toString(), Modifier.weight(1f))
-      StatPanel("TOTAL XP", profile.xp.toString(), Modifier.weight(1f))
-      StatPanel("RANK", profile.rank, Modifier.weight(1f))
+      StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "මට්ටම" else "LEVEL", profile.level.toString(), Modifier.weight(1f))
+      StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "මුළු ලකුණු" else "TOTAL XP", profile.xp.toString(), Modifier.weight(1f))
+      StatPanel(if (currentLanguage == LanguageSetting.SINHALA) "තත්ත්වය" else "RANK", profile.rank, Modifier.weight(1f))
     }
 
     Column(
@@ -105,14 +105,14 @@ fun ArenaScreen(
       verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("NEXT LEVEL", color = SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ මට්ටම" else "NEXT LEVEL", color = SilverMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
         Text("${profile.levelProgress} / 100 XP", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
       }
       Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(ObsidianBorder)) {
         Box(Modifier.fillMaxWidth(profile.levelProgress / 100f).height(6.dp).clip(CircleShape).background(CyanNeon))
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("TERRITORIES", color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "විවෘත කළ ප්‍රදේශ" else "TERRITORIES", color = SilverMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Text("${ArenaEngine.unlockedTerritories(profile.xp)} / 5 unlocked", color = AmberAccent, fontSize = 10.sp)
       }
     }
@@ -122,7 +122,7 @@ fun ArenaScreen(
         .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp)).padding(11.dp),
       verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-      Text("YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
+      Text(if (currentLanguage == LanguageSetting.SINHALA) "ඔබේ චින්තන හැකියාවන්" else "YOUR COGNITIVE PROFILE", color = CyanNeon, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
       Text("Baseline first · then weakest skill gets priority · device-only · not an IQ test", color = SilverDim, fontSize = 8.sp)
       Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ArenaEngine.skillsFor(profile, currentLanguage).forEach { skill ->
@@ -133,7 +133,7 @@ fun ArenaScreen(
         }
       }
     }
-    Text("CHOOSE YOUR TRIAL", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
+    Text(if (currentLanguage == LanguageSetting.SINHALA) "පුහුණු පරීක්ෂණයක් තෝරන්න" else "CHOOSE YOUR TRIAL", color = SilverMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp)
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
       ArenaEngine.modes.forEach { mode ->
         val selected = selectedMode == mode
