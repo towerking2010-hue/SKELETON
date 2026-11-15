@@ -50,7 +50,8 @@ class SkeletonRepository(private val dao: SkeletonDao) {
 
   suspend fun switchCurriculumLanguage(lang: LanguageSetting) {
     val existingById = dao.getAllFeedCards().firstOrNull().orEmpty().associateBy { it.id }
-    val localizedNodes = com.example.engine.MasterCurriculumMatrix.getNodes(lang).map { localized ->
+    val localizedNodes = (com.example.engine.MasterCurriculumMatrix.getNodes(lang) +
+      com.example.engine.bio.BioscienceModule.getBioscienceCuratedCards(lang)).map { localized ->
       val existing = existingById[localized.id]
       if (existing == null) localized else localized.copy(
         isSaved = existing.isSaved,
