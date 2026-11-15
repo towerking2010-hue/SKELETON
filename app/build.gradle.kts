@@ -50,6 +50,10 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
     debug {
+      // QA builds install alongside the owner's existing app so testing never requires
+      // uninstalling an older installation or risking its local Room/SharedPreferences data.
+      applicationIdSuffix = ".qa"
+      versionNameSuffix = "-qa"
       // Do not remove or modify this signingConfig assignment. It is necessary for Android apps in
       // AI Studio.
       signingConfig = signingConfigs.getByName("debugConfig")
