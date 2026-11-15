@@ -110,6 +110,7 @@ fun SkeletonApp(
       ArenaScreen(
         profile = arenaProfile,
         displayName = profileName.ifBlank { currentUser?.displayName.orEmpty() },
+        currentLanguage = systemLanguage,
         onCompleteChallenge = { id, xp -> viewModel.completeArenaChallenge(id, xp) },
         onRecordAttempt = { skillId, correct -> viewModel.recordArenaAttempt(skillId, correct) },
         onBack = { viewModel.closeDrawerMode() }
