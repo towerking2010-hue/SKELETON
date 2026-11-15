@@ -49,6 +49,28 @@ class ArenaEngineTest {
     }
   }
   @Test
+  fun everyArenaModeHasEnoughChallengesToFeelLikeARealTrack() {
+    ArenaEngine.modes.filterNot { it == "ALL" }.forEach { mode ->
+      assertTrue("$mode should contain at least three trials", ArenaEngine.challenges.count { it.mode == mode } >= 3)
+    }
+  }
+
+  @Test
+  fun everyChallengeHasSinhalaLearningContent() {
+    val english = ArenaEngine.challenges.associateBy { it.id }
+    val sinhala = ArenaEngine.challengesFor("ALL", ArenaProfile(), LanguageSetting.SINHALA)
+    assertEquals(english.size, sinhala.size)
+    sinhala.forEach { translated ->
+      val source = english.getValue(translated.id)
+      assertTrue("Missing Sinhala title for ${translated.id}", translated.title != source.title)
+      assertTrue("Missing Sinhala prompt for ${translated.id}", translated.prompt != source.prompt)
+      assertTrue("Missing Sinhala explanation for ${translated.id}", translated.explanation != source.explanation)
+      assertEquals(4, translated.options.size)
+      assertTrue(translated.correctIndex in translated.options.indices)
+    }
+  }
+
+  @Test
   fun skillAccuracyIsPersonalAndEvidenceBased() {
     val evidence = ArenaSkillEvidence(attempts = 4, correct = 3)
     assertEquals(75, evidence.accuracy)
