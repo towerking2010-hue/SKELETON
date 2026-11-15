@@ -145,7 +145,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   Box(modifier.fillMaxSize().background(ObsidianBg).statusBarsPadding().navigationBarsPadding().testTag("language_teacher_screen")) {
     Column(Modifier.fillMaxSize().padding(horizontal = 18.dp)) {
       Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { if (lesson != null) lessonId = null else onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = SilverText) }
+        IconButton(onClick = { if (lesson != null) lessonId = null else onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (si) "ආපසු" else "Back", tint = SilverText) }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
           Text(if (si) "FluentPath" else "FLUENTPATH", color = CyanNeon, fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
           Text(if (si) "භාෂා ප්‍රගුණතා මධ්‍යස්ථානය" else "THE LANGUAGE MASTERY LAB", color = SilverMuted, fontSize = 9.sp, letterSpacing = 1.sp)
@@ -169,7 +169,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             }
           }
           Text("${if (si) "ප්‍රගතිය" else "PROGRESS"} · ${course.lessons.count { it.id in done && it.id !in review }} / ${course.lessons.size}", color = SilverText, fontSize = 12.sp)
-          LinearProgressIndicator(progress = { course.lessons.count { it.id in done }.toFloat() / course.lessons.size.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(8.dp)), color = EmeraldMastery, trackColor = ObsidianBorder)
+          LinearProgressIndicator(progress = { course.lessons.count { it.id in done && it.id !in review }.toFloat() / course.lessons.size.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(8.dp)), color = EmeraldMastery, trackColor = ObsidianBorder)
           course.lessons.forEachIndexed { i, item ->
             val needsReview = item.id in review
             val mastered = item.id in done && !needsReview
@@ -199,7 +199,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
           Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(ObsidianSurfaceElevated).border(1.dp, ObsidianBorder, RoundedCornerShape(18.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
               Text(if (si) "උදාහරණය" else "EXAMPLE", color = EmeraldMastery, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-              IconButton(onClick = { if (voiceReady) tts?.speak(lesson.phrase, TextToSpeech.QUEUE_FLUSH, Bundle(), "fluentpath") else voiceStatus = if (si) "මෙම භාෂාව සඳහා හඬක් ස්ථාපනය කර නැහැ." else "No supported voice is installed." }) { Icon(Icons.Filled.VolumeUp, "Listen", tint = CyanNeon) }
+              IconButton(onClick = { if (voiceReady) tts?.speak(lesson.phrase, TextToSpeech.QUEUE_FLUSH, Bundle(), "fluentpath") else voiceStatus = if (si) "මෙම භාෂාව සඳහා හඬක් ස්ථාපනය කර නැහැ." else "No supported voice is installed." }) { Icon(Icons.Filled.VolumeUp, if (si) "හඬින් අසන්න" else "Listen", tint = CyanNeon) }
             }
             Text(lesson.phrase, color = SilverText, fontSize = 21.sp, fontWeight = FontWeight.Bold)
             Text(if (si) lesson.meaningSi else lesson.meaningEn, color = SilverMuted, fontSize = 13.sp)
