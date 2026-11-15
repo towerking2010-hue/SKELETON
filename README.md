@@ -50,7 +50,7 @@ Build a debug APK:
 
 On Windows, use `gradlew.bat`.
 
-The GitHub Actions workflow at `.github/workflows/android-build.yml` runs unit tests, assembles the debug APK, and uploads it as the `skeleton-debug-apk` artifact.
+The GitHub Actions workflow at `.github/workflows/android-build.yml` runs unit tests, assembles a side-by-side QA APK (`com.aistudio.skeleton.vzkrpx.qa`), runs an Android 12 startup smoke test, and uploads it as the `skeleton-debug-apk` artifact. Configure the optional `SKELETON_DEBUG_KEYSTORE_BASE64` repository secret to keep the QA signing identity stable across builds.
 
 ## Firebase configuration
 
