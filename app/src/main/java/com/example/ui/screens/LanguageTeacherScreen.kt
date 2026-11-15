@@ -82,7 +82,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
   var voiceStatus by remember { mutableStateOf("") }
   val course = courses.firstOrNull { it.id == courseId } ?: courses.first()
   val lesson = course.lessons.firstOrNull { it.id == lessonId }
-  val q = lesson?.questions?.getOrNull(qIndex)
+  val q = lesson?.questions?.getOrNull(qIndex) ?: BhQuestion("", "", emptyList(), 0, "", "")
 
   DisposableEffect(course.id) {
     var engine: TextToSpeech? = null
