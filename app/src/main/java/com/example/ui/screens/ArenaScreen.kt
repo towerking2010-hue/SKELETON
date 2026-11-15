@@ -164,13 +164,15 @@ fun ArenaScreen(
         alreadyCompleted = challenge.id in profile.completedChallengeIds,
         onSelect = { if (!submitted) selectedAnswer = it },
         onRetry = { selectedAnswer = -1; submitted = false; lastWasCorrect = false },
+        onNext = {
+          solvedThisSession = solvedThisSession + challenge.id
+          activeChallengeId = null
+        },
         onSubmit = {
           val isCorrect = selectedAnswer == challenge.correctIndex
           onRecordAttempt(challenge.skillId, isCorrect)
           if (isCorrect) {
             lastWasCorrect = true
-            solvedThisSession = solvedThisSession + challenge.id
-            activeChallengeId = null
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
             lastWasCorrect = false
@@ -203,6 +205,7 @@ private fun ChallengePanel(
   alreadyCompleted: Boolean,
   onSelect: (Int) -> Unit,
   onRetry: () -> Unit,
+  onNext: () -> Unit,
   onSubmit: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -266,7 +269,13 @@ private fun ChallengePanel(
         Text(if (currentLanguage == LanguageSetting.SINHALA) "පිළිතුර යවන්න" else "SUBMIT ANSWER", fontWeight = FontWeight.Black, fontSize = 11.sp, letterSpacing = 1.sp)
       }
     } else if (lastWasCorrect) {
-      Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ පරීක්ෂණය ස්වයංක්‍රීයව විවෘත වේ" else "NEXT TRIAL LOADS AUTOMATICALLY", color = SilverDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+      Button(
+        onClick = onNext,
+        modifier = Modifier.fillMaxWidth().testTag("arena_next_trial"),
+        colors = ButtonDefaults.buttonColors(containerColor = CyanNeon, contentColor = ObsidianBg)
+      ) {
+        Text(if (currentLanguage == LanguageSetting.SINHALA) "ඊළඟ පරීක්ෂණය" else "NEXT TRIAL", fontSize = 11.sp, fontWeight = FontWeight.Black)
+      }
     } else {
       Button(onClick = onRetry, modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(containerColor = ObsidianSurfaceElevated, contentColor = SilverText)) {
