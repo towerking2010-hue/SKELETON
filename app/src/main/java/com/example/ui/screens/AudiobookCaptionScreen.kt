@@ -279,7 +279,7 @@ fun AudiobookCaptionScreen(
 
   Box(
     modifier = modifier.fillMaxSize().background(ObsidianBg)
-      .statusBarsPadding().navigationBarsPadding().testTag("audiobook_caption_screen")
+      .testTag("audiobook_caption_screen")
   ) {
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
       Row(
