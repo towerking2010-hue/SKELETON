@@ -7,7 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
       MyApplicationTheme(adrenalMode = adrenalMode) {
         Surface(
-          modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
+          modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
           color = ObsidianBg
         ) {
           SkeletonApp(viewModel = viewModel)
