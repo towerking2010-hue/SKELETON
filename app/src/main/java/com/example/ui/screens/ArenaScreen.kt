@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,16 +62,16 @@ fun ArenaScreen(
   onBack: () -> Unit
 ) {
   var selectedMode by remember { mutableStateOf("ALL") }
-  var activeChallengeId by remember { mutableStateOf<String?>(null) }
-  var challengeCycle by remember { mutableIntStateOf(0) }
+  var solvedThisSession by remember(selectedMode) { mutableStateOf(emptySet<String>()) }
   val available = ArenaEngine.challengesFor(selectedMode, profile, currentLanguage)
-  val challenge = available.firstOrNull { it.id == activeChallengeId } ?: available.firstOrNull()
+    .filterNot { it.id in solvedThisSession }
+  val challenge = available.firstOrNull()
   var selectedAnswer by remember { mutableIntStateOf(-1) }
   var submitted by remember { mutableStateOf(false) }
   var lastWasCorrect by remember { mutableStateOf(false) }
 
-  LaunchedEffect(challenge?.id, challengeCycle) {
-    activeChallengeId = challenge?.id
+  // Reset the answer controls only when the actual challenge changes.
+  LaunchedEffect(challenge?.id) {
     selectedAnswer = -1
     submitted = false
     lastWasCorrect = false
@@ -160,15 +159,15 @@ fun ArenaScreen(
         selectedAnswer = selectedAnswer,
         submitted = submitted,
         lastWasCorrect = lastWasCorrect,
+        alreadyCompleted = challenge.id in profile.completedChallengeIds,
         onSelect = { if (!submitted) selectedAnswer = it },
         onRetry = { selectedAnswer = -1; submitted = false; lastWasCorrect = false },
         onSubmit = {
           val isCorrect = selectedAnswer == challenge.correctIndex
           onRecordAttempt(challenge.skillId, isCorrect)
           if (isCorrect) {
-            activeChallengeId = null
-            challengeCycle++
             lastWasCorrect = true
+            solvedThisSession = solvedThisSession + challenge.id
             onCompleteChallenge(challenge.id, challenge.rewardXp)
           } else {
             lastWasCorrect = false
@@ -198,6 +197,7 @@ private fun ChallengePanel(
   selectedAnswer: Int,
   submitted: Boolean,
   lastWasCorrect: Boolean,
+  alreadyCompleted: Boolean,
   onSelect: (Int) -> Unit,
   onRetry: () -> Unit,
   onSubmit: () -> Unit,
@@ -238,7 +238,21 @@ private fun ChallengePanel(
       Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
         .background(if (lastWasCorrect) EmeraldMastery.copy(alpha = 0.10f) else AmberAccent.copy(alpha = 0.08f))
         .padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(if (currentLanguage == LanguageSetting.SINHALA) { if (lastWasCorrect) "පරීක්ෂණය සමත්  +${challenge.rewardXp} XP" else "තවම නිවැරදි නැහැ — පැහැදිලි කිරීම බලන්න" } else if (lastWasCorrect) "TRIAL CLEARED  +${challenge.rewardXp} XP" else "NOT QUITE — STUDY THE MECHANISM", color = if (lastWasCorrect) EmeraldMastery else AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        Text(
+          if (currentLanguage == LanguageSetting.SINHALA) {
+            if (!lastWasCorrect) "තවම නිවැරදි නැහැ — පැහැදිලි කිරීම බලන්න"
+            else if (alreadyCompleted) "පුහුණුව සාර්ථකයි — නැවත XP නොලැබේ"
+            else "පරීක්ෂණය සමත්  +${challenge.rewardXp} XP"
+          } else {
+            if (!lastWasCorrect) "NOT QUITE — STUDY THE MECHANISM"
+            else if (alreadyCompleted) "PRACTICE CLEARED — NO REPEAT XP"
+            else "TRIAL CLEARED  +${challenge.rewardXp} XP"
+          },
+          color = if (lastWasCorrect) EmeraldMastery else AmberAccent,
+          fontSize = 10.sp,
+          fontWeight = FontWeight.Bold,
+          fontFamily = FontFamily.Monospace
+        )
         Text(challenge.explanation, color = SilverMuted, fontSize = 11.sp, lineHeight = 16.sp)
         if (!lastWasCorrect) Text(if (currentLanguage == LanguageSetting.SINHALA) "පැහැදිලි කිරීම කියවා නැවත උත්සාහ කරන්න." else "Try again after reviewing the explanation.", color = SilverDim, fontSize = 10.sp)
       }
