@@ -238,9 +238,22 @@ object ArenaEngine {
   )
 
   fun challengesFor(mode: String, profile: ArenaProfile, language: LanguageSetting = LanguageSetting.ENGLISH): List<ArenaChallenge> {
-    val remaining = challenges.filter { mode == "ALL" || it.mode == mode }
-    val unassessed = remaining.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
-    val ordered = if (unassessed.isNotEmpty()) unassessed else remaining.sortedWith(compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }.thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 })
+    val matching = challenges.filter { mode == "ALL" || it.mode == mode }
+    if (matching.isEmpty()) return emptyList()
+
+    // First-time progression must not be blocked by previously completed challenges.
+    // Once a category is cleared, keep its challenges available as practice, without XP farming.
+    val uncompleted = matching.filterNot { it.id in profile.completedChallengeIds }
+    val candidates = uncompleted.ifEmpty { matching }
+    val unassessed = candidates.filter { (profile.skillEvidence[it.skillId]?.attempts ?: 0) == 0 }
+    val ordered = if (unassessed.isNotEmpty()) {
+      unassessed
+    } else {
+      candidates.sortedWith(
+        compareBy<ArenaChallenge> { profile.skillEvidence[it.skillId]?.accuracy ?: 0 }
+          .thenBy { profile.skillEvidence[it.skillId]?.attempts ?: 0 }
+      )
+    }
     return ordered.map { localize(it, language) }
   }
 
