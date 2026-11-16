@@ -14,6 +14,12 @@ class FluentPathVocabularyTest {
             assertEquals(deck.size, deck.map { it.id }.distinct().size)
         }
     }
+    @Test fun sinhalaDeckProvidesSinhalaExplanationsNotEnglishPlaceholders() {
+        val deck = FluentPathVocabulary.forCourse("si")
+        assertEquals("පළමු පුද්ගල සර්වනාමය", deck.first { it.id == "si_v01" }.meaningSinhala)
+        assertTrue(deck.all { it.meaningSinhala.isNotBlank() && it.meaningSinhala != it.meaningEnglish })
+    }
+
     @Test fun unknownCourseReturnsNoInventedVocabulary() {
         assertTrue(FluentPathVocabulary.forCourse("unknown").isEmpty())
     }
