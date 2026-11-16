@@ -56,7 +56,7 @@ object SkeletonCognitiveEngine {
     // Determine candidate topic
     val extractedTopic = extractTopicCandidate(lower)
     val isKnown = existingTopics.any { it.contains(extractedTopic, ignoreCase = true) || extractedTopic.contains(it, ignoreCase = true) }
-    val supportedOfflineTopic = listOf("raft", "rust ownership", "ownership", "quantum computing", "vector database").any { lower.contains(it) }
+    val supportedOfflineTopic = listOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "bayes", "thermodynamics", "neuroplasticity").any { lower.contains(it) }
     val suggestSync = supportedOfflineTopic && extractedTopic.isNotBlank() && !isKnown
 
     val responseText = if (lang == LanguageSetting.SINHALA) {
@@ -95,19 +95,25 @@ object SkeletonCognitiveEngine {
         "A classical bit is either 0 or 1. A qubit is described by probability amplitudes for measurement outcomes; superposition is not simply a tiny coin spinning, and measurement returns a definite result."
       topic.contains("vector", ignoreCase = true) ->
         "A vector database stores numerical embeddings and retrieves nearby vectors using a chosen distance or similarity metric. It can find semantically related items even when their wording differs."
+      topic.contains("bayes", ignoreCase = true) ->
+        "Bayesian reasoning updates a starting belief when new evidence arrives. The result depends on both the prior probability and how likely that evidence would be if the claim were true; a surprising test result is not automatically proof."
+      topic.contains("thermodynamics", ignoreCase = true) ->
+        "Thermodynamics tracks energy and the direction of physical processes. The first law says energy is conserved; the second says the total entropy of an isolated system does not decrease. Entropy is more precise than simply calling it disorder."
+      topic.contains("neuroplasticity", ignoreCase = true) ->
+        "Neuroplasticity is the nervous system's ability to change its connections and activity with experience, learning, and recovery. Repeated practice can strengthen useful pathways, but change depends on context, feedback, sleep, and many biological factors."
       else ->
         "I’m in local-only response mode because cloud AI is disabled by the zero-billing policy. I don’t have a reliable explanation for this topic stored on the device, so I won’t invent one. The Research Desk can help you inspect scholarly records when internet access is available."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "bayes", "thermodynamics", "neuroplasticity")) {
       body.append("\n\nThe important part is the actual mechanism—not just the analogy.")
     }
 
     if (suggestSync) {
       body.append("\n\n[FEED SYNC]: Add this topic to your feed? (Yes/No)")
-    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database")) {
+    } else if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "bayes", "thermodynamics", "neuroplasticity")) {
       body.append("\n\n[ACTIVE RECALL]: What is the key rule that makes this mechanism work?")
     }
 
@@ -132,13 +138,19 @@ object SkeletonCognitiveEngine {
         "මිනිස් හැසිරීම එකවර සරලත් සංකීර්ණත් වන්නේ අපට මූලික අවශ්‍යතා කිහිපයක් තිබුණත් ඒවා ඉටුකරන ආකාරය අත්දැකීම්, බිය, ආදරය, සමාජ පීඩනය සහ පරිසරය අනුව වෙනස් වන නිසාය. බඩගින්න, ආරක්ෂාව සහ පිළිගැනීම වැනි අවශ්‍යතා තේරුම් ගැනීම පහසුයි. නමුත් ඒවා එකිනෙක ගැටෙන විට එකම පුද්ගලයා විවිධ අවස්ථාවල වෙනස් තීරණ ගත හැක."
       topic.contains("vector", ignoreCase = true) ->
         "අර්ථය අනුව සමාන දේවල් සොයාගැනීමට සංඛ්‍යාත්මක නිරූපණ භාවිත කරන දත්ත ගබඩාවක් මෙයයි. උදාහරණයක් ලෙස, 'බල්ලා' යන වචනය නොමැති වාක්‍යයකත් බල්ලෙකු ගැන අදහසක් තිබේ නම් එය අර්ථයෙන් ළඟ දත්ත ලෙස සොයාගත හැක."
+      topic.contains("bayes", ignoreCase = true) ->
+        "Bayesian reasoning කියන්නේ අලුත් සාක්ෂි ලැබෙන විට කලින් තිබූ විශ්වාසයක් යාවත්කාලීන කරන ක්‍රමයකි. මුලින් තිබූ හැකියාවත්, ප්‍රකාශය සත්‍ය නම් එම සාක්ෂිය ලැබීමට ඇති හැකියාවත් දෙකම සලකා බලනවා. පරීක්ෂණයක ධනාත්මක ප්‍රතිඵලයක් ලැබීම පමණක් ප්‍රකාශයක් නිශ්චිතව සනාථ කරන්නේ නැහැ."
+      topic.contains("thermodynamics", ignoreCase = true) ->
+        "තාපගති විද්‍යාව ශක්තිය සහ භෞතික ක්‍රියාවලි සිදුවන දිශාව අධ්‍යයනය කරනවා. පළමු නියමය අනුව ශක්තිය නිර්මාණය හෝ විනාශ නොවී වෙනස් ආකාරවලට මාරු වෙනවා. දෙවන නියමය අනුව හුදකලා පද්ධතියක සමස්ත එන්ට්‍රොපිය අඩු නොවේ. එන්ට්‍රොපිය 'අවුල්' කියන සරල අදහසට වඩා නිශ්චිත සංකල්පයක්."
+      topic.contains("neuroplasticity", ignoreCase = true) ->
+        "ස්නායු ප්ලාස්ටිසිටි (Neuroplasticity) කියන්නේ අත්දැකීම්, ඉගෙනීම සහ සුවය ලැබීම සමඟ මොළය ඇතුළු ස්නායු පද්ධතියේ සම්බන්ධතා හා ක්‍රියාකාරීත්වය වෙනස් විය හැකි හැකියාවයි. නැවත නැවත පුහුණුවීම වැදගත් වුවත් ප්‍රතිචාර, නින්ද, පරිසරය සහ ජීව විද්‍යාත්මක සාධකද බලපානවා."
       else ->
         "දැනට වලාකුළු මත ක්‍රියාකරන කෘත්‍රිම බුද්ධි සේවාව භාවිත කිරීම වියදම් නොවන ලෙස අක්‍රිය කර ඇත. මෙම කරුණ ගැන දුරකථනය තුළ විශ්වාසදායක තොරතුරු නොමැති නිසා මම අනුමාන කර කරුණු නිර්මාණය කරන්නේ නැහැ. අන්තර්ජාල සම්බන්ධතාව තිබේ නම් පර්යේෂණ අංශයෙන් මුල් විද්‍යාත්මක ලේඛන සොයා බැලිය හැක."
     }
 
     val body = StringBuilder()
     body.append(intuition)
-    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "optogenetics", "channelrhodopsin", "crispr", "correlation", "sunburn", "human nature")) {
+    if (topic.lowercase() in setOf("raft", "rust ownership", "ownership", "quantum computing", "vector database", "bayes", "thermodynamics", "neuroplasticity", "optogenetics", "channelrhodopsin", "crispr", "correlation", "sunburn", "human nature")) {
       body.append("\n\nමෙහි වැදගත්ම දේ සිදුවන්නේ ඇයි සහ කෙසේද යන්න තේරුම් ගැනීමයි.")
     }
 
