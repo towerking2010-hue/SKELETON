@@ -68,18 +68,18 @@ object FluentPathVocabulary {
             FluentPathWord("la_v12","domus","house / home","නිවස","Domus magna est.")
         ),
         "si" to listOf(
-            FluentPathWord("si_v01","මම","I","I","මම පාසලට යනවා."),
-            FluentPathWord("si_v02","ඔබ","you (polite)","you","ඔබ කොහෙද යන්නේ?"),
-            FluentPathWord("si_v03","ඔයා","you (informal)","you","ඔයා අද එනවද?"),
-            FluentPathWord("si_v04","වතුර","water","water","මට වතුර ටිකක් දෙන්න."),
-            FluentPathWord("si_v05","කෑම","food / meal","food","අපි කෑම කමු."),
-            FluentPathWord("si_v06","යනවා","to go","go","මම ගෙදර යනවා."),
-            FluentPathWord("si_v07","එනවා","to come","come","ඇය හෙට එනවා."),
-            FluentPathWord("si_v08","කියනවා","to say / tell","say","ඔහු ඇත්ත කියනවා."),
-            FluentPathWord("si_v09","අද","today","today","අද වැස්ස වැටෙනවා."),
-            FluentPathWord("si_v10","හෙට","tomorrow","tomorrow","හෙට අපි හමුවෙමු."),
-            FluentPathWord("si_v11","පොත","book","book","මම පොතක් කියවනවා."),
-            FluentPathWord("si_v12","මිතුරා","friend","friend","මගේ මිතුරා මෙහෙ ඉන්නවා.")
+            FluentPathWord("si_v01","මම","I","පළමු පුද්ගල සර්වනාමය","මම පාසලට යනවා."),
+            FluentPathWord("si_v02","ඔබ","you (polite)","ගෞරවයෙන් අමතන දෙවන පුද්ගල සර්වනාමය","ඔබ කොහෙද යන්නේ?"),
+            FluentPathWord("si_v03","ඔයා","you (informal)","හිතවත් හෝ අවිධිමත් අවස්ථාවල භාවිත කරන ආමන්ත්‍රණය","ඔයා අද එනවද?"),
+            FluentPathWord("si_v04","වතුර","water","පානයට භාවිත කරන දියරය","මට වතුර ටිකක් දෙන්න."),
+            FluentPathWord("si_v05","කෑම","food / meal","ආහාරය හෝ ආහාර වේල","අපි කෑම කමු."),
+            FluentPathWord("si_v06","යනවා","to go","වෙනත් ස්ථානයකට ගමන් කිරීමේ ක්‍රියාව","මම ගෙදර යනවා."),
+            FluentPathWord("si_v07","එනවා","to come","කථිකයා සිටින ස්ථානය දෙසට පැමිණීමේ ක්‍රියාව","ඇය හෙට එනවා."),
+            FluentPathWord("si_v08","කියනවා","to say / tell","වචන මඟින් අදහසක් ප්‍රකාශ කිරීම","ඔහු ඇත්ත කියනවා."),
+            FluentPathWord("si_v09","අද","today","වර්තමාන දිනය","අද වැස්ස වැටෙනවා."),
+            FluentPathWord("si_v10","හෙට","tomorrow","අදින් පසු එළඹෙන දිනය","හෙට අපි හමුවෙමු."),
+            FluentPathWord("si_v11","පොත","book","කියවීමට භාවිත කරන ලේඛනයක්","මම පොතක් කියවනවා."),
+            FluentPathWord("si_v12","මිතුරා","friend","හිතවත් පුද්ගලයෙක්","මගේ මිතුරා මෙහෙ ඉන්නවා.")
         )
     )
     fun forCourse(courseId: String): List<FluentPathWord> = decks[courseId].orEmpty()
