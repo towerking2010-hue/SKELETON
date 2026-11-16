@@ -126,6 +126,7 @@ dependencies {
   implementation(libs.okhttp)
   implementation("com.tom-roush:pdfbox-android:2.0.27.0")
   implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
+  implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
   implementation("com.google.mlkit:text-recognition:16.0.1")
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
