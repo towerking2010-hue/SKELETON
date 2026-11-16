@@ -30,6 +30,8 @@ import com.example.engine.learning.FluentPathProgression
 import com.example.engine.learning.FluentPathLocalization
 import com.example.engine.learning.FluentPathAnswerChecker
 import com.example.engine.learning.FluentPathVocabulary
+import com.example.engine.learning.FluentPathWordReview
+import com.example.engine.learning.FluentPathVocabularyScheduler
 import com.example.ui.theme.*
 import java.util.Locale
 
@@ -124,6 +126,32 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
     mutableStateOf(prefs.getStringSet("vocab_known_$courseId", emptySet())?.toSet() ?: emptySet())
   }
   val vocabulary = remember(courseId) { FluentPathVocabulary.forCourse(courseId) }
+  var vocabularyReviews by remember(courseId) {
+    mutableStateOf(
+      prefs.getStringSet("vocab_reviews_$courseId", emptySet()).orEmpty().mapNotNull { encoded ->
+        val parts = encoded.split("|")
+        if (parts.size != 4) null else {
+          val id = parts[0]
+          val repetitions = parts[1].toIntOrNull()
+          val interval = parts[2].toIntOrNull()
+          val dueAt = parts[3].toLongOrNull()
+          if (id.isBlank() || repetitions == null || interval == null || dueAt == null) null
+          else id to FluentPathWordReview(repetitions, interval, dueAt)
+        }
+      }.toMap()
+    )
+  }
+  val dueVocabularyCount = FluentPathVocabularyScheduler.dueCount(
+    vocabulary.map { it.id }, vocabularyReviews, System.currentTimeMillis()
+  )
+  fun saveVocabularyReview(wordId: String, review: FluentPathWordReview) {
+    val updated = vocabularyReviews + (wordId to review)
+    vocabularyReviews = updated
+    val encoded = updated.map { (id, value) ->
+      "${id}|${value.repetitions}|${value.intervalDays}|${value.dueAtMillis}"
+    }.toSet()
+    prefs.edit().putStringSet("vocab_reviews_$courseId", encoded).apply()
+  }
   val currentWord = vocabulary.getOrNull(vocabularyIndex)
   val course = courses.firstOrNull { it.id == courseId } ?: courses.first()
   val lesson = course.lessons.firstOrNull { it.id == lessonId }
@@ -176,7 +204,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             onClick = { vocabularyOpen = true; vocabularyIndex = 0; vocabularyRevealed = false },
             modifier = Modifier.fillMaxWidth()
           ) {
-            Text(if (si) "වචන පුහුණුගාරය · ${vocabularyKnown.size}/${vocabulary.size} දන්නවා" else "VOCABULARY LAB · ${vocabularyKnown.size}/${vocabulary.size} mastered")
+            Text(if (si) "වචන පුහුණුගාරය · ${vocabularyKnown.size}/${vocabulary.size} දන්නවා" else "VOCABULARY LAB · ${vocabularyKnown.size}/${vocabulary.size} mastered · $dueVocabularyCount due")
           }
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             courses.forEach { c ->
@@ -291,7 +319,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
             } else {
               Text(if (si) "අර්ථය මතක් කරගෙන පසුව පෙන්වන්න." else "Try to recall the meaning before revealing it.", color = SilverMuted, fontSize = 13.sp)
             }
-            Text(if (si) "දන්නා වචන: ${vocabularyKnown.size}/${vocabulary.size}" else "Mastered: ${vocabularyKnown.size}/${vocabulary.size}", color = AmberAccent, fontSize = 11.sp)
+            Text(if (si) "දන්නා වචන: ${vocabularyKnown.size}/${vocabulary.size}" else "Mastered: ${vocabularyKnown.size}/${vocabulary.size} · Due now: $dueVocabularyCount", color = AmberAccent, fontSize = 11.sp)
           }
         },
         confirmButton = {
@@ -304,6 +332,10 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
               val updated = vocabularyKnown + currentWord.id
               vocabularyKnown = updated
               prefs.edit().putStringSet("vocab_known_$courseId", updated).apply()
+              saveVocabularyReview(currentWord.id, FluentPathVocabularyScheduler.remembered(
+                vocabularyReviews[currentWord.id] ?: FluentPathWordReview(),
+                System.currentTimeMillis()
+              ))
               vocabularyIndex = (vocabularyIndex + 1) % vocabulary.size
               vocabularyRevealed = false
             }) { Text(if (si) "දන්නවා ✓" else "I KNEW IT ✓", color = EmeraldMastery) }
@@ -315,6 +347,7 @@ fun LanguageTeacherScreen(currentLanguage: LanguageSetting, onBack: () -> Unit, 
               val updated = vocabularyKnown - currentWord.id
               vocabularyKnown = updated
               prefs.edit().putStringSet("vocab_known_$courseId", updated).apply()
+              saveVocabularyReview(currentWord.id, FluentPathVocabularyScheduler.needsPracticeAgain(System.currentTimeMillis()))
               vocabularyIndex = (vocabularyIndex + 1) % vocabulary.size
               vocabularyRevealed = false
             }) { Text(if (si) "නැවත පුහුණු වන්න" else "PRACTISE AGAIN", color = AmberAccent) }
