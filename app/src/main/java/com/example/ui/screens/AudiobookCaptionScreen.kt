@@ -5,6 +5,8 @@ import android.net.Uri
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -61,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LanguageSetting
+import com.example.engine.ocr.SinhalaScannedPdfOcr
 import com.example.ui.components.SkeletonBracketLogo
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
@@ -97,7 +100,7 @@ private fun splitIntoSentences(text: String): List<String> =
     .map { it.trim() }
     .filter { it.isNotBlank() }
 
-private fun readImportedBook(context: android.content.Context, uri: Uri, currentLanguage: LanguageSetting): AudiobookDocument {
+private fun readImportedBook(context: android.content.Context, uri: Uri, currentLanguage: LanguageSetting, onProgress: (String) -> Unit = {}): AudiobookDocument {
   val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
     ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
     ?: "Imported book"
@@ -105,7 +108,24 @@ private fun readImportedBook(context: android.content.Context, uri: Uri, current
   val raw = context.contentResolver.openInputStream(uri)?.use { input ->
     if (mime.contains("pdf") || name.endsWith(".pdf", true)) {
       PDFBoxResourceLoader.init(context)
-      PDDocument.load(input).use { pdf -> PDFTextStripper().getText(pdf) }
+      PDDocument.load(input).use { pdf ->
+        val selectableText = PDFTextStripper().getText(pdf).trim()
+        if (selectableText.isNotBlank()) {
+          selectableText
+        } else if (currentLanguage == LanguageSetting.SINHALA) {
+          onProgress("සිංහල OCR මඟින් ස්කෑන් කළ පිටු කියවමින්…")
+          SinhalaScannedPdfOcr.extract(
+            context = context,
+            pdf = pdf,
+            onModelDownload = { onProgress("සිංහල OCR ආකෘතිය බාගත කරමින් (1.7 MB)…") },
+            onPageProgress = { completed, total ->
+              onProgress("ස්කෑන් කළ පිටු කියවමින්: $completed / $total")
+            }
+          )
+        } else {
+          ""
+        }
+      }
     } else if (mime.contains("epub") || name.endsWith(".epub", true)) {
       ZipInputStream(input).use { zip ->
         val chapters = StringBuilder()
@@ -133,7 +153,7 @@ private fun readImportedBook(context: android.content.Context, uri: Uri, current
 
   require(raw.isNotBlank()) {
     if (currentLanguage == LanguageSetting.SINHALA) {
-      "මෙම ගොනුවෙන් කියවිය හැකි අකුරු හමු නොවීය. මෙය ස්කෑන් කළ PDF ගොනුවක් විය හැක. සිංහල අකුරු හඳුනාගැනීම සඳහා වෙනම OCR සහාය අවශ්‍ය වේ."
+      "මෙම ගොනුවෙන් කියවිය හැකි සිංහල අකුරු හමු නොවීය. PDF පිටු පැහැදිලිද සහ අකුරු මුද්‍රිතදැයි පරීක්ෂා කරන්න."
     } else {
       "No selectable text was found. This may be a scanned PDF; image-based OCR is required before it can be read."
     }
@@ -176,6 +196,8 @@ fun AudiobookCaptionScreen(
   var voiceStatus by remember { mutableStateOf("Initializing device speech engine…") }
   var tts by remember { mutableStateOf<TextToSpeech?>(null) }
   var importError by remember { mutableStateOf<String?>(null) }
+  var importStatus by remember { mutableStateOf("") }
+  val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
   val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
     if (uri != null) {
@@ -184,15 +206,22 @@ fun AudiobookCaptionScreen(
           try {
             context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           } catch (_: Exception) { }
-          // PDF/EPUB extraction can be expensive; keep file I/O and parsing off the UI thread.
-          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri, currentLanguage) }
+          // PDF/EPUB extraction and scanned-page OCR run off the UI thread.
+          importStatus = if (currentLanguage == LanguageSetting.SINHALA) "ගොනුව කියවමින්…" else "Reading document…"
+          val imported = withContext(Dispatchers.IO) {
+            readImportedBook(context, uri, currentLanguage) { message ->
+              mainHandler.post { importStatus = message }
+            }
+          }
           document = imported
           sentences = splitIntoSentences(imported.text)
           currentSentence = 0
           isPlaying = false
           tts?.stop()
           importError = null
+          importStatus = ""
         } catch (error: Exception) {
+          importStatus = ""
           importError = error.message ?: "Could not read this document."
         }
       }
@@ -309,6 +338,9 @@ fun AudiobookCaptionScreen(
         ) {
           Text("＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
+      }
+      if (importStatus.isNotBlank()) {
+        Text(importStatus, color = AmberAccent, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
       }
       importError?.let {
         Text(it, color = Color(0xFFFF8A80), fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
