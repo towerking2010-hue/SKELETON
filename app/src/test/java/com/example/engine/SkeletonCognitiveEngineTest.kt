@@ -23,6 +23,32 @@ class SkeletonCognitiveEngineTest {
   }
 
   @Test
+  fun offlineTutorSupportsAdditionalScienceTopicsInBothLanguages() {
+    val cases = listOf(
+      Triple("Explain Bayes reasoning", "Bayesian reasoning", "Bayesian reasoning"),
+      Triple("Explain thermodynamics", "Thermodynamics", "තාපගති විද්‍යාව"),
+      Triple("Explain neuroplasticity", "Neuroplasticity", "ස්නායු ප්ලාස්ටිසිටි")
+    )
+    cases.forEach { (prompt, englishMarker, sinhalaMarker) ->
+      val (englishReply, englishFeed) = SkeletonCognitiveEngine.generateCoreResponse(
+        userText = prompt,
+        targetLanguage = LanguageSetting.ENGLISH,
+        existingTopics = emptyList()
+      )
+      assertTrue("Missing English lesson for $prompt", englishReply.contains(englishMarker, ignoreCase = true))
+      assertTrue("Expected feed sync for $prompt", englishFeed != null)
+
+      val (sinhalaReply, sinhalaFeed) = SkeletonCognitiveEngine.generateCoreResponse(
+        userText = prompt,
+        targetLanguage = LanguageSetting.SINHALA,
+        existingTopics = emptyList()
+      )
+      assertTrue("Missing Sinhala lesson for $prompt", sinhalaReply.contains(sinhalaMarker, ignoreCase = true))
+      assertTrue("Expected feed sync for $prompt", sinhalaFeed != null)
+    }
+  }
+
+  @Test
   fun knownOfflineTopicGetsLocalExplanation() {
     val (reply, _) = SkeletonCognitiveEngine.generateCoreResponse(
       userText = "Explain quantum computing",
