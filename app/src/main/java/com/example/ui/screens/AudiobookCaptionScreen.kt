@@ -5,6 +5,8 @@ import android.net.Uri
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -61,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LanguageSetting
+import com.example.engine.ocr.SinhalaScannedPdfOcr
 import com.example.ui.components.SkeletonBracketLogo
 import com.example.ui.theme.AmberAccent
 import com.example.ui.theme.CyanNeon
@@ -97,7 +100,7 @@ private fun splitIntoSentences(text: String): List<String> =
     .map { it.trim() }
     .filter { it.isNotBlank() }
 
-private fun readImportedBook(context: android.content.Context, uri: Uri, currentLanguage: LanguageSetting): AudiobookDocument {
+private fun readImportedBook(context: android.content.Context, uri: Uri, currentLanguage: LanguageSetting, onProgress: (String) -> Unit = {}): AudiobookDocument {
   val name = context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
     ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
     ?: "Imported book"
@@ -105,7 +108,24 @@ private fun readImportedBook(context: android.content.Context, uri: Uri, current
   val raw = context.contentResolver.openInputStream(uri)?.use { input ->
     if (mime.contains("pdf") || name.endsWith(".pdf", true)) {
       PDFBoxResourceLoader.init(context)
-      PDDocument.load(input).use { pdf -> PDFTextStripper().getText(pdf) }
+      PDDocument.load(input).use { pdf ->
+        val selectableText = PDFTextStripper().getText(pdf).trim()
+        if (selectableText.isNotBlank()) {
+          selectableText
+        } else if (currentLanguage == LanguageSetting.SINHALA) {
+          onProgress("සිංහල OCR මඟින් ස්කෑන් කළ පිටු කියවමින්…")
+          SinhalaScannedPdfOcr.extract(
+            context = context,
+            pdf = pdf,
+            onModelDownload = { onProgress("සිංහල OCR ආකෘතිය බාගත කරමින් (1.7 MB)…") },
+            onPageProgress = { completed, total ->
+              onProgress("ස්කෑන් කළ පිටු කියවමින්: $completed / $total")
+            }
+          )
+        } else {
+          ""
+        }
+      }
     } else if (mime.contains("epub") || name.endsWith(".epub", true)) {
       ZipInputStream(input).use { zip ->
         val chapters = StringBuilder()
@@ -133,7 +153,7 @@ private fun readImportedBook(context: android.content.Context, uri: Uri, current
 
   require(raw.isNotBlank()) {
     if (currentLanguage == LanguageSetting.SINHALA) {
-      "මෙම ගොනුවෙන් කියවිය හැකි අකුරු හමු නොවීය. මෙය ස්කෑන් කළ PDF ගොනුවක් විය හැක. සිංහල අකුරු හඳුනාගැනීම සඳහා වෙනම OCR සහාය අවශ්‍ය වේ."
+      "මෙම ගොනුවෙන් කියවිය හැකි සිංහල අකුරු හමු නොවීය. PDF පිටු පැහැදිලිද සහ අකුරු මුද්‍රිතදැයි පරීක්ෂා කරන්න."
     } else {
       "No selectable text was found. This may be a scanned PDF; image-based OCR is required before it can be read."
     }
@@ -149,6 +169,7 @@ fun AudiobookCaptionScreen(
 ) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
+  val si = currentLanguage == LanguageSetting.SINHALA
   val samples = remember {
     listOf(
       AudiobookDocument(
@@ -165,7 +186,7 @@ fun AudiobookCaptionScreen(
       )
     )
   }
-  var document by remember { mutableStateOf(samples.first()) }
+  var document by remember(currentLanguage) { mutableStateOf(if (si) samples[1] else samples.first()) }
   var sentences by remember(document) { mutableStateOf(splitIntoSentences(document.text)) }
   var currentSentence by remember { mutableIntStateOf(0) }
   var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
@@ -173,9 +194,11 @@ fun AudiobookCaptionScreen(
   var ttsReady by remember { mutableStateOf(false) }
   var selectedVoiceAvailable by remember { mutableStateOf(false) }
   val latestSentences by rememberUpdatedState(sentences)
-  var voiceStatus by remember { mutableStateOf("Initializing device speech engine…") }
+  var voiceStatus by remember(currentLanguage) { mutableStateOf(if (si) "දුරකථනයේ හඬ සේවාව සූදානම් කරමින්…" else "Initializing device speech engine…") }
   var tts by remember { mutableStateOf<TextToSpeech?>(null) }
   var importError by remember { mutableStateOf<String?>(null) }
+  var importStatus by remember { mutableStateOf("") }
+  val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
   val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
     if (uri != null) {
@@ -184,16 +207,29 @@ fun AudiobookCaptionScreen(
           try {
             context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           } catch (_: Exception) { }
-          // PDF/EPUB extraction can be expensive; keep file I/O and parsing off the UI thread.
-          val imported = withContext(Dispatchers.IO) { readImportedBook(context, uri, currentLanguage) }
+          // PDF/EPUB extraction and scanned-page OCR run off the UI thread.
+          importStatus = if (currentLanguage == LanguageSetting.SINHALA) "ගොනුව කියවමින්…" else "Reading document…"
+          val imported = withContext(Dispatchers.IO) {
+            readImportedBook(context, uri, currentLanguage) { message ->
+              mainHandler.post { importStatus = message }
+            }
+          }
           document = imported
           sentences = splitIntoSentences(imported.text)
           currentSentence = 0
           isPlaying = false
           tts?.stop()
           importError = null
+          importStatus = ""
         } catch (error: Exception) {
-          importError = error.message ?: "Could not read this document."
+          importStatus = ""
+          importError = if (si) {
+            when {
+              error.message.orEmpty().contains("download", true) || error.message.orEmpty().contains("internet", true) ->
+                "සිංහල OCR ආකෘතිය බාගත කළ නොහැකි වුණා. අන්තර්ජාල සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න."
+              else -> "මෙම ලේඛනය කියවීමට නොහැකි වුණා: ${error.message.orEmpty()}"
+            }
+          } else error.message ?: "Could not read this document."
         }
       }
     }
@@ -210,17 +246,17 @@ fun AudiobookCaptionScreen(
           if (availability >= TextToSpeech.LANG_AVAILABLE) {
             instance.language = locale
             selectedVoiceAvailable = true
-            voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala voice available on this device" else "English voice ready"
+            voiceStatus = if (si) "මෙම දුරකථනයේ සිංහල හඬ තිබේ." else "English voice ready"
           } else {
             selectedVoiceAvailable = false
             voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) {
-              "Sinhala voice unavailable. Install a Sinhala voice in Android Text-to-Speech settings."
+              "සිංහල හඬක් ස්ථාපනය කර නැහැ. Android Text-to-Speech සැකසුම්වලින් හඬ දත්ත ස්ථාපනය කරන්න."
             } else "English voice unavailable on this device"
           }
           ttsReady = true
         }
       } else {
-        voiceStatus = "Android Text-to-Speech initialization failed"
+        voiceStatus = if (si) "දුරකථනයේ හඬ සේවාව ආරම්භ කළ නොහැකි වුණා." else "Android Text-to-Speech initialization failed"
       }
     }
     engine = speech
@@ -241,7 +277,7 @@ fun AudiobookCaptionScreen(
       override fun onError(utteranceId: String?) {
         android.os.Handler(android.os.Looper.getMainLooper()).post {
           isPlaying = false
-          voiceStatus = "Speech failed. Check the installed device voice."
+          voiceStatus = if (si) "හඬ වාදනය අසාර්ථකයි. ස්ථාපිත හඬ පරීක්ෂා කරන්න." else "Speech failed. Check the installed device voice."
         }
       }
     })
@@ -257,11 +293,11 @@ fun AudiobookCaptionScreen(
   fun playFrom(index: Int) {
     val engine = tts
     if (!ttsReady || engine == null || sentences.isEmpty()) {
-      voiceStatus = "Speech engine is not ready yet."
+      voiceStatus = if (si) "හඬ සේවාව තවම සූදානම් නැහැ." else "Speech engine is not ready yet."
       return
     }
     if (!selectedVoiceAvailable) {
-      voiceStatus = "No installed voice supports the selected language."
+      voiceStatus = if (si) "තෝරාගත් භාෂාවට ගැළපෙන හඬක් ස්ථාපනය කර නැහැ." else "No installed voice supports the selected language."
       return
     }
     engine.stop()
@@ -293,7 +329,7 @@ fun AudiobookCaptionScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
           SkeletonBracketLogo(size = 18.dp, accentColor = CyanNeon)
           Spacer(Modifier.width(8.dp))
-          Text("AUDIOBOOK & CAPTIONS", color = CyanNeon, fontSize = 12.sp,
+          Text(if (si) "ශ්‍රව්‍ය පොත සහ උපසිරැසි" else "AUDIOBOOK & CAPTIONS", color = CyanNeon, fontSize = 12.sp,
             fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
         Icon(Icons.Filled.VolumeUp, "Audio engine", tint = if (isPlaying) EmeraldMastery else SilverDim)
@@ -307,8 +343,11 @@ fun AudiobookCaptionScreen(
             .clickable { importLauncher.launch(arrayOf("text/plain", "application/epub+zip", "application/epub", "application/pdf")) }
             .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-          Text("＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          Text(if (si) "＋ TXT / EPUB / PDF ආයාත කරන්න" else "＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
+      }
+      if (importStatus.isNotBlank()) {
+        Text(importStatus, color = AmberAccent, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
       }
       importError?.let {
         Text(it, color = Color(0xFFFF8A80), fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
@@ -381,11 +420,12 @@ fun AudiobookCaptionScreen(
           colors = SliderDefaults.colors(thumbColor = CyanNeon, activeTrackColor = CyanNeon, inactiveTrackColor = ObsidianBorderLight)
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text("SENTENCE ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}",
+          Text(if (si) "වාක්‍යය ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}"
+            else "SENTENCE ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}",
             color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
           Text("${playbackSpeed}x", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
-        Text(voiceStatus, color = if (voiceStatus.contains("unavailable") || voiceStatus.contains("failed")) AmberAccent else SilverMuted,
+        Text(voiceStatus, color = if (selectedVoiceAvailable) SilverMuted else AmberAccent,
           fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp))
         if (currentLanguage == LanguageSetting.SINHALA && !selectedVoiceAvailable) {
           TextButton(onClick = {
@@ -400,7 +440,7 @@ fun AudiobookCaptionScreen(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
           IconButton(onClick = { val target = (currentSentence - 1).coerceAtLeast(0); currentSentence = target; if (isPlaying) playFrom(target) }) {
-            Icon(Icons.Filled.FastRewind, "Previous sentence", tint = SilverMuted)
+            Icon(Icons.Filled.FastRewind, if (si) "පෙර වාක්‍යය" else "Previous sentence", tint = SilverMuted)
           }
           Box(
             Modifier.size(54.dp).clip(CircleShape).background(CyanNeon)
@@ -413,10 +453,11 @@ fun AudiobookCaptionScreen(
             contentAlignment = Alignment.Center
           ) {
             Icon(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-              if (isPlaying) "Pause" else "Play", tint = ObsidianBg, modifier = Modifier.size(28.dp))
+              if (isPlaying) (if (si) "විරාමය" else "Pause") else (if (si) "වාදනය" else "Play"),
+              tint = ObsidianBg, modifier = Modifier.size(28.dp))
           }
           IconButton(onClick = { val target = (currentSentence + 1).coerceAtMost(sentences.lastIndex.coerceAtLeast(0)); currentSentence = target; if (isPlaying) playFrom(target) }) {
-            Icon(Icons.Filled.FastForward, "Next sentence", tint = SilverMuted)
+            Icon(Icons.Filled.FastForward, if (si) "ඊළඟ වාක්‍යය" else "Next sentence", tint = SilverMuted)
           }
           Box(
             Modifier.clip(RoundedCornerShape(10.dp)).background(ObsidianSurface)
@@ -432,7 +473,7 @@ fun AudiobookCaptionScreen(
                 tts?.setSpeechRate(playbackSpeed)
               }.padding(horizontal = 9.dp, vertical = 8.dp)
           ) {
-            Text("SPEED", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(if (si) "වේගය" else "SPEED", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
           }
         }
       }

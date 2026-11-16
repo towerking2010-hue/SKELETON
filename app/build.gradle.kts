@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.skeleton.vzkrpx"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 2
+    versionName = "1.1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -50,6 +50,10 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
     debug {
+      // QA builds install alongside the owner's existing app so testing never requires
+      // uninstalling an older installation or risking its local Room/SharedPreferences data.
+      applicationIdSuffix = ".qa"
+      versionNameSuffix = "-qa"
       // Do not remove or modify this signingConfig assignment. It is necessary for Android apps in
       // AI Studio.
       signingConfig = signingConfigs.getByName("debugConfig")
@@ -121,6 +125,7 @@ dependencies {
   implementation(libs.moshi.kotlin)
   implementation(libs.okhttp)
   implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+  implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
   implementation("com.google.mlkit:text-recognition:16.0.1")
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
@@ -133,6 +138,7 @@ dependencies {
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)
+  androidTestImplementation(libs.androidx.core)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
