@@ -169,6 +169,7 @@ fun AudiobookCaptionScreen(
 ) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
+  val si = currentLanguage == LanguageSetting.SINHALA
   val samples = remember {
     listOf(
       AudiobookDocument(
@@ -185,7 +186,7 @@ fun AudiobookCaptionScreen(
       )
     )
   }
-  var document by remember { mutableStateOf(samples.first()) }
+  var document by remember(currentLanguage) { mutableStateOf(if (si) samples[1] else samples.first()) }
   var sentences by remember(document) { mutableStateOf(splitIntoSentences(document.text)) }
   var currentSentence by remember { mutableIntStateOf(0) }
   var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
@@ -193,7 +194,7 @@ fun AudiobookCaptionScreen(
   var ttsReady by remember { mutableStateOf(false) }
   var selectedVoiceAvailable by remember { mutableStateOf(false) }
   val latestSentences by rememberUpdatedState(sentences)
-  var voiceStatus by remember { mutableStateOf("Initializing device speech engine…") }
+  var voiceStatus by remember(currentLanguage) { mutableStateOf(if (si) "දුරකථනයේ හඬ සේවාව සූදානම් කරමින්…" else "Initializing device speech engine…") }
   var tts by remember { mutableStateOf<TextToSpeech?>(null) }
   var importError by remember { mutableStateOf<String?>(null) }
   var importStatus by remember { mutableStateOf("") }
@@ -222,7 +223,13 @@ fun AudiobookCaptionScreen(
           importStatus = ""
         } catch (error: Exception) {
           importStatus = ""
-          importError = error.message ?: "Could not read this document."
+          importError = if (si) {
+            when {
+              error.message.orEmpty().contains("download", true) || error.message.orEmpty().contains("internet", true) ->
+                "සිංහල OCR ආකෘතිය බාගත කළ නොහැකි වුණා. අන්තර්ජාල සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න."
+              else -> "මෙම ලේඛනය කියවීමට නොහැකි වුණා: ${error.message.orEmpty()}"
+            }
+          } else error.message ?: "Could not read this document."
         }
       }
     }
@@ -239,17 +246,17 @@ fun AudiobookCaptionScreen(
           if (availability >= TextToSpeech.LANG_AVAILABLE) {
             instance.language = locale
             selectedVoiceAvailable = true
-            voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) "Sinhala voice available on this device" else "English voice ready"
+            voiceStatus = if (si) "මෙම දුරකථනයේ සිංහල හඬ තිබේ." else "English voice ready"
           } else {
             selectedVoiceAvailable = false
             voiceStatus = if (currentLanguage == LanguageSetting.SINHALA) {
-              "Sinhala voice unavailable. Install a Sinhala voice in Android Text-to-Speech settings."
+              "සිංහල හඬක් ස්ථාපනය කර නැහැ. Android Text-to-Speech සැකසුම්වලින් හඬ දත්ත ස්ථාපනය කරන්න."
             } else "English voice unavailable on this device"
           }
           ttsReady = true
         }
       } else {
-        voiceStatus = "Android Text-to-Speech initialization failed"
+        voiceStatus = if (si) "දුරකථනයේ හඬ සේවාව ආරම්භ කළ නොහැකි වුණා." else "Android Text-to-Speech initialization failed"
       }
     }
     engine = speech
@@ -270,7 +277,7 @@ fun AudiobookCaptionScreen(
       override fun onError(utteranceId: String?) {
         android.os.Handler(android.os.Looper.getMainLooper()).post {
           isPlaying = false
-          voiceStatus = "Speech failed. Check the installed device voice."
+          voiceStatus = if (si) "හඬ වාදනය අසාර්ථකයි. ස්ථාපිත හඬ පරීක්ෂා කරන්න." else "Speech failed. Check the installed device voice."
         }
       }
     })
@@ -286,11 +293,11 @@ fun AudiobookCaptionScreen(
   fun playFrom(index: Int) {
     val engine = tts
     if (!ttsReady || engine == null || sentences.isEmpty()) {
-      voiceStatus = "Speech engine is not ready yet."
+      voiceStatus = if (si) "හඬ සේවාව තවම සූදානම් නැහැ." else "Speech engine is not ready yet."
       return
     }
     if (!selectedVoiceAvailable) {
-      voiceStatus = "No installed voice supports the selected language."
+      voiceStatus = if (si) "තෝරාගත් භාෂාවට ගැළපෙන හඬක් ස්ථාපනය කර නැහැ." else "No installed voice supports the selected language."
       return
     }
     engine.stop()
@@ -322,7 +329,7 @@ fun AudiobookCaptionScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
           SkeletonBracketLogo(size = 18.dp, accentColor = CyanNeon)
           Spacer(Modifier.width(8.dp))
-          Text("AUDIOBOOK & CAPTIONS", color = CyanNeon, fontSize = 12.sp,
+          Text(if (si) "ශ්‍රව්‍ය පොත සහ උපසිරැසි" else "AUDIOBOOK & CAPTIONS", color = CyanNeon, fontSize = 12.sp,
             fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
         Icon(Icons.Filled.VolumeUp, "Audio engine", tint = if (isPlaying) EmeraldMastery else SilverDim)
@@ -336,7 +343,7 @@ fun AudiobookCaptionScreen(
             .clickable { importLauncher.launch(arrayOf("text/plain", "application/epub+zip", "application/epub", "application/pdf")) }
             .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-          Text("＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          Text(if (si) "＋ TXT / EPUB / PDF ආයාත කරන්න" else "＋ IMPORT TXT / EPUB / PDF", color = CyanNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
       }
       if (importStatus.isNotBlank()) {
@@ -413,11 +420,12 @@ fun AudiobookCaptionScreen(
           colors = SliderDefaults.colors(thumbColor = CyanNeon, activeTrackColor = CyanNeon, inactiveTrackColor = ObsidianBorderLight)
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text("SENTENCE ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}",
+          Text(if (si) "වාක්‍යය ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}"
+            else "SENTENCE ${if (sentences.isEmpty()) 0 else currentSentence + 1} / ${sentences.size}",
             color = SilverMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
           Text("${playbackSpeed}x", color = CyanNeon, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
-        Text(voiceStatus, color = if (voiceStatus.contains("unavailable") || voiceStatus.contains("failed")) AmberAccent else SilverMuted,
+        Text(voiceStatus, color = if (selectedVoiceAvailable) SilverMuted else AmberAccent,
           fontSize = 10.sp, modifier = Modifier.padding(top = 5.dp))
         if (currentLanguage == LanguageSetting.SINHALA && !selectedVoiceAvailable) {
           TextButton(onClick = {
@@ -432,7 +440,7 @@ fun AudiobookCaptionScreen(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
           IconButton(onClick = { val target = (currentSentence - 1).coerceAtLeast(0); currentSentence = target; if (isPlaying) playFrom(target) }) {
-            Icon(Icons.Filled.FastRewind, "Previous sentence", tint = SilverMuted)
+            Icon(Icons.Filled.FastRewind, if (si) "පෙර වාක්‍යය" else "Previous sentence", tint = SilverMuted)
           }
           Box(
             Modifier.size(54.dp).clip(CircleShape).background(CyanNeon)
@@ -445,10 +453,11 @@ fun AudiobookCaptionScreen(
             contentAlignment = Alignment.Center
           ) {
             Icon(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-              if (isPlaying) "Pause" else "Play", tint = ObsidianBg, modifier = Modifier.size(28.dp))
+              if (isPlaying) (if (si) "විරාමය" else "Pause") else (if (si) "වාදනය" else "Play"),
+              tint = ObsidianBg, modifier = Modifier.size(28.dp))
           }
           IconButton(onClick = { val target = (currentSentence + 1).coerceAtMost(sentences.lastIndex.coerceAtLeast(0)); currentSentence = target; if (isPlaying) playFrom(target) }) {
-            Icon(Icons.Filled.FastForward, "Next sentence", tint = SilverMuted)
+            Icon(Icons.Filled.FastForward, if (si) "ඊළඟ වාක්‍යය" else "Next sentence", tint = SilverMuted)
           }
           Box(
             Modifier.clip(RoundedCornerShape(10.dp)).background(ObsidianSurface)
@@ -464,7 +473,7 @@ fun AudiobookCaptionScreen(
                 tts?.setSpeechRate(playbackSpeed)
               }.padding(horizontal = 9.dp, vertical = 8.dp)
           ) {
-            Text("SPEED", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(if (si) "වේගය" else "SPEED", color = AmberAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
           }
         }
       }
