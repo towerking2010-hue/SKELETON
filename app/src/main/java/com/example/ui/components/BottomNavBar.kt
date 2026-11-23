@@ -40,6 +40,7 @@ import com.example.ui.MainTab
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.ObsidianBg
 import com.example.ui.theme.ObsidianBorder
+import com.example.ui.theme.ObsidianSurface
 import com.example.ui.theme.ObsidianSurfaceElevated
 import com.example.ui.theme.SilverDim
 import com.example.ui.theme.SilverMuted
