@@ -58,21 +58,21 @@ fun BottomNavBar(
       .background(ObsidianBg)
       .border(0.8.dp, ObsidianBorder)
       .navigationBarsPadding()
-      .padding(horizontal = 24.dp, vertical = 8.dp)
+      .padding(horizontal = 18.dp, vertical = 7.dp)
   ) {
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .height(56.dp)
-        .clip(RoundedCornerShape(28.dp))
-        .background(ObsidianSurfaceElevated)
-        .border(1.dp, ObsidianBorder, RoundedCornerShape(28.dp))
+        .height(58.dp)
+        .clip(RoundedCornerShape(15.dp))
+        .background(ObsidianSurface)
+        .border(1.dp, ObsidianBorder, RoundedCornerShape(15.dp))
         .padding(horizontal = 8.dp),
       horizontalArrangement = Arrangement.SpaceAround,
       verticalAlignment = Alignment.CenterVertically
     ) {
       // 1. Feed
-      val feedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Discover" else "Discover"
+      val feedLabel = if (currentLanguage == LanguageSetting.SINHALA) "සොයන්න" else "FEED"
       BottomNavItem(
         label = feedLabel,
         selected = currentTab == MainTab.FEED,
@@ -83,7 +83,7 @@ fun BottomNavBar(
       )
 
       // 2. CORE
-      val coreLabel = if (currentLanguage == LanguageSetting.SINHALA) "CORE" else "CORE"
+      val coreLabel = "CORE"
       BottomNavItem(
         label = coreLabel,
         selected = currentTab == MainTab.CORE,
@@ -94,7 +94,7 @@ fun BottomNavBar(
       )
 
       // 3. Saved
-      val savedLabel = if (currentLanguage == LanguageSetting.SINHALA) "Vault" else "Vault"
+      val savedLabel = if (currentLanguage == LanguageSetting.SINHALA) "සුරැකුම්" else "VAULT"
       BottomNavItem(
         label = savedLabel,
         selected = currentTab == MainTab.SAVED,
@@ -127,11 +127,11 @@ private fun BottomNavItem(
 
   Column(
     modifier = Modifier
-      .clip(RoundedCornerShape(18.dp))
-      .background(if (selected) CyanNeon.copy(alpha = 0.10f) else androidx.compose.ui.graphics.Color.Transparent)
-      .border(1.dp, if (selected) CyanNeon.copy(alpha = 0.24f) else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(18.dp))
+      .clip(RoundedCornerShape(9.dp))
+      .background(if (selected) CyanNeon.copy(alpha = 0.08f) else androidx.compose.ui.graphics.Color.Transparent)
+      .border(1.dp, if (selected) CyanNeon.copy(alpha = 0.30f) else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(9.dp))
       .clickable { onClick() }
-      .padding(horizontal = 16.dp, vertical = 6.dp)
+      .padding(horizontal = 18.dp, vertical = 7.dp)
       .testTag(testTag),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center
@@ -146,7 +146,7 @@ private fun BottomNavItem(
     Text(
       text = label,
       color = textColor,
-      fontSize = 10.sp,
+      fontSize = 9.sp,
       fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
       fontFamily = FontFamily.Monospace,
       letterSpacing = 0.5.sp

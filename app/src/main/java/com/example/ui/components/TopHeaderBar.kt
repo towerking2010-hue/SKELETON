@@ -58,7 +58,7 @@ fun TopHeaderBar(
     modifier = modifier.fillMaxWidth()
       .background(ObsidianBg)
       .statusBarsPadding()
-      .height(68.dp)
+      .height(64.dp)
       .padding(horizontal = 18.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.SpaceBetween
@@ -66,7 +66,7 @@ fun TopHeaderBar(
     Row(verticalAlignment = Alignment.CenterVertically) {
       Box(
         modifier = Modifier.size(38.dp)
-          .clip(RoundedCornerShape(12.dp))
+          .clip(RoundedCornerShape(9.dp))
           .background(ObsidianSurfaceElevated)
           .border(1.dp, if (adrenalMode) CrimsonAdrenal else CyanNeon.copy(alpha = 0.65f), RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center
@@ -85,7 +85,7 @@ fun TopHeaderBar(
         )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
           Box(Modifier.size(5.dp).clip(CircleShape).background(CyanNeon))
-          Text("LOCAL-FIRST  ·  ZERO-BILLING", color = SilverMuted, fontSize = 8.sp, letterSpacing = 0.8.sp)
+          Text("COGNITIVE SYSTEM  /  LOCAL MODE", color = SilverMuted, fontSize = 7.sp, letterSpacing = 0.65.sp)
         }
       }
     }
